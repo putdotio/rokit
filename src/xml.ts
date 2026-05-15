@@ -16,7 +16,7 @@ export const readXmlAttribute = (attributes: string, name: string): string | und
 };
 
 export const readActiveApp = (xml: string): ActiveApp => {
-  const match = /<app\s+([^>]*)>([^<]*)<\/app>/.exec(xml);
+  const match = /<app(?:\s+([^>]*))?>([^<]*)<\/app>/.exec(xml);
 
   if (!match) {
     throw new Error("active app response did not include an app node");

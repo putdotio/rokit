@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { createRequire } from "node:module";
 import {
+  assertSceneGraphNode,
   checkDevice,
   getDeviceInfo,
   installPackage,
@@ -9,9 +10,13 @@ import {
   pressKey,
   queryActiveApp,
   queryEcp,
+  querySceneGraph,
   takeScreenshot,
+  waitForActiveApp,
+  waitForSceneGraphNode,
   type RokuContext,
 } from "./roku.js";
+import type { NodeExpectation } from "./scenegraph.js";
 import {
   fail,
   formatErrorMessage,
@@ -26,15 +31,25 @@ type LaunchArgs = {
   readonly params: ReadonlyMap<string, string>;
 };
 
+type NodeCondition = {
+  readonly expectation: NodeExpectation;
+  readonly nodeName: string;
+  readonly timeoutMs?: number;
+};
+
 type Command =
   | { readonly name: "active-app" }
+  | { readonly args: NodeCondition; readonly name: "assert-node" }
   | { readonly name: "check" }
   | { readonly name: "device-info" }
   | { readonly name: "install"; readonly zipPath: string }
   | { readonly name: "launch"; readonly args: LaunchArgs }
   | { readonly name: "press"; readonly keys: readonly string[] }
   | { readonly name: "query"; readonly path: string }
-  | { readonly name: "screenshot"; readonly outputPath: string };
+  | { readonly name: "screenshot"; readonly outputPath: string }
+  | { readonly name: "sgnodes" }
+  | { readonly appId: string; readonly name: "wait-active"; readonly timeoutMs?: number }
+  | { readonly args: NodeCondition; readonly name: "wait-node" };
 
 const require = createRequire(import.meta.url);
 const packageJson = require("../package.json") as { version: string };
@@ -91,6 +106,12 @@ const runCommand = async (context: RokuContext, command: Command): Promise<void>
     return;
   }
 
+  if (command.name === "wait-active") {
+    const app = await waitForActiveApp(context, command.appId, command.timeoutMs);
+    console.log(`active app: ${app.id} ${app.name} ${app.version}`.trim());
+    return;
+  }
+
   if (command.name === "launch") {
     const app = await launchApp(context, command.args.appId, command.args.params);
     console.log(`launched: ${app.id} ${app.name} ${app.version}`.trim());
@@ -107,6 +128,28 @@ const runCommand = async (context: RokuContext, command: Command): Promise<void>
 
   if (command.name === "query") {
     console.log(await queryEcp(context, command.path));
+    return;
+  }
+
+  if (command.name === "sgnodes") {
+    console.log(await querySceneGraph(context));
+    return;
+  }
+
+  if (command.name === "assert-node") {
+    await assertSceneGraphNode(context, command.args.nodeName, command.args.expectation);
+    console.log(`asserted node: ${formatNodeCondition(command.args)}`);
+    return;
+  }
+
+  if (command.name === "wait-node") {
+    await waitForSceneGraphNode(
+      context,
+      command.args.nodeName,
+      command.args.expectation,
+      command.args.timeoutMs,
+    );
+    console.log(`matched node: ${formatNodeCondition(command.args)}`);
     return;
   }
 
@@ -140,6 +183,20 @@ const parseCommand = (argv: readonly string[]): Command => {
     return { name };
   }
 
+  if (name === "wait-active") {
+    const appId = args[0];
+
+    if (!appId) {
+      fail("usage: rokit wait-active <app-id> [--timeout-ms <ms>]");
+    }
+
+    return {
+      appId,
+      name,
+      timeoutMs: parseTimeoutOption(args.slice(1), `rokit ${name} <app-id>`),
+    };
+  }
+
   if (name === "launch") {
     return { name, args: parseLaunchArgs(args) };
   }
@@ -160,6 +217,14 @@ const parseCommand = (argv: readonly string[]): Command => {
     }
 
     return { name, path };
+  }
+
+  if (name === "sgnodes") {
+    return { name };
+  }
+
+  if (name === "assert-node" || name === "wait-node") {
+    return { name, args: parseNodeCondition(name, args) };
   }
 
   if (name === "screenshot") {
@@ -183,6 +248,91 @@ const parseCommand = (argv: readonly string[]): Command => {
   }
 
   return fail(`Unknown command: ${name ?? ""}`);
+};
+
+const parseNodeCondition = (commandName: string, args: readonly string[]): NodeCondition => {
+  const [nodeName, condition, ...rest] = args;
+
+  if (!nodeName || !condition) {
+    return fail(
+      `usage: rokit ${commandName} <node-name> <visible|hidden|absent|text|attr> [value] [--timeout-ms <ms>]`,
+    );
+  }
+
+  if (condition === "visible" || condition === "hidden" || condition === "absent") {
+    const timeoutMs = parseTimeoutOption(rest, `rokit ${commandName} <node-name> ${condition}`);
+    return {
+      expectation: { state: condition },
+      nodeName,
+      timeoutMs,
+    };
+  }
+
+  if (condition === "text") {
+    const [text, ...optionArgs] = rest;
+
+    if (text === undefined) {
+      fail(`usage: rokit ${commandName} <node-name> text <expected-text>`);
+    }
+
+    return {
+      expectation: { state: "visible", text },
+      nodeName,
+      timeoutMs: parseTimeoutOption(optionArgs, `rokit ${commandName} <node-name> text`),
+    };
+  }
+
+  if (condition === "attr") {
+    const [pair, ...optionArgs] = rest;
+
+    if (pair === undefined) {
+      fail(`usage: rokit ${commandName} <node-name> attr <name=value>`);
+    }
+
+    const equalsIndex = pair.indexOf("=");
+
+    if (equalsIndex <= 0) {
+      fail(`Invalid attr condition: ${pair}`);
+    }
+
+    return {
+      expectation: {
+        attribute: pair.slice(0, equalsIndex),
+        value: pair.slice(equalsIndex + 1),
+      },
+      nodeName,
+      timeoutMs: parseTimeoutOption(optionArgs, `rokit ${commandName} <node-name> attr`),
+    };
+  }
+
+  return fail(`Unknown node condition: ${condition}`);
+};
+
+const parseTimeoutOption = (args: readonly string[], usagePrefix: string): number | undefined => {
+  if (args.length === 0) {
+    return undefined;
+  }
+
+  if (args.length !== 2 || args[0] !== "--timeout-ms") {
+    fail(`usage: ${usagePrefix} [--timeout-ms <ms>]`);
+  }
+
+  const timeoutMs = Number(args[1]);
+
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    fail(`Invalid timeout: ${args[1] ?? ""}`);
+  }
+
+  return timeoutMs;
+};
+
+const formatNodeCondition = ({ expectation, nodeName }: NodeCondition): string => {
+  if ("attribute" in expectation) {
+    return `${nodeName} attr ${expectation.attribute}=${expectation.value}`;
+  }
+
+  const suffix = expectation.text === undefined ? "" : ` text=${expectation.text}`;
+  return `${nodeName} ${expectation.state}${suffix}`;
 };
 
 const parseLaunchArgs = (args: readonly string[]): LaunchArgs => {
@@ -227,9 +377,13 @@ usage:
   rokit check
   rokit device-info
   rokit active-app
+  rokit wait-active <app-id> [--timeout-ms <ms>]
   rokit launch <app-id> [--param key=value]
   rokit press <key> [key...]
   rokit query <ecp-path>
+  rokit sgnodes
+  rokit assert-node <node-name> <visible|hidden|absent|text|attr> [value]
+  rokit wait-node <node-name> <visible|hidden|absent|text|attr> [value] [--timeout-ms <ms>]
   rokit screenshot <output-path>
   rokit install <zip-path>
   rokit --version

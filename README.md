@@ -39,6 +39,7 @@ pnpm exec rokit check
 pnpm exec rokit launch dev
 pnpm exec rokit press Down Select
 pnpm exec rokit query /query/active-app
+pnpm exec rokit wait-node videoPlayerScreen visible
 pnpm exec rokit screenshot artifacts/live/player.png
 ```
 
@@ -48,9 +49,13 @@ pnpm exec rokit screenshot artifacts/live/player.png
 rokit check
 rokit device-info
 rokit active-app
+rokit wait-active <app-id> [--timeout-ms <ms>]
 rokit launch <app-id> [--param key=value]
 rokit press <key> [key...]
 rokit query <ecp-path>
+rokit sgnodes
+rokit assert-node <node-name> <visible|hidden|absent|text|attr> [value]
+rokit wait-node <node-name> <visible|hidden|absent|text|attr> [value] [--timeout-ms <ms>]
 rokit screenshot <output-path>
 rokit install <zip-path>
 rokit --version
@@ -60,10 +65,14 @@ rokit --version
   is reachable.
 - `device-info` prints enhanced Roku device metadata as JSON.
 - `active-app` prints the foreground app.
+- `wait-active` waits until the requested app is foregrounded.
 - `launch` opens an app and waits until it is active. Use repeated `--param`
   values for deeplink parameters.
 - `press` sends Roku remote keys through ECP.
 - `query` prints a raw ECP response such as `/query/sgnodes/all`.
+- `sgnodes` prints the raw SceneGraph tree from `/query/sgnodes/all`.
+- `assert-node` checks a named SceneGraph node once.
+- `wait-node` polls SceneGraph until a named node condition matches.
 - `screenshot` saves a developer screenshot. It requires `ROKIT_PASSWORD`.
 - `install` publishes an existing ZIP through `roku-deploy`. It requires
   `ROKIT_PASSWORD`.
@@ -92,6 +101,7 @@ tokens, and app-specific media identifiers do not belong in git.
 - launch and deeplink parameters
 - remote keypresses
 - raw ECP queries
+- SceneGraph state queries and named-node assertions
 - screenshots
 
 App repositories should keep their own scenario commands for product behavior,

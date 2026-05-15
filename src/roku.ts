@@ -1,5 +1,6 @@
 import * as rokuDeploy from "roku-deploy";
 import { basename, dirname, extname, resolve } from "node:path";
+import { assertNamedNode, type NodeExpectation } from "./scenegraph.js";
 import { readActiveApp, readXmlTag, type ActiveApp } from "./xml.js";
 
 const ecpPort = 8060;
@@ -77,6 +78,28 @@ export const getDeviceInfo = async (context: RokuContext) =>
 export const queryActiveApp = async (context: RokuContext): Promise<ActiveApp> =>
   readActiveApp(await fetchText(context, "/query/active-app"));
 
+export const waitForActiveApp = async (
+  context: RokuContext,
+  appId: string,
+  timeoutMs = 10_000,
+): Promise<ActiveApp> => {
+  const start = Date.now();
+  let lastApp: ActiveApp | undefined;
+
+  while (Date.now() - start < timeoutMs) {
+    lastApp = await queryActiveApp(context);
+
+    if (lastApp.id === appId) {
+      return lastApp;
+    }
+
+    await sleep(500);
+  }
+
+  const last = lastApp ? `${lastApp.id} ${lastApp.name}` : "unknown";
+  throw new Error(`expected active app ${appId}, got ${last}`);
+};
+
 export const launchApp = async (
   context: RokuContext,
   appId: string,
@@ -99,6 +122,41 @@ export const pressKey = async (context: RokuContext, key: string): Promise<void>
 
 export const queryEcp = async (context: RokuContext, path: string): Promise<string> =>
   await fetchText(context, path.startsWith("/") ? path : `/${path}`);
+
+export const querySceneGraph = async (context: RokuContext): Promise<string> =>
+  await queryEcp(context, "/query/sgnodes/all");
+
+export const assertSceneGraphNode = async (
+  context: RokuContext,
+  nodeName: string,
+  expectation: NodeExpectation,
+): Promise<void> => {
+  assertNamedNode(await querySceneGraph(context), nodeName, expectation);
+};
+
+export const waitForSceneGraphNode = async (
+  context: RokuContext,
+  nodeName: string,
+  expectation: NodeExpectation,
+  timeoutMs = 30_000,
+): Promise<void> => {
+  const start = Date.now();
+  let lastError: string | undefined;
+
+  while (Date.now() - start < timeoutMs) {
+    try {
+      await assertSceneGraphNode(context, nodeName, expectation);
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+
+    await sleep(500);
+  }
+
+  const suffix = lastError ? `; last observation: ${lastError}` : "";
+  throw new Error(`expected SceneGraph node "${nodeName}" to match condition${suffix}`);
+};
 
 export const installPackage = async (
   context: RokuContext & { readonly password: string },
@@ -141,28 +199,6 @@ export const validateRemoteKey = (key: string): void => {
   if (!remoteKeySet.has(key)) {
     throw new Error(`unsupported remote key: ${key}`);
   }
-};
-
-const waitForActiveApp = async (
-  context: RokuContext,
-  appId: string,
-  timeoutMs = 10_000,
-): Promise<ActiveApp> => {
-  const start = Date.now();
-  let lastApp: ActiveApp | undefined;
-
-  while (Date.now() - start < timeoutMs) {
-    lastApp = await queryActiveApp(context);
-
-    if (lastApp.id === appId) {
-      return lastApp;
-    }
-
-    await sleep(500);
-  }
-
-  const last = lastApp ? `${lastApp.id} ${lastApp.name}` : "unknown";
-  throw new Error(`expected active app ${appId}, got ${last}`);
 };
 
 const fetchInstallerStatus = async (context: RokuContext): Promise<number> => {
