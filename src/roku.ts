@@ -52,6 +52,11 @@ export type DeviceSummary = {
   readonly name: string;
 };
 
+export type RetryOptions = {
+  readonly attempts?: number;
+  readonly retryDelayMs?: number;
+};
+
 export const checkDevice = async (context: RokuContext): Promise<DeviceSummary> => {
   const deviceInfo = await fetchText(context, "/query/device-info");
   const installerStatus = await fetchInstallerStatus(context);
@@ -85,9 +90,17 @@ export const waitForActiveApp = async (
 ): Promise<ActiveApp> => {
   const start = Date.now();
   let lastApp: ActiveApp | undefined;
+  let lastError: string | undefined;
 
   while (Date.now() - start < timeoutMs) {
-    lastApp = await queryActiveApp(context);
+    try {
+      lastApp = await queryActiveApp(context);
+      lastError = undefined;
+    } catch (error) {
+      lastError = formatErrorMessage(error);
+      await sleep(500);
+      continue;
+    }
 
     if (lastApp.id === appId) {
       return lastApp;
@@ -97,7 +110,8 @@ export const waitForActiveApp = async (
   }
 
   const last = lastApp ? `${lastApp.id} ${lastApp.name}` : "unknown";
-  throw new Error(`expected active app ${appId}, got ${last}`);
+  const errorSuffix = lastError ? `; last ECP error: ${lastError}` : "";
+  throw new Error(`expected active app ${appId}, got ${last}${errorSuffix}`);
 };
 
 export const launchApp = async (
@@ -111,7 +125,7 @@ export const launchApp = async (
     url.searchParams.set(key, value);
   }
 
-  await postOk(context, url);
+  await postLaunchMaybeAccepted(context, url);
   return await waitForActiveApp(context, appId);
 };
 
@@ -123,8 +137,28 @@ export const pressKey = async (context: RokuContext, key: string): Promise<void>
 export const queryEcp = async (context: RokuContext, path: string): Promise<string> =>
   await fetchText(context, path.startsWith("/") ? path : `/${path}`);
 
-export const querySceneGraph = async (context: RokuContext): Promise<string> =>
-  await queryEcp(context, "/query/sgnodes/all");
+export const querySceneGraph = async (
+  context: RokuContext,
+  options: RetryOptions = {},
+): Promise<string> => {
+  const attempts = options.attempts ?? 1;
+  const retryDelayMs = options.retryDelayMs ?? 500;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await queryEcp(context, "/query/sgnodes/all");
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < attempts - 1) {
+        await sleep(retryDelayMs);
+      }
+    }
+  }
+
+  throw new Error(`SceneGraph query failed: ${formatErrorMessage(lastError)}`);
+};
 
 export const assertSceneGraphNode = async (
   context: RokuContext,
@@ -232,6 +266,28 @@ const postOk = async (context: RokuContext, url: URL): Promise<void> => {
   }
 };
 
+const postLaunchMaybeAccepted = async (context: RokuContext, url: URL): Promise<void> => {
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      signal: AbortSignal.timeout(context.timeoutMs),
+    });
+
+    if (!response.ok && response.status !== 503) {
+      throw new Error(`POST ${url.pathname} returned HTTP ${response.status}`);
+    }
+  } catch (error) {
+    const message = formatErrorMessage(error).toLowerCase();
+    if (
+      !message.includes("abort") &&
+      !message.includes("timeout") &&
+      !message.includes("fetch failed")
+    ) {
+      throw error;
+    }
+  }
+};
+
 const ecpUrl = (context: RokuContext, path: string): URL =>
   new URL(path, `http://${context.target}:${ecpPort}`);
 
@@ -239,3 +295,6 @@ const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+
+const formatErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);

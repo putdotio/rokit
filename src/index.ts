@@ -14,6 +14,7 @@ export {
   waitForSceneGraphNode,
 } from "./roku.js";
 export type { DeviceSummary, RemoteKey, RokuContext } from "./roku.js";
+export type { RetryOptions } from "./roku.js";
 export {
   assertNamedNode,
   assertNamedNodeState,

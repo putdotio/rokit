@@ -63,7 +63,7 @@ const context: RokuContext = {
 
 await pressKey(context, "Info");
 await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
-await querySceneGraph(context);
+await querySceneGraph(context, { attempts: 3 });
 ```
 
 ## Commands
@@ -88,13 +88,17 @@ rokit --version
   is reachable.
 - `device-info` prints enhanced Roku device metadata as JSON.
 - `active-app` prints the foreground app.
-- `wait-active` waits until the requested app is foregrounded.
+- `wait-active` waits until the requested app is foregrounded and tolerates
+  transient ECP read failures while polling.
 - `launch` opens an app and waits until it is active. Use repeated `--param`
-  values for deeplink parameters.
+  values for deeplink parameters. Roku launch responses can race app startup, so
+  launch accepts transient timeout/fetch failures and then verifies foreground
+  state.
 - `press` sends Roku remote keys through ECP. Use `--delay-ms` for navigation
   sequences that need a stable gap between keys.
 - `query` prints a raw ECP response such as `/query/sgnodes/all`.
-- `sgnodes` prints the raw SceneGraph tree from `/query/sgnodes/all`.
+- `sgnodes` prints the raw SceneGraph tree from `/query/sgnodes/all`. Library
+  callers can pass retry options to `querySceneGraph`.
 - `assert-node` checks a named SceneGraph node once.
 - `wait-node` polls SceneGraph until a named node condition matches.
 - `screenshot` saves a developer screenshot. It requires `ROKIT_PASSWORD`.
