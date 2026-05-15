@@ -27,18 +27,25 @@
   ],
   "type": "module",
   "sideEffects": false,
+  "types": "dist/index.d.mts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack src/rokit.ts",
+    "build": "vp pack src/index.ts src/rokit.ts --dts",
     "check": "vp check .",
     "clean": "rm -rf .turbo coverage dist",
-    "prepack": "vp pack src/rokit.ts",
-    "smoke": "vp pack src/rokit.ts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null",
+    "prepack": "vp pack src/index.ts src/rokit.ts --dts",
+    "smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null",
     "test": "vp test --passWithNoTests",
     "typecheck": "tsc --noEmit",
-    "verify": "vp check . && tsc --noEmit && vp pack src/rokit.ts && vp test --passWithNoTests && npm pack --dry-run"
+    "verify": "vp check . && tsc --noEmit && vp pack src/index.ts src/rokit.ts --dts && vp test --passWithNoTests && npm pack --dry-run"
   },
   "dependencies": {
     "roku-deploy": "3.17.3"

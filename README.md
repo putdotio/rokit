@@ -43,6 +43,28 @@ pnpm exec rokit wait-node videoPlayerScreen visible
 pnpm exec rokit screenshot artifacts/live/player.png
 ```
 
+App-specific scenario scripts can also import the generic helpers:
+
+```ts
+import { assertSceneGraphNode, pressKey, querySceneGraph, type RokuContext } from "@putdotio/rokit";
+
+const target = process.env.ROKIT_TARGET;
+
+if (!target) {
+  throw new Error("ROKIT_TARGET is not set");
+}
+
+const context: RokuContext = {
+  target,
+  timeoutMs: 10_000,
+  username: "rokudev",
+};
+
+await pressKey(context, "Info");
+await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
+await querySceneGraph(context);
+```
+
 ## Commands
 
 ```bash

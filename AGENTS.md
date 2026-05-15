@@ -6,6 +6,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 ## Patterns
 
 - Keep CLI wiring thin: parse/dispatch commands, then call named Roku helpers.
+- Keep `src/index.ts` as the public library surface for app-specific scenario
+  scripts. Export generic Roku/SceneGraph primitives only.
 - Treat `process.cwd()` as the consumer app root.
 - Keep `.rokit/` consumer-local; it can hold env, generated artifacts, and
   transient device state.
