@@ -30,6 +30,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
   primary public contract.
 - Avoid sleeps in generic commands. App repos can add meaningful wait/assert
   loops around `rokit` primitives.
+- Release details live in `docs/DISTRIBUTION.md`; readiness details live in
+  `docs/READINESS.md`.
 
 ## When Contracts Change
 
@@ -58,6 +60,7 @@ vp run test
 Live Roku checks when a developer-enabled device exists:
 
 ```bash
+ROKIT_TARGET=<roku-ip> vp run live:smoke
 ROKIT_TARGET=<roku-ip> vp exec rokit check
 ROKIT_TARGET=<roku-ip> vp exec rokit launch dev
 ROKIT_TARGET=<roku-ip> vp exec rokit press Info Back

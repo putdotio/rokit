@@ -135,6 +135,8 @@ HTML, or checking app-specific UI nodes.
 ## Docs
 
 - [Contributing](./CONTRIBUTING.md)
+- [Distribution](./docs/DISTRIBUTION.md)
+- [Agent readiness](./docs/READINESS.md)
 - [Security](./SECURITY.md)
 
 ## Repo Internals

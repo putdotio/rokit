@@ -41,6 +41,8 @@
     "build": "vp pack src/index.ts src/rokit.ts --dts",
     "check": "vp check .",
     "clean": "rm -rf .turbo coverage dist",
+    "hooks:install": "git config core.hooksPath .git-hooks",
+    "live:smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs check",
     "prepack": "vp pack src/index.ts src/rokit.ts --dts",
     "smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null",
     "test": "vp test --passWithNoTests",
