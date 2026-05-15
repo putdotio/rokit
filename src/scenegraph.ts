@@ -1,6 +1,8 @@
 import { readXmlAttribute } from "./xml.js";
 
 export type NodeState = "absent" | "hidden" | "visible";
+export type SceneGraphBounds = readonly [x: number, y: number, width: number, height: number];
+export type SceneGraphPoint = readonly [x: number, y: number];
 
 export type NodeExpectation =
   | {
@@ -32,6 +34,69 @@ export const readNamedNodeAttribute = (
   }
 
   return readXmlAttribute(attributes, attributeName);
+};
+
+export const readNamedNodeNumber = (
+  xml: string,
+  nodeName: string,
+  attributeName: string,
+): number | undefined => {
+  const value = readNamedNodeAttribute(xml, nodeName, attributeName);
+
+  if (value !== undefined) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  if (attributeName !== "width" && attributeName !== "height") {
+    return undefined;
+  }
+
+  const bounds = readNamedNodeBounds(xml, nodeName);
+
+  if (!bounds) {
+    return undefined;
+  }
+
+  return attributeName === "width" ? bounds[2] : bounds[3];
+};
+
+export const readNamedNodeBounds = (
+  xml: string,
+  nodeName: string,
+): SceneGraphBounds | undefined => {
+  const bounds = readNamedNodeAttribute(xml, nodeName, "bounds");
+
+  if (!bounds) {
+    return undefined;
+  }
+
+  const parts = parseSceneGraphNumberList(bounds);
+
+  if (parts.length < 4) {
+    return undefined;
+  }
+
+  return [parts[0], parts[1], parts[2], parts[3]];
+};
+
+export const readNamedNodeTranslation = (
+  xml: string,
+  nodeName: string,
+): SceneGraphPoint | undefined => {
+  const translation = readNamedNodeAttribute(xml, nodeName, "translation");
+
+  if (!translation) {
+    return undefined;
+  }
+
+  const parts = parseSceneGraphNumberList(translation);
+
+  if (parts.length < 2) {
+    return undefined;
+  }
+
+  return [parts[0], parts[1]];
 };
 
 export const isNamedNodeVisible = (xml: string, nodeName: string): boolean => {
@@ -105,3 +170,10 @@ const assertNamedNodeAttribute = (
 };
 
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export const parseSceneGraphNumberList = (value: string): number[] =>
+  value
+    .replace(/[[\]{}]/g, "")
+    .split(",")
+    .map((part) => Number(part.trim()))
+    .filter((part) => Number.isFinite(part));

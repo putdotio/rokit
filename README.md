@@ -47,7 +47,13 @@ pnpm exec rokit screenshot artifacts/live/player.png
 App-specific scenario scripts can also import the generic helpers:
 
 ```ts
-import { assertSceneGraphNode, pressKey, querySceneGraph, type RokuContext } from "@putdotio/rokit";
+import {
+  assertSceneGraphNode,
+  pressKey,
+  querySceneGraph,
+  readNamedNodeTranslation,
+  type RokuContext,
+} from "@putdotio/rokit";
 
 const target = process.env.ROKIT_TARGET;
 
@@ -62,8 +68,9 @@ const context: RokuContext = {
 };
 
 await pressKey(context, "Info");
+const xml = await querySceneGraph(context, { attempts: 3 });
 await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
-await querySceneGraph(context, { attempts: 3 });
+console.log(readNamedNodeTranslation(xml, "videoPlayerScreen"));
 ```
 
 ## Commands
@@ -130,6 +137,7 @@ tokens, and app-specific media identifiers do not belong in git.
 - remote keypresses
 - raw ECP queries
 - SceneGraph state queries and named-node assertions
+- SceneGraph attribute, numeric geometry, bounds, and translation readers
 - screenshots
 
 App repositories should keep their own scenario commands for product behavior,

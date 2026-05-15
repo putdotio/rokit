@@ -20,9 +20,18 @@ export {
   assertNamedNodeState,
   assertNamedNodeText,
   isNamedNodeVisible,
+  parseSceneGraphNumberList,
   readNamedNodeAttribute,
   readNamedNodeAttributes,
+  readNamedNodeBounds,
+  readNamedNodeNumber,
+  readNamedNodeTranslation,
 } from "./scenegraph.js";
-export type { NodeExpectation, NodeState } from "./scenegraph.js";
+export type {
+  NodeExpectation,
+  NodeState,
+  SceneGraphBounds,
+  SceneGraphPoint,
+} from "./scenegraph.js";
 export { readActiveApp, readXmlAttribute, readXmlTag } from "./xml.js";
 export type { ActiveApp } from "./xml.js";

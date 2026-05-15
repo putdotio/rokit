@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { assertNamedNode, isNamedNodeVisible, readNamedNodeAttribute } from "../src/scenegraph.js";
+import {
+  assertNamedNode,
+  isNamedNodeVisible,
+  parseSceneGraphNumberList,
+  readNamedNodeAttribute,
+  readNamedNodeBounds,
+  readNamedNodeNumber,
+  readNamedNodeTranslation,
+} from "../src/scenegraph.js";
 
 const xml = `
 <All_Nodes>
@@ -7,6 +15,7 @@ const xml = `
   <Label name="title" text="Big Buck Bunny" />
   <Group name="osd" visible="false" />
   <Rectangle name="progressTrack" width="1728" height="10" />
+  <Rectangle name="progressFill" bounds="{0, 23, 400, 12}" />
 </All_Nodes>`;
 
 describe("SceneGraph helpers", () => {
@@ -14,6 +23,15 @@ describe("SceneGraph helpers", () => {
     expect(readNamedNodeAttribute(xml, "title", "text")).toBe("Big Buck Bunny");
     expect(readNamedNodeAttribute(xml, "progressTrack", "height")).toBe("10");
     expect(readNamedNodeAttribute(xml, "missing", "text")).toBeUndefined();
+  });
+
+  it("reads numeric SceneGraph geometry", () => {
+    expect(parseSceneGraphNumberList("{0, 23, 400, 12}")).toEqual([0, 23, 400, 12]);
+    expect(readNamedNodeNumber(xml, "progressTrack", "width")).toBe(1728);
+    expect(readNamedNodeNumber(xml, "progressFill", "height")).toBe(12);
+    expect(readNamedNodeBounds(xml, "progressFill")).toEqual([0, 23, 400, 12]);
+    expect(readNamedNodeTranslation(xml, "videoPlayerScreen")).toEqual([0, 0]);
+    expect(readNamedNodeTranslation(xml, "missing")).toBeUndefined();
   });
 
   it("detects visible nodes", () => {
