@@ -37,6 +37,11 @@ type NodeCondition = {
   readonly timeoutMs?: number;
 };
 
+type PressArgs = {
+  readonly delayMs: number;
+  readonly keys: readonly string[];
+};
+
 type Command =
   | { readonly name: "active-app" }
   | { readonly args: NodeCondition; readonly name: "assert-node" }
@@ -44,7 +49,7 @@ type Command =
   | { readonly name: "device-info" }
   | { readonly name: "install"; readonly zipPath: string }
   | { readonly name: "launch"; readonly args: LaunchArgs }
-  | { readonly name: "press"; readonly keys: readonly string[] }
+  | { readonly args: PressArgs; readonly name: "press" }
   | { readonly name: "query"; readonly path: string }
   | { readonly name: "screenshot"; readonly outputPath: string }
   | { readonly name: "sgnodes" }
@@ -119,7 +124,11 @@ const runCommand = async (context: RokuContext, command: Command): Promise<void>
   }
 
   if (command.name === "press") {
-    for (const key of command.keys) {
+    for (const [index, key] of command.args.keys.entries()) {
+      if (index > 0 && command.args.delayMs > 0) {
+        await sleep(command.args.delayMs);
+      }
+
       await pressKey(context, key);
       console.log(`pressed: ${key}`);
     }
@@ -202,11 +211,7 @@ const parseCommand = (argv: readonly string[]): Command => {
   }
 
   if (name === "press") {
-    if (args.length === 0) {
-      fail("usage: rokit press <key> [key...]");
-    }
-
-    return { name, keys: args };
+    return { name, args: parsePressArgs(args) };
   }
 
   if (name === "query") {
@@ -308,6 +313,41 @@ const parseNodeCondition = (commandName: string, args: readonly string[]): NodeC
   return fail(`Unknown node condition: ${condition}`);
 };
 
+const parsePressArgs = (args: readonly string[]): PressArgs => {
+  let delayMs = 0;
+  const keys: string[] = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--delay-ms") {
+      const value = args[index + 1];
+
+      if (!value) {
+        fail("usage: rokit press [--delay-ms <ms>] <key> [key...]");
+      }
+
+      delayMs = parsePositiveInteger(value, "delay");
+      index += 1;
+      continue;
+    }
+
+    if (arg?.startsWith("--")) {
+      fail(`Unknown press option: ${arg}`);
+    }
+
+    if (arg !== undefined) {
+      keys.push(arg);
+    }
+  }
+
+  if (keys.length === 0) {
+    fail("usage: rokit press [--delay-ms <ms>] <key> [key...]");
+  }
+
+  return { delayMs, keys };
+};
+
 const parseTimeoutOption = (args: readonly string[], usagePrefix: string): number | undefined => {
   if (args.length === 0) {
     return undefined;
@@ -317,13 +357,17 @@ const parseTimeoutOption = (args: readonly string[], usagePrefix: string): numbe
     fail(`usage: ${usagePrefix} [--timeout-ms <ms>]`);
   }
 
-  const timeoutMs = Number(args[1]);
+  return parsePositiveInteger(args[1] ?? "", "timeout");
+};
 
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
-    fail(`Invalid timeout: ${args[1] ?? ""}`);
+const parsePositiveInteger = (value: string, label: string): number => {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    fail(`Invalid ${label}: ${value}`);
   }
 
-  return timeoutMs;
+  return parsed;
 };
 
 const formatNodeCondition = ({ expectation, nodeName }: NodeCondition): string => {
@@ -334,6 +378,11 @@ const formatNodeCondition = ({ expectation, nodeName }: NodeCondition): string =
   const suffix = expectation.text === undefined ? "" : ` text=${expectation.text}`;
   return `${nodeName} ${expectation.state}${suffix}`;
 };
+
+const sleep = (ms: number): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 const parseLaunchArgs = (args: readonly string[]): LaunchArgs => {
   const appId = args[0];
@@ -379,7 +428,7 @@ usage:
   rokit active-app
   rokit wait-active <app-id> [--timeout-ms <ms>]
   rokit launch <app-id> [--param key=value]
-  rokit press <key> [key...]
+  rokit press [--delay-ms <ms>] <key> [key...]
   rokit query <ecp-path>
   rokit sgnodes
   rokit assert-node <node-name> <visible|hidden|absent|text|attr> [value]

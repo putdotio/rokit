@@ -38,6 +38,7 @@ Then run:
 pnpm exec rokit check
 pnpm exec rokit launch dev
 pnpm exec rokit press Down Select
+pnpm exec rokit press --delay-ms 250 Right Select
 pnpm exec rokit query /query/active-app
 pnpm exec rokit wait-node videoPlayerScreen visible
 pnpm exec rokit screenshot artifacts/live/player.png
@@ -73,7 +74,7 @@ rokit device-info
 rokit active-app
 rokit wait-active <app-id> [--timeout-ms <ms>]
 rokit launch <app-id> [--param key=value]
-rokit press <key> [key...]
+rokit press [--delay-ms <ms>] <key> [key...]
 rokit query <ecp-path>
 rokit sgnodes
 rokit assert-node <node-name> <visible|hidden|absent|text|attr> [value]
@@ -90,7 +91,8 @@ rokit --version
 - `wait-active` waits until the requested app is foregrounded.
 - `launch` opens an app and waits until it is active. Use repeated `--param`
   values for deeplink parameters.
-- `press` sends Roku remote keys through ECP.
+- `press` sends Roku remote keys through ECP. Use `--delay-ms` for navigation
+  sequences that need a stable gap between keys.
 - `query` prints a raw ECP response such as `/query/sgnodes/all`.
 - `sgnodes` prints the raw SceneGraph tree from `/query/sgnodes/all`.
 - `assert-node` checks a named SceneGraph node once.
