@@ -38,7 +38,7 @@ jobs:
         run: vp run verify
 
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]') && vars.PUTIO_RELEASE_BOT_CLIENT_ID != ''
     name: Release rokit
     needs:
       - verify
