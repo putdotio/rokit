@@ -1,6 +1,6 @@
 {
   "name": "@putdotio/rokit",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A tiny CLI companion for Roku device harness work.",
   "keywords": [
     "cli",
