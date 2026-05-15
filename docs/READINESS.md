@@ -8,12 +8,12 @@ Status: current as of 2026-05-15
 
 Overall: B-
 
-| Dimension  | Status  | Evidence                                                                                                               | Gap                                     |
-| ---------- | ------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| bootable   | pass    | `pnpm smoke` builds the CLI and checks `--version` plus `--help`                                                       | no server boot surface, by design       |
-| testable   | pass    | `pnpm verify` runs TypeScript, bundle, unit tests, and npm pack dry run                                                | live Roku checks require local hardware |
-| observable | partial | CLI commands print active app, device info, raw ECP state, SceneGraph XML, screenshots, and compact assertion failures | no structured JSON output mode yet      |
-| verifiable | pass    | CI runs `pnpm verify`; `pnpm live:smoke` proves a configured Roku responds                                             | no CI hardware lane                     |
+| Dimension  | Status | Evidence                                                                                                                                     | Gap                                     |
+| ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| bootable   | pass   | `pnpm smoke` builds the CLI and checks `--version` plus `--help`                                                                             | no server boot surface, by design       |
+| testable   | pass   | `pnpm verify` runs TypeScript, bundle, unit tests, and npm pack dry run                                                                      | live Roku checks require local hardware |
+| observable | pass   | CLI commands print active app, device info, raw ECP state, SceneGraph XML, screenshots, compact assertion failures, and explicit JSON output | no automatic non-TTY JSON mode          |
+| verifiable | pass   | CI runs `pnpm verify`; `pnpm live:smoke` proves a configured Roku responds                                                                   | no CI hardware lane                     |
 
 ## Layers
 

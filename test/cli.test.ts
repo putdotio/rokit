@@ -17,6 +17,7 @@ describe("rokit cli", () => {
     expect(result.stdout).toContain("rokit - Roku device harness helper");
     expect(result.stdout).toContain("rokit check");
     expect(result.stdout).toContain("rokit wait-node");
+    expect(result.stdout).toContain("--output json | text");
     expect(result.stderr).toBe("");
   });
 
@@ -34,5 +35,27 @@ describe("rokit cli", () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("ROKIT_TARGET is not set");
     expect(result.stderr).not.toContain("Error:");
+  });
+
+  it("reports missing target as structured JSON", () => {
+    const result = runRokit(["--json", "check"]);
+
+    expect(result.status).toBe(1);
+    expect(JSON.parse(result.stderr)).toEqual({
+      error: { message: "ROKIT_TARGET is not set" },
+      status: "failed",
+    });
+    expect(result.stdout).toBe("");
+  });
+
+  it("reports invalid global output mode as structured JSON", () => {
+    const result = runRokit(["--json", "--output", "yaml", "check"]);
+
+    expect(result.status).toBe(1);
+    expect(JSON.parse(result.stderr)).toEqual({
+      error: { message: "usage: rokit [--json|--output json|--output text] <command>" },
+      status: "failed",
+    });
+    expect(result.stdout).toBe("");
   });
 });

@@ -45,9 +45,10 @@ export const requirePassword = (env: RokitEnv): string => {
   return password;
 };
 
+export class RokitCliError extends Error {}
+
 export const fail = (message: string): never => {
-  console.error(message);
-  process.exit(1);
+  throw new RokitCliError(message);
 };
 
 export const formatErrorMessage = (error: unknown): string => {

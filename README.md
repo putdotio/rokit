@@ -42,6 +42,7 @@ pnpm exec rokit press --delay-ms 250 Right Select
 pnpm exec rokit query /query/active-app
 pnpm exec rokit wait-node videoPlayerScreen visible
 pnpm exec rokit screenshot artifacts/live/player.png
+pnpm exec rokit --json active-app
 ```
 
 App-specific scenario scripts can also import the generic helpers:
@@ -90,6 +91,16 @@ rokit screenshot <output-path>
 rokit install <zip-path>
 rokit --version
 ```
+
+Global options:
+
+```bash
+rokit --json <command>
+rokit --output json <command>
+```
+
+JSON mode wraps command output as `{ "status": "ok", "command": "...", ... }`
+and reports failures as `{ "status": "failed", "error": { "message": "..." } }`.
 
 - `check` confirms the Roku ECP endpoint responds and the developer installer
   is reachable.

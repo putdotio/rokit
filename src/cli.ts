@@ -42,6 +42,20 @@ type PressArgs = {
   readonly keys: readonly string[];
 };
 
+type OutputMode = "json" | "text";
+
+type CliOptions = {
+  readonly args: readonly string[];
+  readonly outputMode: OutputMode;
+};
+
+type CommandResult = {
+  readonly command: string;
+  readonly data?: unknown;
+  readonly message?: string;
+  readonly status: "ok";
+};
+
 type Command =
   | { readonly name: "active-app" }
   | { readonly args: NodeCondition; readonly name: "assert-node" }
@@ -60,95 +74,135 @@ const require = createRequire(import.meta.url);
 const packageJson = require("../package.json") as { version: string };
 
 export const main = async (argv = process.argv.slice(2)): Promise<void> => {
-  const firstArg = argv[0];
-
-  if (!firstArg || firstArg === "--help" || firstArg === "-h") {
-    printHelp();
-    return;
-  }
-
-  if (firstArg === "--version" || firstArg === "-v") {
-    console.log(packageJson.version);
-    return;
-  }
-
-  loadLocalEnv();
-
-  const env = loadEnv();
-  const target = requireTarget(env);
-  const context: RokuContext = {
-    password: env.password,
-    target,
-    timeoutMs: env.timeoutMs,
-    username: env.username,
-  };
-  const command = parseCommand(argv);
+  let outputMode = inferOutputMode(argv);
 
   try {
-    await runCommand(context, command);
+    const options = parseGlobalOptions(argv);
+    outputMode = options.outputMode;
+    const firstArg = options.args[0];
+
+    if (!firstArg || firstArg === "--help" || firstArg === "-h") {
+      printHelp();
+      return;
+    }
+
+    if (firstArg === "--version" || firstArg === "-v") {
+      console.log(packageJson.version);
+      return;
+    }
+
+    loadLocalEnv();
+
+    const env = loadEnv();
+    const target = requireTarget(env);
+    const context: RokuContext = {
+      password: env.password,
+      target,
+      timeoutMs: env.timeoutMs,
+      username: env.username,
+    };
+    const command = parseCommand(options.args);
+    const result = await runCommand(context, command);
+
+    printResult(options.outputMode, result);
   } catch (error) {
-    fail(formatErrorMessage(error));
+    printError(outputMode, formatErrorMessage(error));
+    process.exitCode = 1;
   }
 };
 
-const runCommand = async (context: RokuContext, command: Command): Promise<void> => {
+const runCommand = async (context: RokuContext, command: Command): Promise<CommandResult> => {
   if (command.name === "check") {
     const summary = await checkDevice(context);
-    console.log(`device: ${summary.name} (${summary.model})`);
-    console.log(`ecp: ${summary.ecp}`);
-    console.log(`developer installer HTTP status: ${summary.installerStatus}`);
-    return;
+    return {
+      command: command.name,
+      data: summary,
+      message: [
+        `device: ${summary.name} (${summary.model})`,
+        `ecp: ${summary.ecp}`,
+        `developer installer HTTP status: ${summary.installerStatus}`,
+      ].join("\n"),
+      status: "ok",
+    };
   }
 
   if (command.name === "device-info") {
-    console.log(JSON.stringify(await getDeviceInfo(context), null, 2));
-    return;
+    return { command: command.name, data: await getDeviceInfo(context), status: "ok" };
   }
 
   if (command.name === "active-app") {
     const app = await queryActiveApp(context);
-    console.log(`active app: ${app.id} ${app.name} ${app.version}`.trim());
-    return;
+    return {
+      command: command.name,
+      data: app,
+      message: `active app: ${app.id} ${app.name} ${app.version}`.trim(),
+      status: "ok",
+    };
   }
 
   if (command.name === "wait-active") {
     const app = await waitForActiveApp(context, command.appId, command.timeoutMs);
-    console.log(`active app: ${app.id} ${app.name} ${app.version}`.trim());
-    return;
+    return {
+      command: command.name,
+      data: app,
+      message: `active app: ${app.id} ${app.name} ${app.version}`.trim(),
+      status: "ok",
+    };
   }
 
   if (command.name === "launch") {
     const app = await launchApp(context, command.args.appId, command.args.params);
-    console.log(`launched: ${app.id} ${app.name} ${app.version}`.trim());
-    return;
+    return {
+      command: command.name,
+      data: app,
+      message: `launched: ${app.id} ${app.name} ${app.version}`.trim(),
+      status: "ok",
+    };
   }
 
   if (command.name === "press") {
+    const pressed: string[] = [];
+
     for (const [index, key] of command.args.keys.entries()) {
       if (index > 0 && command.args.delayMs > 0) {
         await sleep(command.args.delayMs);
       }
 
       await pressKey(context, key);
-      console.log(`pressed: ${key}`);
+      pressed.push(key);
     }
-    return;
+
+    return {
+      command: command.name,
+      data: { delayMs: command.args.delayMs, keys: pressed },
+      message: pressed.map((key) => `pressed: ${key}`).join("\n"),
+      status: "ok",
+    };
   }
 
   if (command.name === "query") {
-    console.log(await queryEcp(context, command.path));
-    return;
+    const body = await queryEcp(context, command.path);
+    return {
+      command: command.name,
+      data: { body, path: command.path },
+      message: body,
+      status: "ok",
+    };
   }
 
   if (command.name === "sgnodes") {
-    console.log(await querySceneGraph(context));
-    return;
+    const body = await querySceneGraph(context);
+    return { command: command.name, data: { body }, message: body, status: "ok" };
   }
 
   if (command.name === "assert-node") {
     await assertSceneGraphNode(context, command.args.nodeName, command.args.expectation);
-    console.log(`asserted node: ${formatNodeCondition(command.args)}`);
-    return;
+    return {
+      command: command.name,
+      data: formatNodeData(command.args),
+      message: `asserted node: ${formatNodeCondition(command.args)}`,
+      status: "ok",
+    };
   }
 
   if (command.name === "wait-node") {
@@ -158,23 +212,90 @@ const runCommand = async (context: RokuContext, command: Command): Promise<void>
       command.args.expectation,
       command.args.timeoutMs,
     );
-    console.log(`matched node: ${formatNodeCondition(command.args)}`);
-    return;
+    return {
+      command: command.name,
+      data: formatNodeData(command.args),
+      message: `matched node: ${formatNodeCondition(command.args)}`,
+      status: "ok",
+    };
   }
 
   if (command.name === "screenshot") {
     const password = requirePassword(context);
     mkdirSync(dirname(command.outputPath), { recursive: true });
-    console.log(
-      `screenshot: ${await takeScreenshot({ ...context, password }, command.outputPath)}`,
-    );
-    return;
+    const path = await takeScreenshot({ ...context, password }, command.outputPath);
+    return { command: command.name, data: { path }, message: `screenshot: ${path}`, status: "ok" };
   }
 
   if (command.name === "install") {
     const password = requirePassword(context);
-    console.log(await installPackage({ ...context, password }, command.zipPath));
+    const message = await installPackage({ ...context, password }, command.zipPath);
+    return { command: command.name, data: { message }, message, status: "ok" };
   }
+
+  throw new Error(`unsupported command: ${(command as Command).name}`);
+};
+
+const parseGlobalOptions = (argv: readonly string[]): CliOptions => {
+  const args: string[] = [];
+  let outputMode: OutputMode = "text";
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+
+    if (arg === "--json") {
+      outputMode = "json";
+      continue;
+    }
+
+    if (arg === "--output") {
+      const value = argv[index + 1];
+
+      if (value !== "json" && value !== "text") {
+        fail("usage: rokit [--json|--output json|--output text] <command>");
+      }
+
+      outputMode = value === "json" ? "json" : "text";
+      index += 1;
+      continue;
+    }
+
+    args.push(arg);
+  }
+
+  return { args, outputMode };
+};
+
+const inferOutputMode = (argv: readonly string[]): OutputMode => {
+  if (argv.includes("--json")) {
+    return "json";
+  }
+
+  const outputIndex = argv.indexOf("--output");
+  return argv[outputIndex + 1] === "json" ? "json" : "text";
+};
+
+const printResult = (outputMode: OutputMode, result: CommandResult): void => {
+  if (outputMode === "json") {
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  if (result.message !== undefined) {
+    console.log(result.message);
+    return;
+  }
+
+  console.log(JSON.stringify(result.data, null, 2));
+};
+
+const printError = (outputMode: OutputMode, message: string): void => {
+  if (outputMode === "json") {
+    console.error(JSON.stringify({ error: { message }, status: "failed" }, null, 2));
+    return;
+  }
+
+  console.error(message);
 };
 
 const parseCommand = (argv: readonly string[]): Command => {
@@ -379,6 +500,12 @@ const formatNodeCondition = ({ expectation, nodeName }: NodeCondition): string =
   return `${nodeName} ${expectation.state}${suffix}`;
 };
 
+const formatNodeData = ({ expectation, nodeName, timeoutMs }: NodeCondition) => ({
+  expectation,
+  nodeName,
+  timeoutMs,
+});
+
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -436,6 +563,10 @@ usage:
   rokit screenshot <output-path>
   rokit install <zip-path>
   rokit --version
+
+global options:
+  --json
+  --output json | text
 
 environment:
   ROKIT_TARGET=<roku-ip>

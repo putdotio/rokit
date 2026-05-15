@@ -6,6 +6,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 ## Patterns
 
 - Keep CLI wiring thin: parse/dispatch commands, then call named Roku helpers.
+- Keep human output stable; `--json` / `--output json` should wrap every
+  command result and error in a deterministic object for agents.
 - Keep `src/index.ts` as the public library surface for app-specific scenario
   scripts. Export generic Roku/SceneGraph primitives only.
 - Treat `process.cwd()` as the consumer app root.
