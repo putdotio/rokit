@@ -49,10 +49,12 @@ App-specific scenario scripts can also import the generic helpers:
 
 ```ts
 import {
+  assertNamedNodeState,
+  assertNamedNodeTranslation,
   assertSceneGraphNode,
   pressKey,
   querySceneGraph,
-  readNamedNodeTranslation,
+  waitForSceneGraphAssertion,
   type RokuContext,
 } from "@putdotio/rokit";
 
@@ -71,7 +73,10 @@ const context: RokuContext = {
 await pressKey(context, "Info");
 const xml = await querySceneGraph(context, { attempts: 3 });
 await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
-console.log(readNamedNodeTranslation(xml, "videoPlayerScreen"));
+assertNamedNodeTranslation(xml, "videoPlayerScreen", 0, 0);
+await waitForSceneGraphAssertion(context, "expected player", (xml) => {
+  assertNamedNodeState(xml, "videoPlayerScreen", "visible");
+});
 ```
 
 ## Commands
@@ -149,6 +154,8 @@ tokens, and app-specific media identifiers do not belong in git.
 - raw ECP queries
 - SceneGraph state queries and named-node assertions
 - SceneGraph attribute, numeric geometry, bounds, and translation readers
+- SceneGraph geometry assertions, status/failure readers, and custom assertion
+  wait loops
 - screenshots
 
 App repositories should keep their own scenario commands for product behavior,

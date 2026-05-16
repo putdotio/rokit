@@ -57,6 +57,13 @@ export type RetryOptions = {
   readonly retryDelayMs?: number;
 };
 
+export type SceneGraphAssertion = (xml: string) => void;
+
+export type WaitForSceneGraphAssertionOptions = {
+  readonly pollIntervalMs?: number;
+  readonly timeoutMs?: number;
+};
+
 export const checkDevice = async (context: RokuContext): Promise<DeviceSummary> => {
   const deviceInfo = await fetchText(context, "/query/device-info");
   const installerStatus = await fetchInstallerStatus(context);
@@ -190,6 +197,33 @@ export const waitForSceneGraphNode = async (
 
   const suffix = lastError ? `; last observation: ${lastError}` : "";
   throw new Error(`expected SceneGraph node "${nodeName}" to match condition${suffix}`);
+};
+
+export const waitForSceneGraphAssertion = async (
+  context: RokuContext,
+  description: string,
+  assertXml: SceneGraphAssertion,
+  options: WaitForSceneGraphAssertionOptions = {},
+): Promise<string> => {
+  const timeoutMs = options.timeoutMs ?? 30_000;
+  const pollIntervalMs = options.pollIntervalMs ?? 500;
+  const start = Date.now();
+  let lastError: string | undefined;
+
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const xml = await querySceneGraph(context);
+      assertXml(xml);
+      return xml;
+    } catch (error) {
+      lastError = formatErrorMessage(error);
+    }
+
+    await sleep(pollIntervalMs);
+  }
+
+  const suffix = lastError ? `; last observation: ${lastError}` : "";
+  throw new Error(`${description}${suffix}`);
 };
 
 export const installPackage = async (

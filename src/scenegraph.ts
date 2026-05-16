@@ -1,8 +1,12 @@
-import { readXmlAttribute } from "./xml.js";
+import { readXmlAttribute, readXmlTag } from "./xml.js";
 
 export type NodeState = "absent" | "hidden" | "visible";
 export type SceneGraphBounds = readonly [x: number, y: number, width: number, height: number];
 export type SceneGraphPoint = readonly [x: number, y: number];
+export type SceneGraphStatus = {
+  readonly error?: string;
+  readonly status?: string;
+};
 
 export type NodeExpectation =
   | {
@@ -99,10 +103,66 @@ export const readNamedNodeTranslation = (
   return [parts[0], parts[1]];
 };
 
+export const readSceneGraphStatus = (xml: string): SceneGraphStatus => ({
+  error: readXmlTag(xml, "error"),
+  status: readXmlTag(xml, "status"),
+});
+
+export const readSceneGraphFailure = (xml: string): string | undefined => {
+  const { error, status } = readSceneGraphStatus(xml);
+
+  return status === "FAILED" ? (error ?? "unknown") : undefined;
+};
+
 export const isNamedNodeVisible = (xml: string, nodeName: string): boolean => {
   const attributes = readNamedNodeAttributes(xml, nodeName);
 
   return attributes !== undefined && !attributes.includes('visible="false"');
+};
+
+export const assertSceneGraphNumberNear = (
+  actual: number | undefined,
+  expected: number,
+  label: string,
+  tolerance = 1,
+): void => {
+  if (actual === undefined || Math.abs(actual - expected) > tolerance) {
+    throw new Error(`expected ${label} ${expected}, got ${actual ?? "missing"}`);
+  }
+};
+
+export const assertNamedNodeTranslation = (
+  xml: string,
+  nodeName: string,
+  expectedX: number,
+  expectedY: number,
+  tolerance = 1,
+): void => {
+  const translation = readNamedNodeTranslation(xml, nodeName);
+
+  assertSceneGraphNumberNear(translation?.[0], expectedX, `${nodeName} x`, tolerance);
+  assertSceneGraphNumberNear(translation?.[1], expectedY, `${nodeName} y`, tolerance);
+};
+
+export const assertNamedNodeSize = (
+  xml: string,
+  nodeName: string,
+  expectedWidth: number,
+  expectedHeight: number,
+  tolerance = 1,
+): void => {
+  assertSceneGraphNumberNear(
+    readNamedNodeNumber(xml, nodeName, "width"),
+    expectedWidth,
+    `${nodeName} width`,
+    tolerance,
+  );
+  assertSceneGraphNumberNear(
+    readNamedNodeNumber(xml, nodeName, "height"),
+    expectedHeight,
+    `${nodeName} height`,
+    tolerance,
+  );
 };
 
 export const assertNamedNode = (

@@ -1,16 +1,22 @@
 import { describe, expect, it } from "vitest";
 import {
+  assertNamedNodeSize,
+  assertNamedNodeTranslation,
   assertNamedNode,
+  assertSceneGraphNumberNear,
   isNamedNodeVisible,
   parseSceneGraphNumberList,
   readNamedNodeAttribute,
   readNamedNodeBounds,
   readNamedNodeNumber,
   readNamedNodeTranslation,
+  readSceneGraphFailure,
+  readSceneGraphStatus,
 } from "../src/scenegraph.js";
 
 const xml = `
 <All_Nodes>
+  <status>OK</status>
   <Group name="videoPlayerScreen" visible="true" translation="[0,0]" />
   <Label name="title" text="Big Buck Bunny" />
   <Group name="osd" visible="false" />
@@ -32,6 +38,18 @@ describe("SceneGraph helpers", () => {
     expect(readNamedNodeBounds(xml, "progressFill")).toEqual([0, 23, 400, 12]);
     expect(readNamedNodeTranslation(xml, "videoPlayerScreen")).toEqual([0, 0]);
     expect(readNamedNodeTranslation(xml, "missing")).toBeUndefined();
+  });
+
+  it("asserts numeric geometry with compact failures", () => {
+    expect(() => assertSceneGraphNumberNear(11, 10, "progressTrack height")).not.toThrow();
+    expect(() => assertSceneGraphNumberNear(undefined, 10, "progressTrack height")).toThrow(
+      "expected progressTrack height 10, got missing",
+    );
+    expect(() => assertNamedNodeTranslation(xml, "videoPlayerScreen", 0, 0)).not.toThrow();
+    expect(() => assertNamedNodeSize(xml, "progressFill", 400, 12)).not.toThrow();
+    expect(() => assertNamedNodeSize(xml, "progressTrack", 100, 10)).toThrow(
+      "expected progressTrack width 100, got 1728",
+    );
   });
 
   it("detects visible nodes", () => {
@@ -62,5 +80,14 @@ describe("SceneGraph helpers", () => {
     expect(() => assertNamedNode(xml, "title", { state: "visible", text: "Other" })).toThrow(
       'expected "title" text "Other", got "Big Buck Bunny"',
     );
+  });
+
+  it("reads SceneGraph query status", () => {
+    expect(readSceneGraphStatus(xml)).toEqual({ error: undefined, status: "OK" });
+    expect(readSceneGraphFailure(xml)).toBeUndefined();
+    expect(
+      readSceneGraphFailure("<app-ui><status>FAILED</status><error>boom</error></app-ui>"),
+    ).toBe("boom");
+    expect(readSceneGraphFailure("<app-ui><status>FAILED</status></app-ui>")).toBe("unknown");
   });
 });

@@ -11,14 +11,24 @@ export {
   takeScreenshot,
   validateRemoteKey,
   waitForActiveApp,
+  waitForSceneGraphAssertion,
   waitForSceneGraphNode,
 } from "./roku.js";
-export type { DeviceSummary, RemoteKey, RokuContext } from "./roku.js";
-export type { RetryOptions } from "./roku.js";
+export type {
+  DeviceSummary,
+  RemoteKey,
+  RetryOptions,
+  RokuContext,
+  SceneGraphAssertion,
+  WaitForSceneGraphAssertionOptions,
+} from "./roku.js";
 export {
+  assertNamedNodeSize,
   assertNamedNode,
   assertNamedNodeState,
   assertNamedNodeText,
+  assertNamedNodeTranslation,
+  assertSceneGraphNumberNear,
   isNamedNodeVisible,
   parseSceneGraphNumberList,
   readNamedNodeAttribute,
@@ -26,12 +36,15 @@ export {
   readNamedNodeBounds,
   readNamedNodeNumber,
   readNamedNodeTranslation,
+  readSceneGraphFailure,
+  readSceneGraphStatus,
 } from "./scenegraph.js";
 export type {
   NodeExpectation,
   NodeState,
   SceneGraphBounds,
   SceneGraphPoint,
+  SceneGraphStatus,
 } from "./scenegraph.js";
 export { readActiveApp, readXmlAttribute, readXmlTag } from "./xml.js";
 export type { ActiveApp } from "./xml.js";
