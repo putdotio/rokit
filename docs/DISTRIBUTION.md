@@ -29,9 +29,12 @@ Required protected inputs:
 
 - `PUTIO_RELEASE_BOT_CLIENT_ID` as a repository or Environment variable
 - `PUTIO_RELEASE_BOT_PRIVATE_KEY` as an Environment secret
-- `NPM_TOKEN` as an Environment secret
 
-Release writes use the `putio-release-bot` installation token. The default `GITHUB_TOKEN` remains read-only.
+The npm package uses Trusted Publishing from GitHub Actions. On npm, configure owner `putdotio`, repository `rokit`, workflow `ci.yml`, and Environment named `release` for the package.
+
+The workflow grants `id-token: write` so npm can mint short-lived publish credentials and provenance; do not add a long-lived `NPM_TOKEN` secret.
+
+Release writes use the `putio-release-bot` installation token. The default `GITHUB_TOKEN` remains read-only, and the release-bot remote is configured only after dependencies are installed.
 
 ## Release Smoke
 
