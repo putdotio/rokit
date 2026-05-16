@@ -32,7 +32,7 @@ Required protected inputs:
 
 The npm package uses Trusted Publishing from GitHub Actions. On npm, configure owner `putdotio`, repository `rokit`, workflow `ci.yml`, and Environment named `release` for the package.
 
-The workflow grants `id-token: write` so npm mints short-lived publish credentials and provenance for the release job.
+During the `@semantic-release/npm` publish step, npm detects the GitHub OIDC identity, mints short-lived publish credentials, and publishes provenance for the release job.
 
 Release writes use the `putio-release-bot` installation token. The default `GITHUB_TOKEN` remains read-only, and the release-bot remote is configured only after dependencies are installed.
 
