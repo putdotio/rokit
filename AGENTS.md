@@ -3,6 +3,19 @@
 `rokit` is a small Node CLI that wraps generic Roku device harness primitives.
 Keep it platform-focused, typed, and useful for both humans and agents.
 
+## Generic Tool Boundary
+
+- Keep `rokit` free of put.io product behavior. Do not add put.io app IDs,
+  deep links, content IDs, account data, credentials, journeys, UI node names,
+  or product assertions.
+- `@putdotio/rokit`, `putdotio/rokit`, release-bot wiring, copyright, and
+  security contacts are ownership/publishing metadata only; do not treat them
+  as permission to add product-specific fixtures.
+- Use neutral examples such as `dev`, `Example Channel`, `videoPlayerScreen`,
+  and synthetic SceneGraph/XML data when docs or tests need sample app data.
+- Consumer app repos own product scenario scripts, app-specific selectors,
+  playback/content assertions, and review artifacts.
+
 ## Patterns
 
 - Keep CLI wiring thin: parse/dispatch commands, then call named Roku helpers.

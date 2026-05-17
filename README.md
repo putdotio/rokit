@@ -1,8 +1,4 @@
 <div align="center">
-  <p>
-    <img src="https://static.put.io/images/putio-boncuk.png" width="72">
-  </p>
-
   <h1>rokit</h1>
 
   <p>A tiny CLI companion for Roku device harness work.</p>

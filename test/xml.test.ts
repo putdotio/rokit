@@ -5,11 +5,11 @@ describe("XML helpers", () => {
   it("reads active-app responses with attributes", () => {
     expect(
       readActiveApp(
-        '<active-app><app id="dev" type="appl" version="1.0">put.io</app></active-app>',
+        '<active-app><app id="dev" type="appl" version="1.0">Example Channel</app></active-app>',
       ),
     ).toEqual({
       id: "dev",
-      name: "put.io",
+      name: "Example Channel",
       type: "appl",
       version: "1.0",
     });
