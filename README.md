@@ -21,7 +21,8 @@ own app-specific journeys, content IDs, credentials, or product assertions.
 
 ## Usage
 
-Create `.rokit/.env` or export environment variables in the app repo:
+Create `.env` or `.env.local`, or export environment variables in the app
+repo:
 
 ```bash
 ROKIT_TARGET=<roku-ip>
@@ -47,6 +48,17 @@ pnpm exec rokit proof artifacts/live/proof --screenshot
 pnpm exec rokit screenshot artifacts/live/player.png
 pnpm exec rokit --json active-app
 ```
+
+For a stronger local device probe from this repo, configure `ROKIT_TARGET` and
+`ROKIT_PASSWORD`, then run:
+
+```bash
+pnpm live:probe
+```
+
+The probe packages `examples/live-probe-channel`, installs it into the Roku
+developer slot, launches it, waits for a generic SceneGraph node, sends remote
+keys, and writes proof artifacts under `.rokit/live-probe/`.
 
 App-specific scenario scripts can also import the generic helpers:
 
@@ -150,8 +162,9 @@ When stdout is not a TTY, command output defaults to JSON unless
 - `wait-media-player` waits until `/query/media-player` reports a target state
   such as `play`, `pause`, or `buffer`.
 - `wait-ready` waits for the requested app to be foregrounded, checks
-  SceneGraph completeness on a best-effort basis, and can also wait for a
-  media-player state or named SceneGraph node.
+  SceneGraph completeness, and can also wait for a media-player state or named
+  SceneGraph node. Without `--node`, SceneGraph is best-effort and reports
+  partial metadata when unavailable.
 - `launch` opens an app and waits until it is active. Use repeated `--param`
   values for deeplink parameters. Roku launch responses can race app startup, so
   launch accepts transient timeout/fetch failures and then verifies foreground
@@ -163,7 +176,7 @@ When stdout is not a TTY, command output defaults to JSON unless
 - `sgnodes` prints the raw SceneGraph tree from `/query/sgnodes/all`. Library
   callers can pass retry options to `querySceneGraph`; use
   `requireComplete: true` when a scenario needs to reject partial SceneGraph
-  dumps that include `<All_Nodes>` but no root `<App>` node yet.
+  dumps.
 - `assert-node` checks a named SceneGraph node once.
 - `wait-node` polls SceneGraph until a named node condition matches.
 - `screenshot` saves a developer screenshot. It requires `ROKIT_PASSWORD`.
@@ -182,6 +195,7 @@ ROKIT_TARGET=<roku-ip>
 ROKIT_PASSWORD=<developer-mode-password>
 ROKIT_USERNAME=rokudev
 ROKIT_TIMEOUT_MS=10000
+ROKIT_LIVE_PROBE_DIR=.rokit/live-probe
 ```
 
 `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are accepted as fallbacks for app

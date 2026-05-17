@@ -121,7 +121,9 @@ export const isNamedNodeVisible = (xml: string, nodeName: string): boolean => {
 };
 
 export const isCompleteSceneGraph = (xml: string): boolean =>
-  !xml.includes("<All_Nodes>") || xml.includes("<App ");
+  !xml.includes("<All_Nodes>") ||
+  (xml.includes("</sgnodes>") &&
+    (readSceneGraphStatus(xml).status !== undefined || readSceneGraphFailure(xml) !== undefined));
 
 export const escapeXmlAttribute = (value: string): string =>
   value

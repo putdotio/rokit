@@ -19,8 +19,9 @@ repo.
 3. Prefer structured output. In automation, rely on the non-TTY JSON default or
    pass `--json` explicitly.
 4. Use `--fields` to keep observations small when only a few values are needed.
-5. For live proof, use `rokit snapshot` for a quick state read or
-   `rokit proof <output-dir>` for review artifacts.
+5. For live proof, use `rokit snapshot` for a quick state read,
+   `rokit proof <output-dir>` for review artifacts, or `pnpm live:probe` in the
+   rokit repo for the full generic package/install/launch/input/proof probe.
 6. Use `rokit wait-ready <app-id>` after launch when the app can race ECP or
    SceneGraph readiness.
 7. Use `rokit press --until-node ...` for bounded navigation loops instead of

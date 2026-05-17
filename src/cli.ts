@@ -465,8 +465,7 @@ const runCommand = async (
 
   if (command.name === "wait-ready") {
     const data = await waitForReady(deviceContext, command);
-    const failedObservations =
-      data.sceneGraph.status === "failed" && !command.node ? ["sceneGraph"] : [];
+    const failedObservations = data.sceneGraph.status === "failed" ? ["sceneGraph"] : [];
     return {
       command: command.name,
       data,

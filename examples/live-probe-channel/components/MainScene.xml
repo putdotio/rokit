@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+  <children>
+    <Rectangle
+      id="background"
+      width="1280"
+      height="720"
+      color="0x101820FF" />
+    <Label
+      id="title"
+      text="Rokit Live Probe"
+      translation="[120, 140]"
+      width="1040"
+      height="80"
+      horizAlign="center"
+      vertAlign="center" />
+    <Label
+      id="status"
+      text="Install, launch, input, and proof OK"
+      translation="[120, 250]"
+      width="1040"
+      height="60"
+      horizAlign="center"
+      vertAlign="center" />
+  </children>
+</component>

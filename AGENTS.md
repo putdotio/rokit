@@ -28,6 +28,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Treat `process.cwd()` as the consumer app root.
 - Keep `.rokit/` consumer-local; it can hold env, generated artifacts, and
   transient device state.
+- Keep `examples/live-probe-channel` generic. It exists only to prove package,
+  install, launch, input, SceneGraph, screenshot, and proof mechanics.
 - Wrap `roku-deploy` for package publish, screenshots, and device metadata when
   it already owns the platform mechanics.
 - Use Roku ECP for launch, keypresses, active-app queries, and raw runtime
@@ -81,6 +83,7 @@ Live Roku checks when a developer-enabled device exists:
 
 ```bash
 ROKIT_TARGET=<roku-ip> vp run live:smoke
+ROKIT_TARGET=<roku-ip> ROKIT_PASSWORD=<password> vp run live:probe
 ROKIT_TARGET=<roku-ip> vp exec rokit check
 ROKIT_TARGET=<roku-ip> vp exec rokit launch dev
 ROKIT_TARGET=<roku-ip> vp exec rokit press Info Back

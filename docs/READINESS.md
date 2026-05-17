@@ -13,14 +13,14 @@ Overall: B+
 | bootable   | pass   | `pnpm smoke` builds the CLI and checks `--version` plus `--help`                                                                                                                         | no server boot surface, by design       |
 | testable   | pass   | `pnpm verify` runs TypeScript, bundle, unit tests, and npm pack dry run                                                                                                                  | live Roku checks require local hardware |
 | observable | pass   | CLI commands print active app, device info, raw ECP state, SceneGraph XML, snapshots, proof bundles, screenshots, compact assertion failures, and JSON output by default in non-TTY runs | no CI hardware lane                     |
-| verifiable | pass   | CI runs `pnpm verify`; `pnpm live:smoke` proves a configured Roku responds; `rokit proof` collects review artifacts for live runs                                                        | no CI hardware lane                     |
+| verifiable | pass   | CI runs `pnpm verify`; `pnpm live:smoke` proves a configured Roku responds; `pnpm live:probe` packages, installs, launches, drives, asserts, screenshots, and proofs a generic channel   | no CI hardware lane                     |
 
 ## Layers
 
 - Boot: `pnpm smoke`, `rokit describe`
 - Smoke: `pnpm smoke`, `rokit check`
 - Interact: `rokit press`, `rokit launch`, `rokit query`, `rokit sgnodes`
-- E2e: `pnpm live:smoke` and `rokit proof <output-dir>` for a configured developer-enabled Roku
+- E2e: `pnpm live:probe` for a configured developer-enabled Roku
 - Enforce: GitHub Actions `verify`, optional `.git-hooks/pre-push`
 - Observe: ECP responses, SceneGraph XML, `rokit snapshot`, `rokit proof`, screenshots, concise command output
 - Isolate: `.rokit/` and `.env` stay local per worktree
@@ -64,3 +64,17 @@ Optional live smoke:
 ```bash
 ROKIT_TARGET=<roku-ip> pnpm live:smoke
 ```
+
+Full local live probe:
+
+```bash
+cp .env.example .env
+# Fill ROKIT_TARGET and ROKIT_PASSWORD.
+pnpm live:probe
+```
+
+`pnpm live:probe` reads `.env` and `.env.local`, accepts `ROKU_DEV_TARGET` and
+`ROKU_DEV_PASSWORD` as fallbacks, copies `examples/live-probe-channel` into
+`.rokit/live-probe/app`, packages it, installs it into the Roku developer slot,
+launches `dev`, checks generic SceneGraph labels, sends `Info Back`, and writes
+proof artifacts to `.rokit/live-probe/artifacts`.

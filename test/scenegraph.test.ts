@@ -95,7 +95,14 @@ describe("SceneGraph helpers", () => {
   });
 
   it("detects complete SceneGraph dumps and escaped text", () => {
-    expect(isCompleteSceneGraph("<All_Nodes><App /></All_Nodes>")).toBe(true);
+    expect(
+      isCompleteSceneGraph("<sgnodes><All_Nodes><App /></All_Nodes><status>OK</status></sgnodes>"),
+    ).toBe(true);
+    expect(
+      isCompleteSceneGraph(
+        '<sgnodes><All_Nodes><Label name="title" text="Rokit Example" /></All_Nodes><status>OK</status></sgnodes>',
+      ),
+    ).toBe(true);
     expect(isCompleteSceneGraph("<All_Nodes><Label /></All_Nodes>")).toBe(false);
     expect(isCompleteSceneGraph("<status>FAILED</status>")).toBe(true);
     expect(escapeXmlAttribute('Oops & "nope"')).toBe("Oops &amp; &quot;nope&quot;");

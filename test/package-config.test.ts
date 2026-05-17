@@ -8,6 +8,7 @@ type PackageConfig = {
   engines: {
     node: string;
   };
+  files: readonly string[];
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -16,7 +17,12 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const readPackageConfig = (): PackageConfig => {
   const parsed: unknown = JSON.parse(readFileSync("package.json", "utf8"));
 
-  if (!isRecord(parsed) || !isRecord(parsed.devDependencies) || !isRecord(parsed.engines)) {
+  if (
+    !isRecord(parsed) ||
+    !isRecord(parsed.devDependencies) ||
+    !isRecord(parsed.engines) ||
+    !Array.isArray(parsed.files)
+  ) {
     throw new Error("package.json is missing devDependencies or engines");
   }
 
@@ -34,6 +40,7 @@ const readPackageConfig = (): PackageConfig => {
     engines: {
       node: nodeEngine,
     },
+    files: parsed.files.filter((value): value is string => typeof value === "string"),
   };
 };
 
@@ -47,5 +54,13 @@ describe("package config", () => {
     expect(packageConfig.devDependencies["@types/node"]).toMatch(/^\^24\./);
     expect(lockfile).toContain("@types/node@24.");
     expect(lockfile).not.toContain("@types/node@25.");
+  });
+
+  it("packages the generic live probe with agent-facing docs", () => {
+    const packageConfig = readPackageConfig();
+
+    expect(packageConfig.files).toEqual(
+      expect.arrayContaining(["AGENTS.md", "docs", "examples", "README.md", "SECURITY.md"]),
+    );
   });
 });

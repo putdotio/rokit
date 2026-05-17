@@ -19,7 +19,7 @@ Overall: 16 / 21, Agent-first
 | Context-window discipline | 2     | `--fields` filters structured output for all commands                                                                                                                                                                           | no streaming pagination because commands are single-observation surfaces |
 | Input hardening           | 3     | ECP paths reject query strings, fragments, traversal, backslashes, control characters, and encoded path segments; generated output paths are sandboxed to the current app root; ECP path segments are encoded at the HTTP layer | none for the current command set                                         |
 | Safety rails              | 2     | `--dry-run` validates mutating commands before device or filesystem side effects                                                                                                                                                | no response sanitization layer for device-returned strings               |
-| Agent knowledge packaging | 2     | `AGENTS.md`, this scorecard, readiness docs, and `docs/skills/rokit-harness/SKILL.md` package agent-facing rules                                                                                                                | not a full versioned skill library                                       |
+| Agent knowledge packaging | 3     | `AGENTS.md`, this scorecard, readiness docs, `docs/skills/rokit-harness/SKILL.md`, and `examples/live-probe-channel` package agent-facing rules and runnable generic proof material                                             | not a full versioned skill library                                       |
 
 ## Surface Coverage
 
@@ -40,6 +40,9 @@ Overall: 16 / 21, Agent-first
   best-effort SceneGraph completeness and optional media-player or node waits.
 - New interaction surface: `press --until-node` repeats a generic remote-key
   sequence until a SceneGraph condition matches.
+- New live probe surface: `pnpm live:probe` packages and installs
+  `examples/live-probe-channel`, launches the Roku developer slot, asserts
+  generic SceneGraph labels, sends remote keys, and writes screenshot proof.
 
 ## Agent Rules
 
