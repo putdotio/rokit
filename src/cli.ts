@@ -10,9 +10,11 @@ import {
   pressKey,
   queryActiveApp,
   queryEcp,
+  queryMediaPlayer,
   querySceneGraph,
   takeScreenshot,
   waitForActiveApp,
+  waitForMediaPlayerState,
   waitForSceneGraphNode,
   type RokuContext,
 } from "./roku.js";
@@ -63,11 +65,13 @@ type Command =
   | { readonly name: "device-info" }
   | { readonly name: "install"; readonly zipPath: string }
   | { readonly name: "launch"; readonly args: LaunchArgs }
+  | { readonly name: "media-player" }
   | { readonly args: PressArgs; readonly name: "press" }
   | { readonly name: "query"; readonly path: string }
   | { readonly name: "screenshot"; readonly outputPath: string }
   | { readonly name: "sgnodes" }
   | { readonly appId: string; readonly name: "wait-active"; readonly timeoutMs?: number }
+  | { readonly name: "wait-media-player"; readonly state: string; readonly timeoutMs?: number }
   | { readonly args: NodeCondition; readonly name: "wait-node" };
 
 const require = createRequire(import.meta.url);
@@ -136,6 +140,26 @@ const runCommand = async (context: RokuContext, command: Command): Promise<Comma
       command: command.name,
       data: app,
       message: `active app: ${app.id} ${app.name} ${app.version}`.trim(),
+      status: "ok",
+    };
+  }
+
+  if (command.name === "media-player") {
+    const mediaPlayer = await queryMediaPlayer(context);
+    return {
+      command: command.name,
+      data: mediaPlayer,
+      message: formatMediaPlayerMessage(mediaPlayer),
+      status: "ok",
+    };
+  }
+
+  if (command.name === "wait-media-player") {
+    const mediaPlayer = await waitForMediaPlayerState(context, command.state, command.timeoutMs);
+    return {
+      command: command.name,
+      data: mediaPlayer,
+      message: formatMediaPlayerMessage(mediaPlayer),
       status: "ok",
     };
   }
@@ -311,6 +335,24 @@ const parseCommand = (argv: readonly string[]): Command => {
 
   if (name === "active-app") {
     return { name };
+  }
+
+  if (name === "media-player") {
+    return { name };
+  }
+
+  if (name === "wait-media-player") {
+    const state = args[0];
+
+    if (!state) {
+      fail("usage: rokit wait-media-player <state> [--timeout-ms <ms>]");
+    }
+
+    return {
+      name,
+      state,
+      timeoutMs: parseTimeoutOption(args.slice(1), "rokit wait-media-player <state>"),
+    };
   }
 
   if (name === "wait-active") {
@@ -506,6 +548,22 @@ const formatNodeData = ({ expectation, nodeName, timeoutMs }: NodeCondition) => 
   timeoutMs,
 });
 
+const formatMediaPlayerMessage = (
+  mediaPlayer: Awaited<ReturnType<typeof queryMediaPlayer>>,
+): string => {
+  const parts = [
+    `state=${mediaPlayer.state ?? "unknown"}`,
+    `container=${mediaPlayer.container ?? "unknown"}`,
+    `position=${formatMaybeMs(mediaPlayer.positionMs)}`,
+    `duration=${formatMaybeMs(mediaPlayer.durationMs)}`,
+  ];
+
+  return `media-player: ${parts.join(" ")}`;
+};
+
+const formatMaybeMs = (value: number | undefined): string =>
+  value === undefined ? "unknown" : `${value}ms`;
+
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -553,7 +611,9 @@ usage:
   rokit check
   rokit device-info
   rokit active-app
+  rokit media-player
   rokit wait-active <app-id> [--timeout-ms <ms>]
+  rokit wait-media-player <state> [--timeout-ms <ms>]
   rokit launch <app-id> [--param key=value]
   rokit press [--delay-ms <ms>] <key> [key...]
   rokit query <ecp-path>

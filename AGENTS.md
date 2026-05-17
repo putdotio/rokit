@@ -30,6 +30,9 @@ Keep it platform-focused, typed, and useful for both humans and agents.
   it already owns the platform mechanics.
 - Use Roku ECP for launch, keypresses, active-app queries, and raw runtime
   state.
+- Media-player helpers can parse and wait on Roku `/query/media-player` state,
+  but app repos own expectations about specific content, playback URLs, and
+  containers.
 - Keep SceneGraph helpers generic: node state, text, attributes, focus/state
   waits, and raw tree output are okay; product-specific screen contracts stay in
   app repos.

@@ -16,6 +16,7 @@ describe("rokit cli", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("rokit - Roku device harness helper");
     expect(result.stdout).toContain("rokit check");
+    expect(result.stdout).toContain("rokit media-player");
     expect(result.stdout).toContain("rokit wait-node");
     expect(result.stdout).toContain("--output json | text");
     expect(result.stderr).toBe("");

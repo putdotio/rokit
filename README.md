@@ -81,7 +81,9 @@ await waitForSceneGraphAssertion(context, "expected player", (xml) => {
 rokit check
 rokit device-info
 rokit active-app
+rokit media-player
 rokit wait-active <app-id> [--timeout-ms <ms>]
+rokit wait-media-player <state> [--timeout-ms <ms>]
 rokit launch <app-id> [--param key=value]
 rokit press [--delay-ms <ms>] <key> [key...]
 rokit query <ecp-path>
@@ -107,8 +109,12 @@ and reports failures as `{ "status": "failed", "error": { "message": "..." } }`.
   is reachable.
 - `device-info` prints enhanced Roku device metadata as JSON.
 - `active-app` prints the foreground app.
+- `media-player` prints parsed `/query/media-player` playback state, including
+  state, container, position, duration, and format metadata.
 - `wait-active` waits until the requested app is foregrounded and tolerates
   transient ECP read failures while polling.
+- `wait-media-player` waits until `/query/media-player` reports a target state
+  such as `play`, `pause`, or `buffer`.
 - `launch` opens an app and waits until it is active. Use repeated `--param`
   values for deeplink parameters. Roku launch responses can race app startup, so
   launch accepts transient timeout/fetch failures and then verifies foreground
@@ -148,6 +154,7 @@ tokens, and app-specific media identifiers do not belong in git.
 - launch and deeplink parameters
 - remote keypresses
 - raw ECP queries
+- parsed media-player state from `/query/media-player`
 - SceneGraph state queries and named-node assertions
 - SceneGraph attribute, numeric geometry, bounds, and translation readers
 - SceneGraph geometry assertions, status/failure readers, and custom assertion

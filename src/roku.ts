@@ -1,7 +1,7 @@
 import * as rokuDeploy from "roku-deploy";
 import { basename, dirname, extname, resolve } from "node:path";
 import { assertNamedNode, type NodeExpectation } from "./scenegraph.js";
-import { readActiveApp, readXmlTag, type ActiveApp } from "./xml.js";
+import { readActiveApp, readXmlAttribute, readXmlTag, type ActiveApp } from "./xml.js";
 
 const ecpPort = 8060;
 
@@ -50,6 +50,35 @@ export type DeviceSummary = {
   readonly installerStatus: number;
   readonly model: string;
   readonly name: string;
+};
+
+export type MediaPlayerState =
+  | "buffer"
+  | "close"
+  | "error"
+  | "none"
+  | "open"
+  | "pause"
+  | "play"
+  | "stop"
+  | string;
+
+export type MediaPlayerInfo = {
+  readonly audio?: string;
+  readonly buffering?: {
+    readonly current?: number;
+    readonly max?: number;
+    readonly target?: number;
+  };
+  readonly captions?: string;
+  readonly container?: string;
+  readonly durationMs?: number;
+  readonly error: boolean;
+  readonly isLive?: boolean;
+  readonly positionMs?: number;
+  readonly state?: MediaPlayerState;
+  readonly video?: string;
+  readonly videoResolution?: string;
 };
 
 export type RetryOptions = {
@@ -143,6 +172,82 @@ export const pressKey = async (context: RokuContext, key: string): Promise<void>
 
 export const queryEcp = async (context: RokuContext, path: string): Promise<string> =>
   await fetchText(context, path.startsWith("/") ? path : `/${path}`);
+
+export const queryMediaPlayerXml = async (context: RokuContext): Promise<string> =>
+  await queryEcp(context, "/query/media-player");
+
+export const queryMediaPlayer = async (context: RokuContext): Promise<MediaPlayerInfo> =>
+  readMediaPlayerInfo(await queryMediaPlayerXml(context));
+
+export const readMediaPlayerInfo = (xml: string): MediaPlayerInfo => {
+  const playerAttributes = /<player(?:\s+([^>]*))?>/.exec(xml)?.[1] ?? "";
+  const formatAttributes = /<format(?:\s+([^>]*))?\/>/.exec(xml)?.[1] ?? "";
+  const bufferingAttributes = /<buffering(?:\s+([^>]*))?\/>/.exec(xml)?.[1];
+
+  return {
+    audio: readXmlAttribute(formatAttributes, "audio"),
+    buffering:
+      bufferingAttributes === undefined
+        ? undefined
+        : {
+            current: readXmlNumberAttribute(bufferingAttributes, "current"),
+            max: readXmlNumberAttribute(bufferingAttributes, "max"),
+            target: readXmlNumberAttribute(bufferingAttributes, "target"),
+          },
+    captions: readXmlAttribute(formatAttributes, "captions"),
+    container: readXmlAttribute(formatAttributes, "container"),
+    durationMs: readXmlNumberTag(xml, "duration"),
+    error: readXmlAttribute(playerAttributes, "error") === "true",
+    isLive: readXmlBooleanTag(xml, "is_live"),
+    positionMs: readXmlNumberTag(xml, "position"),
+    state: readXmlAttribute(playerAttributes, "state"),
+    video: readXmlAttribute(formatAttributes, "video"),
+    videoResolution: readXmlAttribute(formatAttributes, "video_res"),
+  };
+};
+
+export const readMediaPlayerState = (xml: string): MediaPlayerState | undefined =>
+  readMediaPlayerInfo(xml).state;
+
+export const readMediaPlayerPositionMs = (xml: string): number | undefined =>
+  readMediaPlayerInfo(xml).positionMs;
+
+export const readMediaPlayerContainer = (xml: string): string | undefined =>
+  readMediaPlayerInfo(xml).container;
+
+export const isActiveMediaPlayerState = (state: string | undefined): boolean =>
+  state === "buffer" || state === "pause" || state === "play";
+
+export const waitForMediaPlayerState = async (
+  context: RokuContext,
+  expectedState: MediaPlayerState,
+  timeoutMs = 10_000,
+): Promise<MediaPlayerInfo> => {
+  const start = Date.now();
+  let lastState: string | undefined;
+  let lastError: string | undefined;
+
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const mediaPlayer = await queryMediaPlayer(context);
+      lastState = mediaPlayer.state;
+      lastError = undefined;
+
+      if (mediaPlayer.state === expectedState) {
+        return mediaPlayer;
+      }
+    } catch (error) {
+      lastError = formatErrorMessage(error);
+    }
+
+    await sleep(500);
+  }
+
+  const suffix = lastError ? `; last ECP error: ${lastError}` : "";
+  throw new Error(
+    `expected media-player state ${expectedState}, got ${lastState ?? "unknown"}${suffix}`,
+  );
+};
 
 export const querySceneGraph = async (
   context: RokuContext,
@@ -324,6 +429,42 @@ const postLaunchMaybeAccepted = async (context: RokuContext, url: URL): Promise<
 
 const ecpUrl = (context: RokuContext, path: string): URL =>
   new URL(path, `http://${context.target}:${ecpPort}`);
+
+const readXmlNumberTag = (xml: string, tag: string): number | undefined => {
+  const rawValue = readXmlTag(xml, tag);
+  if (rawValue === undefined) {
+    return undefined;
+  }
+
+  const match = /-?\d+(?:\.\d+)?/.exec(rawValue);
+  if (!match) {
+    return undefined;
+  }
+
+  return Number(match[0]);
+};
+
+const readXmlBooleanTag = (xml: string, tag: string): boolean | undefined => {
+  const value = readXmlTag(xml, tag);
+  if (value === "true") {
+    return true;
+  }
+  if (value === "false") {
+    return false;
+  }
+
+  return undefined;
+};
+
+const readXmlNumberAttribute = (attributes: string, name: string): number | undefined => {
+  const value = readXmlAttribute(attributes, name);
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
 
 const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => {
