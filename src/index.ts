@@ -1,4 +1,5 @@
 export {
+  assertMediaPlayerContainer,
   assertSceneGraphNode,
   checkDevice,
   getDeviceInfo,
@@ -9,7 +10,9 @@ export {
   queryActiveApp,
   queryEcp,
   queryMediaPlayer,
+  queryMediaPlayerSafe,
   queryMediaPlayerXml,
+  queryMediaPlayerXmlSafe,
   querySceneGraph,
   readMediaPlayerContainer,
   readMediaPlayerInfo,
@@ -39,6 +42,8 @@ export {
   assertNamedNodeText,
   assertNamedNodeTranslation,
   assertSceneGraphNumberNear,
+  escapeXmlAttribute,
+  isCompleteSceneGraph,
   isNamedNodeVisible,
   parseSceneGraphNumberList,
   readNamedNodeAttribute,
@@ -48,6 +53,7 @@ export {
   readNamedNodeTranslation,
   readSceneGraphFailure,
   readSceneGraphStatus,
+  sceneGraphContainsText,
 } from "./scenegraph.js";
 export type {
   NodeExpectation,

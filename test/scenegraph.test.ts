@@ -3,6 +3,8 @@ import {
   assertNamedNodeSize,
   assertNamedNodeTranslation,
   assertNamedNode,
+  escapeXmlAttribute,
+  isCompleteSceneGraph,
   assertSceneGraphNumberNear,
   isNamedNodeVisible,
   parseSceneGraphNumberList,
@@ -12,6 +14,7 @@ import {
   readNamedNodeTranslation,
   readSceneGraphFailure,
   readSceneGraphStatus,
+  sceneGraphContainsText,
 } from "../src/scenegraph.js";
 
 const xml = `
@@ -89,5 +92,15 @@ describe("SceneGraph helpers", () => {
       readSceneGraphFailure("<app-ui><status>FAILED</status><error>boom</error></app-ui>"),
     ).toBe("boom");
     expect(readSceneGraphFailure("<app-ui><status>FAILED</status></app-ui>")).toBe("unknown");
+  });
+
+  it("detects complete SceneGraph dumps and escaped text", () => {
+    expect(isCompleteSceneGraph("<All_Nodes><App /></All_Nodes>")).toBe(true);
+    expect(isCompleteSceneGraph("<All_Nodes><Label /></All_Nodes>")).toBe(false);
+    expect(isCompleteSceneGraph("<status>FAILED</status>")).toBe(true);
+    expect(escapeXmlAttribute('Oops & "nope"')).toBe("Oops &amp; &quot;nope&quot;");
+    expect(
+      sceneGraphContainsText('<Label text="Oops &amp; &quot;nope&quot;" />', 'Oops & "nope"'),
+    ).toBe(true);
   });
 });

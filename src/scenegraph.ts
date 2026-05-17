@@ -120,6 +120,19 @@ export const isNamedNodeVisible = (xml: string, nodeName: string): boolean => {
   return attributes !== undefined && !attributes.includes('visible="false"');
 };
 
+export const isCompleteSceneGraph = (xml: string): boolean =>
+  !xml.includes("<All_Nodes>") || xml.includes("<App ");
+
+export const escapeXmlAttribute = (value: string): string =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+
+export const sceneGraphContainsText = (xml: string, text: string): boolean =>
+  xml.includes(escapeXmlAttribute(text));
+
 export const assertSceneGraphNumberNear = (
   actual: number | undefined,
   expected: number,

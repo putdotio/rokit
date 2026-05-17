@@ -47,9 +47,11 @@ App-specific scenario scripts can also import the generic helpers:
 import {
   assertNamedNodeState,
   assertNamedNodeTranslation,
+  assertMediaPlayerContainer,
   assertSceneGraphNode,
   pressKey,
   querySceneGraph,
+  sceneGraphContainsText,
   waitForSceneGraphAssertion,
   type RokuContext,
 } from "@putdotio/rokit";
@@ -67,11 +69,15 @@ const context: RokuContext = {
 };
 
 await pressKey(context, "Info");
-const xml = await querySceneGraph(context, { attempts: 3 });
+const xml = await querySceneGraph(context, { attempts: 3, requireComplete: true });
 await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
 assertNamedNodeTranslation(xml, "videoPlayerScreen", 0, 0);
+await assertMediaPlayerContainer(context, "mp4");
 await waitForSceneGraphAssertion(context, "expected player", (xml) => {
   assertNamedNodeState(xml, "videoPlayerScreen", "visible");
+  if (!sceneGraphContainsText(xml, "Ready")) {
+    throw new Error("expected ready text");
+  }
 });
 ```
 
@@ -123,7 +129,9 @@ and reports failures as `{ "status": "failed", "error": { "message": "..." } }`.
   sequences that need a stable gap between keys.
 - `query` prints a raw ECP response such as `/query/sgnodes/all`.
 - `sgnodes` prints the raw SceneGraph tree from `/query/sgnodes/all`. Library
-  callers can pass retry options to `querySceneGraph`.
+  callers can pass retry options to `querySceneGraph`; use
+  `requireComplete: true` when a scenario needs to reject partial SceneGraph
+  dumps that include `<All_Nodes>` but no root `<App>` node yet.
 - `assert-node` checks a named SceneGraph node once.
 - `wait-node` polls SceneGraph until a named node condition matches.
 - `screenshot` saves a developer screenshot. It requires `ROKIT_PASSWORD`.
@@ -155,8 +163,10 @@ tokens, and app-specific media identifiers do not belong in git.
 - remote keypresses
 - raw ECP queries
 - parsed media-player state from `/query/media-player`
+- media-player active-state and container assertions
 - SceneGraph state queries and named-node assertions
 - SceneGraph attribute, numeric geometry, bounds, and translation readers
+- SceneGraph completeness and escaped-text helpers
 - SceneGraph geometry assertions, status/failure readers, and custom assertion
   wait loops
 - screenshots

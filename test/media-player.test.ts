@@ -46,6 +46,7 @@ describe("media-player helpers", () => {
 
   it("detects active playback states", () => {
     expect(isActiveMediaPlayerState("buffer")).toBe(true);
+    expect(isActiveMediaPlayerState("buffering")).toBe(true);
     expect(isActiveMediaPlayerState("pause")).toBe(true);
     expect(isActiveMediaPlayerState("play")).toBe(true);
     expect(isActiveMediaPlayerState("stop")).toBe(false);

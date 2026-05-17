@@ -1,6 +1,6 @@
 import * as rokuDeploy from "roku-deploy";
 import { basename, dirname, extname, resolve } from "node:path";
-import { assertNamedNode, type NodeExpectation } from "./scenegraph.js";
+import { assertNamedNode, isCompleteSceneGraph, type NodeExpectation } from "./scenegraph.js";
 import { readActiveApp, readXmlAttribute, readXmlTag, type ActiveApp } from "./xml.js";
 
 const ecpPort = 8060;
@@ -83,6 +83,7 @@ export type MediaPlayerInfo = {
 
 export type RetryOptions = {
   readonly attempts?: number;
+  readonly requireComplete?: boolean;
   readonly retryDelayMs?: number;
 };
 
@@ -179,6 +180,23 @@ export const queryMediaPlayerXml = async (context: RokuContext): Promise<string>
 export const queryMediaPlayer = async (context: RokuContext): Promise<MediaPlayerInfo> =>
   readMediaPlayerInfo(await queryMediaPlayerXml(context));
 
+export const queryMediaPlayerXmlSafe = async (
+  context: RokuContext,
+): Promise<string | undefined> => {
+  try {
+    return await queryMediaPlayerXml(context);
+  } catch {
+    return undefined;
+  }
+};
+
+export const queryMediaPlayerSafe = async (
+  context: RokuContext,
+): Promise<MediaPlayerInfo | undefined> => {
+  const xml = await queryMediaPlayerXmlSafe(context);
+  return xml === undefined ? undefined : readMediaPlayerInfo(xml);
+};
+
 export const readMediaPlayerInfo = (xml: string): MediaPlayerInfo => {
   const playerAttributes = /<player(?:\s+([^>]*))?>/.exec(xml)?.[1] ?? "";
   const formatAttributes = /<format(?:\s+([^>]*))?\/>/.exec(xml)?.[1] ?? "";
@@ -216,7 +234,22 @@ export const readMediaPlayerContainer = (xml: string): string | undefined =>
   readMediaPlayerInfo(xml).container;
 
 export const isActiveMediaPlayerState = (state: string | undefined): boolean =>
-  state === "buffer" || state === "pause" || state === "play";
+  state === "buffer" || state === "buffering" || state === "pause" || state === "play";
+
+export const assertMediaPlayerContainer = async (
+  context: RokuContext,
+  expectedContainer: string,
+): Promise<MediaPlayerInfo> => {
+  const mediaPlayer = await queryMediaPlayer(context);
+
+  if (mediaPlayer.container !== expectedContainer) {
+    throw new Error(
+      `expected media-player container ${expectedContainer}, got ${mediaPlayer.container ?? "unknown"}`,
+    );
+  }
+
+  return mediaPlayer;
+};
 
 export const waitForMediaPlayerState = async (
   context: RokuContext,
@@ -254,19 +287,31 @@ export const querySceneGraph = async (
   options: RetryOptions = {},
 ): Promise<string> => {
   const attempts = options.attempts ?? 1;
+  const requireComplete = options.requireComplete ?? false;
   const retryDelayMs = options.retryDelayMs ?? 500;
+  let lastXml = "";
   let lastError: unknown;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
-      return await queryEcp(context, "/query/sgnodes/all");
+      const xml = await queryEcp(context, "/query/sgnodes/all");
+      if (!requireComplete || isCompleteSceneGraph(xml)) {
+        return xml;
+      }
+
+      lastXml = xml;
     } catch (error) {
       lastError = error;
-
-      if (attempt < attempts - 1) {
-        await sleep(retryDelayMs);
-      }
+      lastXml = "";
     }
+
+    if (attempt < attempts - 1) {
+      await sleep(retryDelayMs);
+    }
+  }
+
+  if (lastXml !== "") {
+    return lastXml;
   }
 
   throw new Error(`SceneGraph query failed: ${formatErrorMessage(lastError)}`);
