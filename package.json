@@ -22,8 +22,12 @@
     "rokit": "dist/rokit.mjs"
   },
   "files": [
+    "AGENTS.md",
+    "CONTRIBUTING.md",
     "dist",
-    "README.md"
+    "docs",
+    "README.md",
+    "SECURITY.md"
   ],
   "type": "module",
   "sideEffects": false,
@@ -43,17 +47,21 @@
     "clean": "rm -rf .turbo coverage dist",
     "hooks:install": "git config core.hooksPath .git-hooks",
     "live:smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs check",
+    "prepare": "./scripts/prepare-effect.sh",
     "prepack": "vp pack src/index.ts src/rokit.ts --dts",
     "smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null",
-    "test": "vp test --passWithNoTests",
+    "test": "vp pack src/index.ts src/rokit.ts --dts && vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit",
-    "verify": "vp check . && tsc --noEmit && vp pack src/index.ts src/rokit.ts --dts && vp test --passWithNoTests && npm pack --dry-run"
+    "verify": "vp check . && tsc --noEmit && vp run test && npm pack --dry-run"
   },
   "dependencies": {
+    "@effect/platform-node": "4.0.0-beta.66",
+    "effect": "4.0.0-beta.66",
     "roku-deploy": "3.17.3"
   },
   "devDependencies": {
-    "@types/node": "^25.7.0",
+    "@effect/vitest": "4.0.0-beta.66",
+    "@types/node": "^24.12.4",
     "typescript": "^6.0.2",
     "vite-plus": "^0.1.20",
     "vitest": "^4.1.6"

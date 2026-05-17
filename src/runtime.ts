@@ -1,5 +1,7 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
+import { InvalidInput, MissingPassword, MissingTarget } from "./errors.js";
+import { validateEcpPath } from "./roku.js";
 
 export const appDir = process.cwd();
 export const rokitDir = join(appDir, ".rokit");
@@ -29,7 +31,7 @@ export const requireTarget = (env: RokitEnv): string => {
   const target = env.target?.trim();
 
   if (!target) {
-    return fail("ROKIT_TARGET is not set");
+    throw MissingTarget.make({});
   }
 
   return normalizeTarget(target);
@@ -39,16 +41,56 @@ export const requirePassword = (env: RokitEnv): string => {
   const password = env.password;
 
   if (!password) {
-    return fail("ROKIT_PASSWORD is not set");
+    throw MissingPassword.make({});
   }
 
   return password;
 };
 
-export class RokitCliError extends Error {}
+export const resolveOutputPath = (path: string, label: string): string => {
+  rejectUnsafeInput(path, label);
+
+  const resolved = resolve(appDir, path);
+  const relativePath = relative(appDir, resolved);
+
+  if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
+    fail(`${label} must stay within the current working directory`);
+  }
+
+  return resolved;
+};
+
+export const resolveFileOutputPath = (path: string, label: string): string => {
+  const resolved = resolveOutputPath(path, label);
+
+  if (resolved === appDir) {
+    fail(`${label} must name a file within the current working directory`);
+  }
+
+  return resolved;
+};
+
+export const rejectUnsafeInput = (value: string, label: string): void => {
+  if (
+    [...value].some((character) => {
+      const code = character.charCodeAt(0);
+      return code < 32 || code === 127;
+    })
+  ) {
+    fail(`${label} contains control characters`);
+  }
+};
+
+export const rejectUnsafeEcpPath = (value: string): void => {
+  try {
+    validateEcpPath(value);
+  } catch (error) {
+    fail(formatErrorMessage(error));
+  }
+};
 
 export const fail = (message: string): never => {
-  throw new RokitCliError(message);
+  throw InvalidInput.make({ message });
 };
 
 export const formatErrorMessage = (error: unknown): string => {

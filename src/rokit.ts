@@ -1,4 +1,5 @@
 #!/usr/bin/env node
-import { main } from "./cli.js";
+import { NodeRuntime } from "@effect/platform-node";
+import { mainEffect } from "./cli.js";
 
-await main();
+NodeRuntime.runMain(mainEffect());

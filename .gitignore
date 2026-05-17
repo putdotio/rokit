@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 .rokit/
+.repos/effect
 .turbo
 coverage
 dist

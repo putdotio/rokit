@@ -36,6 +36,13 @@ During the `@semantic-release/npm` publish step, npm detects the GitHub OIDC ide
 
 Release writes use the `putio-release-bot` installation token. The default `GITHUB_TOKEN` remains read-only, and the release-bot remote is configured only after dependencies are installed.
 
+## Package Contents
+
+The npm package includes `dist`, `README.md`, `docs`, `AGENTS.md`,
+`CONTRIBUTING.md`, and `SECURITY.md`. The docs are included so agents consuming
+the package can inspect readiness, distribution, security, Agent DX, and the
+repo-local `rokit-harness` skill without cloning extra private context.
+
 ## Release Smoke
 
 After a release, confirm the tag and package are visible:

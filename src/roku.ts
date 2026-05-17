@@ -1,5 +1,6 @@
 import * as rokuDeploy from "roku-deploy";
-import { basename, dirname, extname, resolve } from "node:path";
+import { createSocket } from "node:dgram";
+import { basename, dirname, extname, isAbsolute, resolve } from "node:path";
 import { assertNamedNode, isCompleteSceneGraph, type NodeExpectation } from "./scenegraph.js";
 import { readActiveApp, readXmlAttribute, readXmlTag, type ActiveApp } from "./xml.js";
 
@@ -52,6 +53,13 @@ export type DeviceSummary = {
   readonly name: string;
 };
 
+export type DiscoveredRokuDevice = {
+  readonly location: string;
+  readonly server?: string;
+  readonly target?: string;
+  readonly usn?: string;
+};
+
 export type MediaPlayerState =
   | "buffer"
   | "close"
@@ -94,6 +102,10 @@ export type WaitForSceneGraphAssertionOptions = {
   readonly timeoutMs?: number;
 };
 
+export type PackageResult = {
+  readonly path: string;
+};
+
 export const checkDevice = async (context: RokuContext): Promise<DeviceSummary> => {
   const deviceInfo = await fetchText(context, "/query/device-info");
   const installerStatus = await fetchInstallerStatus(context);
@@ -119,6 +131,61 @@ export const getDeviceInfo = async (context: RokuContext) =>
 
 export const queryActiveApp = async (context: RokuContext): Promise<ActiveApp> =>
   readActiveApp(await fetchText(context, "/query/active-app"));
+
+export const discoverRokuDevices = async (timeoutMs = 3_000): Promise<DiscoveredRokuDevice[]> =>
+  await new Promise((resolveDevices, reject) => {
+    const socket = createSocket("udp4");
+    const devices = new Map<string, DiscoveredRokuDevice>();
+    const request = [
+      "M-SEARCH * HTTP/1.1",
+      "HOST: 239.255.255.250:1900",
+      'MAN: "ssdp:discover"',
+      "MX: 1",
+      "ST: roku:ecp",
+      "",
+      "",
+    ].join("\r\n");
+
+    const finish = () => {
+      socket.close();
+      resolveDevices([...devices.values()]);
+    };
+
+    const timer = setTimeout(finish, timeoutMs);
+
+    socket.on("message", (message) => {
+      const headers = readSsdpHeaders(message.toString("utf8"));
+      const location = headers.get("location");
+
+      if (!location) {
+        return;
+      }
+
+      devices.set(location, {
+        location,
+        server: headers.get("server"),
+        target: readLocationTarget(location),
+        usn: headers.get("usn"),
+      });
+    });
+
+    socket.on("error", (error) => {
+      clearTimeout(timer);
+      socket.close();
+      reject(error);
+    });
+
+    socket.bind(() => {
+      socket.setBroadcast(true);
+      socket.send(Buffer.from(request), 1900, "239.255.255.250", (error) => {
+        if (error) {
+          clearTimeout(timer);
+          socket.close();
+          reject(error);
+        }
+      });
+    });
+  });
 
 export const waitForActiveApp = async (
   context: RokuContext,
@@ -171,8 +238,10 @@ export const pressKey = async (context: RokuContext, key: string): Promise<void>
   await postOk(context, ecpUrl(context, `/keypress/${encodeURIComponent(key)}`));
 };
 
-export const queryEcp = async (context: RokuContext, path: string): Promise<string> =>
-  await fetchText(context, path.startsWith("/") ? path : `/${path}`);
+export const queryEcp = async (context: RokuContext, path: string): Promise<string> => {
+  const safePath = validateEcpPath(path);
+  return await fetchText(context, safePath.startsWith("/") ? safePath : `/${safePath}`);
+};
 
 export const queryMediaPlayerXml = async (context: RokuContext): Promise<string> =>
   await queryEcp(context, "/query/media-player");
@@ -311,7 +380,7 @@ export const querySceneGraph = async (
   }
 
   if (lastXml !== "") {
-    return lastXml;
+    throw new Error("SceneGraph query returned incomplete XML");
   }
 
   throw new Error(`SceneGraph query failed: ${formatErrorMessage(lastError)}`);
@@ -407,6 +476,74 @@ export const takeScreenshot = async (
     outFile: basename(resolvedOutput, extension),
     password: context.password,
   });
+};
+
+export const packageChannel = async (
+  outputPath: string,
+  rootDir = process.cwd(),
+): Promise<PackageResult> => {
+  const options = packageOptions(outputPath, rootDir);
+
+  await rokuDeploy.createPackage(options);
+
+  return {
+    path: rokuDeploy.getOutputZipFilePath(options),
+  };
+};
+
+export const resolvePackageOutputPath = (outputPath: string, rootDir = process.cwd()): string => {
+  const options = packageOptions(outputPath, rootDir);
+  return rokuDeploy.getOutputZipFilePath(options);
+};
+
+const packageOptions = (outputPath: string, rootDir = process.cwd()) => {
+  const resolvedRoot = resolve(rootDir);
+  const resolvedOutput = isAbsolute(outputPath)
+    ? resolve(outputPath)
+    : resolve(resolvedRoot, outputPath);
+
+  return {
+    outDir: dirname(resolvedOutput),
+    outFile: basename(resolvedOutput),
+    rootDir: resolvedRoot,
+  };
+};
+
+export const validateEcpPath = (path: string): string => {
+  rejectUnsafeInput(path, "ECP path");
+
+  if (path.includes("\\")) {
+    throw new Error("ECP path must not include backslashes");
+  }
+
+  if (path.startsWith("//") || /^[a-z][a-z0-9+.-]*:/i.test(path)) {
+    throw new Error("ECP path must be device-relative");
+  }
+
+  if (path.includes("?") || path.includes("#")) {
+    throw new Error("ECP path must not include query strings or fragments");
+  }
+
+  if (/(^|[/\\])\.\.($|[/\\])/.test(path)) {
+    throw new Error("ECP path must not include path traversal");
+  }
+
+  if (/%(?:2e|2f|5c)/i.test(path)) {
+    throw new Error("ECP path must not include percent-encoded path segments");
+  }
+
+  return path;
+};
+
+const rejectUnsafeInput = (value: string, label: string): void => {
+  if (
+    [...value].some((character) => {
+      const code = character.charCodeAt(0);
+      return code < 32 || code === 127;
+    })
+  ) {
+    throw new Error(`${label} contains control characters`);
+  }
 };
 
 export const validateRemoteKey = (key: string): void => {
@@ -518,3 +655,27 @@ const sleep = (ms: number): Promise<void> =>
 
 const formatErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
+
+const readSsdpHeaders = (text: string): ReadonlyMap<string, string> => {
+  const headers = new Map<string, string>();
+
+  for (const line of text.split(/\r?\n/)) {
+    const separator = line.indexOf(":");
+
+    if (separator <= 0) {
+      continue;
+    }
+
+    headers.set(line.slice(0, separator).trim().toLowerCase(), line.slice(separator + 1).trim());
+  }
+
+  return headers;
+};
+
+const readLocationTarget = (location: string): string | undefined => {
+  try {
+    return new URL(location).hostname;
+  } catch {
+    return undefined;
+  }
+};

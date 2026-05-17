@@ -31,12 +31,19 @@ ROKIT_PASSWORD=<developer-mode-password>
 Then run:
 
 ```bash
+pnpm exec rokit describe
+pnpm exec rokit discover
+pnpm exec rokit package --out artifacts/live/channel.zip
 pnpm exec rokit check
 pnpm exec rokit launch dev
 pnpm exec rokit press Down Select
+pnpm exec rokit press --delay-ms 250 --max 8 Down --until-node videoPlayerScreen visible
 pnpm exec rokit press --delay-ms 250 Right Select
 pnpm exec rokit query /query/active-app
 pnpm exec rokit wait-node videoPlayerScreen visible
+pnpm exec rokit wait-ready dev --media-state play
+pnpm exec rokit snapshot
+pnpm exec rokit proof artifacts/live/proof --screenshot
 pnpm exec rokit screenshot artifacts/live/player.png
 pnpm exec rokit --json active-app
 ```
@@ -84,14 +91,20 @@ await waitForSceneGraphAssertion(context, "expected player", (xml) => {
 ## Commands
 
 ```bash
+rokit describe
 rokit check
+rokit discover [--timeout-ms <ms>]
 rokit device-info
 rokit active-app
 rokit media-player
+rokit snapshot
+rokit proof <output-dir> [--screenshot]
+rokit package --out <zip-path>
 rokit wait-active <app-id> [--timeout-ms <ms>]
 rokit wait-media-player <state> [--timeout-ms <ms>]
+rokit wait-ready <app-id> [--media-state <state>] [--node <node-name> <condition> [value]] [--timeout-ms <ms>]
 rokit launch <app-id> [--param key=value]
-rokit press [--delay-ms <ms>] <key> [key...]
+rokit press [--delay-ms <ms>] [--max <count>] <key> [key...] [--until-node <node-name> <condition> [value]]
 rokit query <ecp-path>
 rokit sgnodes
 rokit assert-node <node-name> <visible|hidden|absent|text|attr> [value]
@@ -106,27 +119,46 @@ Global options:
 ```bash
 rokit --json <command>
 rokit --output json <command>
+rokit --dry-run <mutating-command>
+rokit --fields status,data.state <command>
+rokit --input-json '{"command":"press","keys":["Down","Select"]}'
 ```
 
 JSON mode wraps command output as `{ "status": "ok", "command": "...", ... }`
 and reports failures as `{ "status": "failed", "error": { "message": "..." } }`.
+When stdout is not a TTY, command output defaults to JSON unless
+`--output text` is explicit.
 
+- `describe` prints the machine-readable command surface, per-command
+  parameters, JSON payload fields, global options, and agent-DX feature flags.
 - `check` confirms the Roku ECP endpoint responds and the developer installer
   is reachable.
+- `discover` uses SSDP to find Roku ECP devices on the local network. It does
+  not write discovered device facts into repo files.
 - `device-info` prints enhanced Roku device metadata as JSON.
 - `active-app` prints the foreground app.
 - `media-player` prints parsed `/query/media-player` playback state, including
   state, container, position, duration, and format metadata.
+- `snapshot` prints a compact state object with device, active-app,
+  media-player, and SceneGraph status observations.
+- `proof` writes reviewable local artifacts: summary JSON, active-app JSON,
+  device-info JSON, media-player JSON, raw SceneGraph XML when available, and
+  an optional screenshot.
+- `package` creates a sideload ZIP from the current app root with `roku-deploy`.
 - `wait-active` waits until the requested app is foregrounded and tolerates
   transient ECP read failures while polling.
 - `wait-media-player` waits until `/query/media-player` reports a target state
   such as `play`, `pause`, or `buffer`.
+- `wait-ready` waits for the requested app to be foregrounded, checks
+  SceneGraph completeness on a best-effort basis, and can also wait for a
+  media-player state or named SceneGraph node.
 - `launch` opens an app and waits until it is active. Use repeated `--param`
   values for deeplink parameters. Roku launch responses can race app startup, so
   launch accepts transient timeout/fetch failures and then verifies foreground
   state.
 - `press` sends Roku remote keys through ECP. Use `--delay-ms` for navigation
-  sequences that need a stable gap between keys.
+  sequences that need a stable gap between keys. Add `--until-node` and `--max`
+  to repeat a key sequence until a generic SceneGraph condition matches.
 - `query` prints a raw ECP response such as `/query/sgnodes/all`.
 - `sgnodes` prints the raw SceneGraph tree from `/query/sgnodes/all`. Library
   callers can pass retry options to `querySceneGraph`; use
@@ -137,6 +169,11 @@ and reports failures as `{ "status": "failed", "error": { "message": "..." } }`.
 - `screenshot` saves a developer screenshot. It requires `ROKIT_PASSWORD`.
 - `install` publishes an existing ZIP through `roku-deploy`. It requires
   `ROKIT_PASSWORD`.
+
+Mutating commands support `--dry-run` so agents can validate parsed inputs
+without changing device or filesystem state. ECP paths reject query strings,
+fragments, traversal, backslashes, control characters, and percent-encoded path
+segments. Generated output paths must stay within the current working directory.
 
 ## Environment
 
@@ -180,6 +217,7 @@ HTML, or checking app-specific UI nodes.
 - [Contributing](./CONTRIBUTING.md)
 - [Distribution](./docs/DISTRIBUTION.md)
 - [Agent readiness](./docs/READINESS.md)
+- [Agent DX score](./docs/AGENT_DX.md)
 - [Security](./SECURITY.md)
 
 ## Repo Internals

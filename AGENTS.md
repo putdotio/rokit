@@ -18,6 +18,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 ## Patterns
 
+- Use Effect at the runtime boundary and for reusable effectful operations. Keep
+  errors schema-backed and render them without stack traces in CLI output.
 - Keep CLI wiring thin: parse/dispatch commands, then call named Roku helpers.
 - Keep human output stable; `--json` / `--output json` should wrap every
   command result and error in a deterministic object for agents.
