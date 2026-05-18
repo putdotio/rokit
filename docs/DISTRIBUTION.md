@@ -41,8 +41,8 @@ Release writes use the `putio-release-bot` installation token. The default `GITH
 The npm package includes `dist`, `README.md`, `docs`, `examples`, `AGENTS.md`,
 `CONTRIBUTING.md`, and `SECURITY.md`. The docs and generic live probe are
 included so agents consuming the package can inspect readiness, distribution,
-security, Agent DX, and the repo-local `rokit-harness` skill without cloning
-extra private context.
+security, and generic Roku proof mechanics without cloning extra private
+context.
 
 ## Release Smoke
 

@@ -1594,7 +1594,7 @@ const parseLaunchArgs = (args: readonly string[]): LaunchArgs => {
 };
 
 const describeCli = () => ({
-  agentDx: {
+  automation: {
     dryRun: true,
     inputJson: true,
     nonTtyJsonDefault: true,
@@ -1697,6 +1697,7 @@ const describeCli = () => ({
     globalField("fields", "field-mask", "Comma-separated JSON field mask for output trimming."),
     globalField("inputJson", "json-object", "Command payload matching the described input schema."),
   ],
+  schemaVersion: 2,
 });
 
 const commandSchema = (

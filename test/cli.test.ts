@@ -65,7 +65,14 @@ describe("rokit cli", () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.status).toBe("ok");
-    expect(parsed.data.agentDx).toMatchObject({
+    expect(Object.keys(parsed.data).sort()).toEqual([
+      "automation",
+      "commands",
+      "globalOptions",
+      "schemaVersion",
+    ]);
+    expect(parsed.data.schemaVersion).toBe(2);
+    expect(parsed.data.automation).toMatchObject({
       dryRun: true,
       inputJson: true,
       nonTtyJsonDefault: true,
@@ -271,7 +278,7 @@ describe("rokit cli", () => {
     expect(result.stdout).toBe("");
   });
 
-  it("hardens ECP paths and output paths for agent mistakes", () => {
+  it("hardens ECP paths for agent mistakes", () => {
     const badQuery = runRokit(["--dry-run", "query", "/query/active-app?x=1"]);
     const protocolRelativeQuery = runRokit([
       "--dry-run",
@@ -288,10 +295,6 @@ describe("rokit cli", () => {
       "query",
       "/\\example.com/query/device-info",
     ]);
-    const badScreenshot = runRokit(["--dry-run", "screenshot", "../outside.png"]);
-    const cwdScreenshotOutput = runRokit(["--dry-run", "screenshot", "."]);
-    const cwdPackageOutput = runRokit(["--dry-run", "package", "--out", "."]);
-    const duplicateProofOutput = runRokit(["--dry-run", "proof", "first", "second"]);
 
     expect(badQuery.status).toBe(1);
     expect(JSON.parse(badQuery.stderr).error.message).toBe(
@@ -309,6 +312,14 @@ describe("rokit cli", () => {
     expect(JSON.parse(slashBackslashHostQuery.stderr).error.message).toBe(
       "ECP path must not include backslashes",
     );
+  });
+
+  it("hardens output paths for agent mistakes", () => {
+    const badScreenshot = runRokit(["--dry-run", "screenshot", "../outside.png"]);
+    const cwdScreenshotOutput = runRokit(["--dry-run", "screenshot", "."]);
+    const cwdPackageOutput = runRokit(["--dry-run", "package", "--out", "."]);
+    const duplicateProofOutput = runRokit(["--dry-run", "proof", "first", "second"]);
+
     expect(badScreenshot.status).toBe(1);
     expect(JSON.parse(badScreenshot.stderr).error.message).toBe(
       "screenshot output path must stay within the current working directory",
