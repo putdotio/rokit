@@ -1,6 +1,6 @@
 ---
 name: rokit-harness
-description: Use rokit as a generic Roku harness adapter for packaging, installing, launching, key input, ECP/SceneGraph/media-player observation, readiness waits, screenshots, and proof bundles.
+description: Use rokit as a generic Roku harness adapter for packaging, installing, launching, key input, ECP/SceneGraph/media-player observation, readiness waits, debug console capture, screenshots, and proof bundles.
 ---
 
 # rokit Harness
@@ -25,9 +25,12 @@ repo.
 6. For live proof, use `rokit snapshot` for a quick state read,
    `rokit proof <output-dir>` for review artifacts, or `pnpm live:probe` in the
    rokit repo for the full generic package/install/launch/input/proof probe.
-7. Use `rokit wait-ready <app-id>` after launch when the app can race ECP or
+7. For crash/debug proof, start `rokit console <output-path>` before
+   reproducing the problem so startup errors and crash traces are captured.
+   Use `rokit debug-command <command>` only for generic Roku debug commands.
+8. Use `rokit wait-ready <app-id>` after launch when the app can race ECP or
    SceneGraph readiness.
-8. Use `rokit press --until-node ...` for bounded navigation loops instead of
+9. Use `rokit press --until-node ...` for bounded navigation loops instead of
    arbitrary sleeps.
 
 ## Boundaries

@@ -8,12 +8,12 @@ Status: current as of 2026-05-17
 
 Overall: B+
 
-| Dimension  | Status | Evidence                                                                                                                                                                                 | Gap                                     |
-| ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| bootable   | pass   | `pnpm smoke` builds the CLI and checks `--version` plus `--help`                                                                                                                         | no server boot surface, by design       |
-| testable   | pass   | `pnpm verify` runs TypeScript, bundle, unit tests, and npm pack dry run                                                                                                                  | live Roku checks require local hardware |
-| observable | pass   | CLI commands print active app, device info, raw ECP state, SceneGraph XML, snapshots, proof bundles, screenshots, compact assertion failures, and JSON output by default in non-TTY runs | no CI hardware lane                     |
-| verifiable | pass   | CI runs `pnpm verify`; `pnpm live:smoke` proves a configured Roku responds; `pnpm live:probe` packages, installs, launches, drives, asserts, screenshots, and proofs a generic channel   | no CI hardware lane                     |
+| Dimension  | Status | Evidence                                                                                                                                                                                                                                 | Gap                                     |
+| ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| bootable   | pass   | `pnpm smoke` builds the CLI and checks `--version` plus `--help`                                                                                                                                                                         | no server boot surface, by design       |
+| testable   | pass   | `pnpm verify` runs TypeScript, bundle, unit tests, and npm pack dry run                                                                                                                                                                  | live Roku checks require local hardware |
+| observable | pass   | CLI commands print active app, device info, raw ECP state, SceneGraph XML, BrightScript console logs, debug-server output, snapshots, proof bundles, screenshots, compact assertion failures, and JSON output by default in non-TTY runs | no CI hardware lane                     |
+| verifiable | pass   | CI runs `pnpm verify`; `pnpm live:smoke` proves a configured Roku responds; `pnpm live:probe` packages, installs, launches, drives, asserts, screenshots, and proofs a generic channel                                                   | no CI hardware lane                     |
 
 ## Layers
 
@@ -22,7 +22,7 @@ Overall: B+
 - Interact: `rokit press`, `rokit launch`, `rokit query`, `rokit sgnodes`
 - E2e: `pnpm live:probe` for a configured developer-enabled Roku
 - Enforce: GitHub Actions `verify`, optional `.git-hooks/pre-push`
-- Observe: ECP responses, SceneGraph XML, `rokit snapshot`, `rokit proof`, screenshots, concise command output
+- Observe: ECP responses, SceneGraph XML, `rokit console`, `rokit debug-command`, `rokit snapshot`, `rokit proof`, screenshots, concise command output
 - Isolate: `.rokit/` and `.env` stay local per worktree
 
 ## Agent-Facing CLI Contract

@@ -26,6 +26,8 @@ describe("rokit cli", () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("rokit - Roku device harness helper");
     expect(result.stdout).toContain("rokit check");
+    expect(result.stdout).toContain("rokit console");
+    expect(result.stdout).toContain("rokit debug-command");
     expect(result.stdout).toContain("rokit media-player");
     expect(result.stdout).toContain("rokit wait-node");
     expect(result.stdout).toContain("--output json | text");
@@ -83,6 +85,25 @@ describe("rokit cli", () => {
     );
     expect(parsed.data.commands).toContainEqual(
       expect.objectContaining({
+        name: "console",
+        parameters: expect.arrayContaining([
+          expect.objectContaining({ name: "outputPath", required: true, type: "path" }),
+          expect.objectContaining({ name: "durationMs", required: false }),
+        ]),
+      }),
+    );
+    expect(parsed.data.commands).toContainEqual(
+      expect.objectContaining({
+        mutates: true,
+        name: "debug-command",
+        parameters: expect.arrayContaining([
+          expect.objectContaining({ name: "debugCommand", required: true }),
+          expect.objectContaining({ name: "args", repeatable: true }),
+        ]),
+      }),
+    );
+    expect(parsed.data.commands).toContainEqual(
+      expect.objectContaining({
         inputJson: expect.objectContaining({
           required: expect.arrayContaining(["command", "outputDir"]),
         }),
@@ -136,6 +157,13 @@ describe("rokit cli", () => {
   it("supports dry-run for mutating commands without requiring a target", () => {
     const result = runRokit(["--dry-run", "launch", "dev", "--param", "source=synthetic"]);
     const packageResult = runRokit(["--dry-run", "package", "--out", "out/channel"]);
+    const consoleResult = runRokit([
+      "--dry-run",
+      "console",
+      "artifacts/debug/console.log",
+      "--duration-ms",
+      "250",
+    ]);
 
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
@@ -151,6 +179,16 @@ describe("rokit cli", () => {
     expect(JSON.parse(packageResult.stdout)).toMatchObject({
       command: "package",
       data: { path: resolve("out/channel.zip") },
+      dryRun: true,
+      status: "ok",
+    });
+    expect(consoleResult.status).toBe(0);
+    expect(JSON.parse(consoleResult.stdout)).toMatchObject({
+      command: "console",
+      data: {
+        durationMs: 250,
+        port: 8085,
+      },
       dryRun: true,
       status: "ok",
     });

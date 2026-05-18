@@ -1,12 +1,22 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { InvalidInput, MissingTarget, normalizeError, renderError } from "../src/errors.js";
+import {
+  DebugPortUnavailable,
+  InvalidInput,
+  MissingTarget,
+  normalizeError,
+  renderError,
+} from "../src/errors.js";
 
 describe("rokit errors", () => {
   it.effect("renders schema-backed CLI errors", () =>
     Effect.sync(() => {
       assert.strictEqual(renderError(InvalidInput.make({ message: "bad command" })), "bad command");
       assert.strictEqual(renderError(MissingTarget.make({})), "ROKIT_TARGET is not set");
+      assert.strictEqual(
+        renderError(DebugPortUnavailable.make({ detail: "connection refused", port: 8085 })),
+        "Roku debug port 8085 unavailable: connection refused",
+      );
     }),
   );
 

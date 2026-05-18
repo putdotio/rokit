@@ -48,12 +48,12 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Missing config/env and child-command failures should not print stack traces.
 - `ROKIT_PASSWORD` is required only for developer-installer operations such as
   install and screenshot.
-- `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are compatibility fallbacks, not the
-  primary public contract.
+- `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are optional fallback aliases, not
+  the primary public contract.
 - Avoid sleeps in generic commands. App repos can add meaningful wait/assert
   loops around `rokit` primitives.
-- Release details live in `docs/DISTRIBUTION.md`; readiness details live in
-  `docs/READINESS.md`.
+- Release details live in `docs/DISTRIBUTION.md`; debugging details live in
+  `docs/DEBUGGING.md`; readiness details live in `docs/READINESS.md`.
 
 ## When Contracts Change
 

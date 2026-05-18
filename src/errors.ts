@@ -19,6 +19,18 @@ export class MissingPassword extends Schema.TaggedErrorClass<MissingPassword>()(
   }
 }
 
+export class DebugPortUnavailable extends Schema.TaggedErrorClass<DebugPortUnavailable>()(
+  "DebugPortUnavailable",
+  {
+    detail: Schema.String,
+    port: Schema.Number,
+  },
+) {
+  override get message(): string {
+    return `Roku debug port ${this.port} unavailable: ${this.detail}`;
+  }
+}
+
 export class UnexpectedRokitFailure extends Schema.TaggedErrorClass<UnexpectedRokitFailure>()(
   "UnexpectedRokitFailure",
   {
@@ -26,7 +38,12 @@ export class UnexpectedRokitFailure extends Schema.TaggedErrorClass<UnexpectedRo
   },
 ) {}
 
-export type RokitError = InvalidInput | MissingPassword | MissingTarget | UnexpectedRokitFailure;
+export type RokitError =
+  | DebugPortUnavailable
+  | InvalidInput
+  | MissingPassword
+  | MissingTarget
+  | UnexpectedRokitFailure;
 
 export const renderError = (error: RokitError): string => error.message;
 
@@ -41,6 +58,7 @@ export const normalizeError = (error: unknown): RokitError => {
 };
 
 const isRokitError = (error: unknown): error is RokitError =>
+  error instanceof DebugPortUnavailable ||
   error instanceof InvalidInput ||
   error instanceof MissingPassword ||
   error instanceof MissingTarget ||

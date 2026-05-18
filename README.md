@@ -17,11 +17,11 @@
 
 ## Install
 
+Requires Node `>=24.14.0`; install it in a consumer repo with:
+
 ```bash
 pnpm add -D @putdotio/rokit
 ```
-
-Node `>=24.14`
 
 ## Quick Start
 
@@ -40,13 +40,13 @@ pnpm exec rokit package --out artifacts/live/channel.zip
 pnpm exec rokit install artifacts/live/channel.zip
 pnpm exec rokit launch dev
 pnpm exec rokit press Down Select
+pnpm exec rokit console artifacts/live/console.log --duration-ms 30000
 pnpm exec rokit proof artifacts/live/proof --screenshot
 ```
 
 `ROKIT_PASSWORD` is required for developer-installer operations such as
 `install` and `screenshot`. `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are
-accepted as compatibility fallbacks for app repos that already use Roku dev
-naming.
+accepted as optional aliases when the `ROKIT_*` names are unset.
 
 ## Automation
 
@@ -76,6 +76,8 @@ Common commands:
 | `discover`                                         | Find Roku ECP devices with SSDP                    |
 | `device-info`                                      | Read Roku device metadata                          |
 | `active-app`                                       | Read the foreground app                            |
+| `console <output-path>`                            | Capture BrightScript console output from `8085`    |
+| `debug-command <command> [args...]`                | Run an allowlisted Roku debug command              |
 | `media-player`                                     | Read parsed `/query/media-player` state            |
 | `snapshot`                                         | Read a compact state snapshot                      |
 | `proof <output-dir>`                               | Write reviewable local proof artifacts             |
@@ -138,6 +140,7 @@ await waitForSceneGraphAssertion(context, "player ready", (xml) => {
 
 - package, install, launch, deeplink params, and remote keypresses
 - raw ECP queries and parsed media-player state
+- BrightScript console capture and allowlisted debug-server commands
 - SceneGraph state queries and named-node assertions
 - timestamped screenshots, snapshots, and proof artifacts
 
@@ -148,6 +151,7 @@ artifacts.
 ## Docs
 
 - [Contributing](./CONTRIBUTING.md)
+- [Roku debugging](./docs/DEBUGGING.md)
 - [Distribution](./docs/DISTRIBUTION.md)
 - [Agent readiness](./docs/READINESS.md)
 - [Security](./SECURITY.md)
