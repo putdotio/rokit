@@ -338,6 +338,16 @@ describe("rokit cli", () => {
     );
   });
 
+  it("timestamps screenshot output paths", () => {
+    const result = runRokit(["--dry-run", "screenshot", "artifacts/lab/story.jpg"]);
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.data.path).not.toBe(resolve("artifacts/lab/story.jpg"));
+    expect(parsed.data.path).toContain(`${resolve("artifacts/lab")}/`);
+    expect(parsed.data.path).toMatch(/story-\d{8}-\d{6}-\d{3}\.jpg$/);
+  });
+
   it("keeps partial observation metadata visible through field masks", () => {
     const result = runRokitWithEnv(["--fields", "data.activeApp", "snapshot"], {
       ROKIT_TARGET: "127.0.0.1",

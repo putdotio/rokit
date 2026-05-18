@@ -87,12 +87,14 @@ Common commands:
 | `sgnodes`                                          | Print the raw SceneGraph tree                      |
 | `assert-node` / `wait-node`                        | Check generic SceneGraph node state                |
 | `wait-active` / `wait-media-player` / `wait-ready` | Poll generic runtime readiness                     |
-| `screenshot <output-path>`                         | Save a developer screenshot                        |
+| `screenshot <output-path>`                         | Save a timestamped developer screenshot            |
 
 Mutating commands support `--dry-run` where the platform can validate without
 changing device or filesystem state. ECP paths reject query strings, fragments,
 traversal, backslashes, control characters, and percent-encoded path segments.
 Generated output paths must stay within the current working directory.
+Screenshots append a timestamp to the requested filename and report the actual
+path written, so repeated captures do not reuse cache-prone filenames.
 
 ## Library Use
 
@@ -137,7 +139,7 @@ await waitForSceneGraphAssertion(context, "player ready", (xml) => {
 - package, install, launch, deeplink params, and remote keypresses
 - raw ECP queries and parsed media-player state
 - SceneGraph state queries and named-node assertions
-- screenshots, snapshots, and proof artifacts
+- timestamped screenshots, snapshots, and proof artifacts
 
 Consumer app repos own product behavior: opening specific routes, asserting
 playback for real content, checking app-specific UI nodes, and generating review

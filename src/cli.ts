@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { basename, dirname, extname, join } from "node:path";
 import { createRequire } from "node:module";
 import { Effect } from "effect";
 import {
@@ -424,7 +424,8 @@ const runCommand = async (
   }
 
   if (command.name === "screenshot") {
-    const path = resolveFileOutputPath(command.outputPath, "screenshot output path");
+    const requestedPath = resolveFileOutputPath(command.outputPath, "screenshot output path");
+    const path = timestampOutputPath(requestedPath);
 
     if (dryRun) {
       return dryRunResult(command.name, { path });
@@ -613,12 +614,36 @@ const writeProof = async (context: RokuContext, outputDir: string, includeScreen
 
   if (includeScreenshot) {
     const password = requirePassword(context);
-    const path = await takeScreenshot({ ...context, password }, `${outputDir}/screenshot.png`);
+    const path = await takeScreenshot(
+      { ...context, password },
+      timestampOutputPath(`${outputDir}/screenshot.png`),
+    );
     artifacts.push({ kind: "screenshot", path });
   }
 
   return { artifacts, outputDir, snapshot };
 };
+
+const timestampOutputPath = (path: string, date = new Date()): string => {
+  const extension = extname(path);
+  const name = basename(path, extension);
+  return join(dirname(path), `${name}-${formatTimestamp(date)}${extension}`);
+};
+
+const formatTimestamp = (date: Date): string =>
+  [
+    date.getFullYear().toString(),
+    padDatePart(date.getMonth() + 1),
+    padDatePart(date.getDate()),
+    "-",
+    padDatePart(date.getHours()),
+    padDatePart(date.getMinutes()),
+    padDatePart(date.getSeconds()),
+    "-",
+    padDatePart(date.getMilliseconds(), 3),
+  ].join("");
+
+const padDatePart = (value: number, length = 2): string => value.toString().padStart(length, "0");
 
 const waitForReady = async (
   context: RokuContext,
@@ -696,7 +721,11 @@ const dryRunData = (command: Command): unknown => {
   }
 
   if (command.name === "screenshot") {
-    return { path: resolveFileOutputPath(command.outputPath, "screenshot output path") };
+    return {
+      path: timestampOutputPath(
+        resolveFileOutputPath(command.outputPath, "screenshot output path"),
+      ),
+    };
   }
 
   if (command.name === "proof") {
@@ -1683,8 +1712,12 @@ const describeCli = () => ({
         optionField("timeoutMs", "positive-integer", "Wait timeout in milliseconds."),
       ],
     ),
-    commandSchema("screenshot", "Write a developer screenshot.", true, true, [
-      argumentField("outputPath", "path", "Screenshot output path inside the current app root."),
+    commandSchema("screenshot", "Write a timestamped developer screenshot.", true, true, [
+      argumentField(
+        "outputPath",
+        "path",
+        "Screenshot base output path inside the current app root.",
+      ),
     ]),
   ] satisfies readonly DescribedCommand[],
   globalOptions: [
