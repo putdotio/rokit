@@ -45,15 +45,14 @@ const readPackageConfig = (): PackageConfig => {
 };
 
 describe("package config", () => {
-  it("keeps Node ambient types within the supported engine major", () => {
+  it("keeps Node ambient types at or above the minimum supported engine major", () => {
     const packageConfig = readPackageConfig();
     const lockfile = readFileSync("pnpm-lock.yaml", "utf8");
 
     expect(packageConfig.engines.node).toContain(">=24.");
-    expect(packageConfig.engines.node).toContain("<25");
-    expect(packageConfig.devDependencies["@types/node"]).toMatch(/^\^24\./);
-    expect(lockfile).toContain("@types/node@24.");
-    expect(lockfile).not.toContain("@types/node@25.");
+    expect(packageConfig.engines.node).not.toContain("<25");
+    expect(packageConfig.devDependencies["@types/node"]).toMatch(/^\^(2[5-9]|[3-9]\d)\./);
+    expect(lockfile).toContain("@types/node@25.");
   });
 
   it("packages the generic live probe with agent-facing docs", () => {

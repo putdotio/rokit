@@ -21,7 +21,7 @@
 pnpm add -D @putdotio/rokit
 ```
 
-Node `>=24.14 <25`
+Node `>=24.14`
 
 ## Quick Start
 
