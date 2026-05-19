@@ -15,8 +15,8 @@ importers:
         specifier: 4.0.0-beta.68
         version: 4.0.0-beta.68
       roku-deploy:
-        specifier: 3.17.3
-        version: 3.17.3
+        specifier: 3.17.4
+        version: 3.17.4
     devDependencies:
       '@effect/vitest':
         specifier: 4.0.0-beta.68
@@ -1282,8 +1282,8 @@ packages:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
 
-  roku-deploy@3.17.3:
-    resolution: {integrity: sha512-u9xv3ug8Hfhdo0B1+YE8xzaKBuS3hahM4g4gfAief10b5WkT+4jSLGMa/84EUD/HfEDj8h3Dg7Q3gm0StB8B4Q==}
+  roku-deploy@3.17.4:
+    resolution: {integrity: sha512-tsy2TtibcFck/tnTgu2fMci/TAGYN1x6SJ0ACF+tWEB6jOIfkDQ2KGSZkXEHknmHhUQr1tQyVzhGlsCIK0WbuQ==}
     hasBin: true
 
   rolldown@1.0.1:
@@ -2582,7 +2582,7 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  roku-deploy@3.17.3:
+  roku-deploy@3.17.4:
     dependencies:
       '@types/request': 2.48.13
       chalk: 2.4.2
