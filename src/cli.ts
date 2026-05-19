@@ -10,6 +10,7 @@ import {
 } from "./debug.js";
 import {
   assertSceneGraphNode,
+  captureScreenshot,
   checkDevice,
   discoverRokuDevices,
   getDeviceInfo,
@@ -22,7 +23,6 @@ import {
   queryMediaPlayer,
   querySceneGraph,
   resolvePackageOutputPath,
-  takeScreenshot,
   validateRemoteKey,
   waitForActiveApp,
   waitForMediaPlayerState,
@@ -485,8 +485,7 @@ const runCommand = async (
     }
 
     const password = requirePassword(deviceContext);
-    mkdirSync(dirname(path), { recursive: true });
-    const screenshotPath = await takeScreenshot({ ...deviceContext, password }, path);
+    const screenshotPath = await captureScreenshot({ ...deviceContext, password }, path);
     return {
       command: command.name,
       data: { path: screenshotPath },
@@ -667,7 +666,7 @@ const writeProof = async (context: RokuContext, outputDir: string, includeScreen
 
   if (includeScreenshot) {
     const password = requirePassword(context);
-    const path = await takeScreenshot(
+    const path = await captureScreenshot(
       { ...context, password },
       timestampOutputPath(`${outputDir}/screenshot.png`),
     );

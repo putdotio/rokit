@@ -106,6 +106,7 @@ App-specific scenario scripts can import the generic helpers:
 import {
   assertMediaPlayerContainer,
   assertSceneGraphNode,
+  captureScreenshot,
   pressKey,
   querySceneGraph,
   waitForSceneGraphAssertion,
@@ -124,9 +125,14 @@ const context: RokuContext = {
 };
 
 await pressKey(context, "Info");
-await querySceneGraph(context, { attempts: 3, requireComplete: true });
+await querySceneGraph(context, { attempts: 3, requireAppNode: true, requireComplete: true });
 await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
 await assertMediaPlayerContainer(context, "mp4");
+await captureScreenshot(
+  { ...context, password: process.env.ROKIT_PASSWORD ?? "" },
+  "artifacts/player.jpg",
+  { attempts: 3 },
+);
 await waitForSceneGraphAssertion(context, "player ready", (xml) => {
   if (!xml.includes("videoPlayerScreen")) {
     throw new Error("expected player screen");

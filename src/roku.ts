@@ -1,6 +1,8 @@
 import * as rokuDeploy from "roku-deploy";
 import { createSocket } from "node:dgram";
-import { basename, dirname, extname, isAbsolute, resolve } from "node:path";
+import { access, copyFile, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, dirname, extname, isAbsolute, join, resolve } from "node:path";
 import { assertNamedNode, isCompleteSceneGraph, type NodeExpectation } from "./scenegraph.js";
 import { readActiveApp, readXmlAttribute, readXmlTag, type ActiveApp } from "./xml.js";
 
@@ -93,6 +95,7 @@ export type MediaPlayerInfo = {
 
 export type RetryOptions = {
   readonly attempts?: number;
+  readonly requireAppNode?: boolean;
   readonly requireComplete?: boolean;
   readonly retryDelayMs?: number;
 };
@@ -106,6 +109,12 @@ export type WaitForSceneGraphAssertionOptions = {
 
 export type PackageResult = {
   readonly path: string;
+};
+
+export type ScreenshotCaptureOptions = {
+  readonly attempts?: number;
+  readonly retryDelayMs?: number;
+  readonly tempDirPrefix?: string;
 };
 
 export const checkDevice = async (context: RokuContext): Promise<DeviceSummary> => {
@@ -358,22 +367,28 @@ export const querySceneGraph = async (
   options: RetryOptions = {},
 ): Promise<string> => {
   const attempts = options.attempts ?? 1;
+  const requireAppNode = options.requireAppNode ?? false;
   const requireComplete = options.requireComplete ?? false;
   const retryDelayMs = options.retryDelayMs ?? 500;
   let lastXml = "";
   let lastError: unknown;
+  let lastMissingAppNode = false;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
       const xml = await queryEcp(context, "/query/sgnodes/all");
-      if (!requireComplete || isCompleteSceneGraph(xml)) {
+      const complete = !requireComplete || isCompleteSceneGraph(xml);
+      const hasAppNode = !requireAppNode || !xml.includes("<All_Nodes>") || xml.includes("<App ");
+      if (complete && hasAppNode) {
         return xml;
       }
 
       lastXml = xml;
+      lastMissingAppNode = complete && !hasAppNode;
     } catch (error) {
       lastError = error;
       lastXml = "";
+      lastMissingAppNode = false;
     }
 
     if (attempt < attempts - 1) {
@@ -382,6 +397,10 @@ export const querySceneGraph = async (
   }
 
   if (lastXml !== "") {
+    if (lastMissingAppNode) {
+      throw new Error("SceneGraph query returned complete XML without an App node");
+    }
+
     throw new Error("SceneGraph query returned incomplete XML");
   }
 
@@ -480,6 +499,58 @@ export const takeScreenshot = async (
   });
 };
 
+export const captureScreenshot = async (
+  context: RokuContext & { readonly password: string },
+  outputPath: string,
+  options: ScreenshotCaptureOptions = {},
+): Promise<string> => {
+  const attempts = options.attempts ?? 3;
+  const retryDelayMs = options.retryDelayMs ?? 1_500;
+  const resolvedOutput = resolve(outputPath);
+  await mkdir(dirname(resolvedOutput), { recursive: true });
+  let lastError = "unknown";
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const captureDir = await mkdtemp(
+      join(tmpdir(), `${safeTempPrefix(options.tempDirPrefix ?? "rokit-screenshot")}-`),
+    );
+    const capturePath = join(captureDir, basename(resolvedOutput));
+
+    try {
+      const capturedPath = await takeScreenshot(context, capturePath);
+      const tempResult = await firstExistingPath([capturedPath, capturePath]);
+      if (tempResult !== undefined) {
+        await copyFile(tempResult, resolvedOutput);
+        return resolvedOutput;
+      }
+
+      const directCapturedPath = await takeScreenshot(context, resolvedOutput);
+      const directResult = await firstExistingPath([resolvedOutput, directCapturedPath]);
+      if (directResult === resolvedOutput) {
+        return resolvedOutput;
+      }
+
+      if (directResult !== undefined) {
+        await copyFile(directResult, resolvedOutput);
+        return resolvedOutput;
+      }
+
+      throw new Error("screenshot capture succeeded without writing an image file");
+    } catch (error) {
+      lastError = formatErrorMessage(error);
+      if (attempt === attempts) {
+        break;
+      }
+
+      await sleep(retryDelayMs);
+    } finally {
+      await rm(captureDir, { force: true, recursive: true });
+    }
+  }
+
+  throw new Error(`failed to capture ${basename(resolvedOutput)}: ${lastError}`);
+};
+
 export const packageChannel = async (
   outputPath: string,
   rootDir = process.cwd(),
@@ -545,6 +616,27 @@ const rejectUnsafeInput = (value: string, label: string): void => {
     })
   ) {
     throw new Error(`${label} contains control characters`);
+  }
+};
+
+const safeTempPrefix = (value: string): string => value.replace(/[^a-zA-Z0-9_-]/g, "-");
+
+const firstExistingPath = async (paths: readonly string[]): Promise<string | undefined> => {
+  for (const path of paths) {
+    if (await fileExists(path)) {
+      return path;
+    }
+  }
+
+  return undefined;
+};
+
+const fileExists = async (path: string): Promise<boolean> => {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
   }
 };
 

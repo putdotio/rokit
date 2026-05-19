@@ -9,6 +9,7 @@ export {
   assertMediaPlayerContainer,
   assertSceneGraphNode,
   checkDevice,
+  captureScreenshot,
   discoverRokuDevices,
   getDeviceInfo,
   installPackage,
@@ -45,6 +46,7 @@ export type {
   RetryOptions,
   RokuContext,
   SceneGraphAssertion,
+  ScreenshotCaptureOptions,
   WaitForSceneGraphAssertionOptions,
 } from "./roku.js";
 export {
