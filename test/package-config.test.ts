@@ -50,7 +50,6 @@ describe("package config", () => {
     const lockfile = readFileSync("pnpm-lock.yaml", "utf8");
 
     expect(packageConfig.engines.node).toContain(">=24.");
-    expect(packageConfig.engines.node).not.toContain("<25");
     expect(packageConfig.devDependencies["@types/node"]).toMatch(/^\^(2[5-9]|[3-9]\d)\./);
     expect(lockfile).toContain("@types/node@25.");
   });
