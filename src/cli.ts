@@ -3,6 +3,12 @@ import { basename, dirname, extname, join } from "node:path";
 import { createRequire } from "node:module";
 import { Effect } from "effect";
 import {
+  buildDebugCommand,
+  captureDebugConsole,
+  runDebugCommand,
+  type RokuDebugCommand,
+} from "./debug.js";
+import {
   assertSceneGraphNode,
   checkDevice,
   discoverRokuDevices,
@@ -54,6 +60,17 @@ type PressArgs = {
   readonly until?: NodeCondition;
 };
 
+type ConsoleArgs = {
+  readonly durationMs: number;
+  readonly outputPath: string;
+};
+
+type DebugCommandArgs = {
+  readonly command: RokuDebugCommand;
+  readonly durationMs: number;
+  readonly idleTimeoutMs: number;
+};
+
 type OutputMode = "json" | "text";
 
 type CliOptions = {
@@ -99,6 +116,8 @@ type Command =
   | { readonly name: "active-app" }
   | { readonly args: NodeCondition; readonly name: "assert-node" }
   | { readonly name: "check" }
+  | { readonly args: ConsoleArgs; readonly name: "console" }
+  | { readonly args: DebugCommandArgs; readonly name: "debug-command" }
   | { readonly name: "describe" }
   | { readonly name: "device-info" }
   | { readonly name: "discover"; readonly timeoutMs?: number }
@@ -125,6 +144,9 @@ type Command =
 
 const require = createRequire(import.meta.url);
 const packageJson = require("../package.json") as { version: string };
+const defaultConsoleDurationMs = 30_000;
+const defaultDebugCommandDurationMs = 3_000;
+const defaultDebugCommandIdleTimeoutMs = 500;
 
 export const mainEffect = Effect.fn("mainEffect")(function* (argv = process.argv.slice(2)) {
   let outputMode = inferOutputMode(argv);
@@ -258,6 +280,37 @@ const runCommand = async (
         `ecp: ${summary.ecp}`,
         `developer installer HTTP status: ${summary.installerStatus}`,
       ].join("\n"),
+      status: "ok",
+    };
+  }
+
+  if (command.name === "console") {
+    const requestedPath = resolveFileOutputPath(command.args.outputPath, "console output path");
+    const path = timestampOutputPath(requestedPath);
+    const capture = await captureDebugConsole(deviceContext, command.args.durationMs);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, capture.body);
+
+    return {
+      command: command.name,
+      data: { ...capture, path },
+      message: `console: ${path}`,
+      status: "ok",
+    };
+  }
+
+  if (command.name === "debug-command") {
+    const result = await runDebugCommand(
+      deviceContext,
+      command.args.command,
+      command.args.durationMs,
+      command.args.idleTimeoutMs,
+    );
+
+    return {
+      command: command.name,
+      data: result,
+      message: result.body,
       status: "ok",
     };
   }
@@ -695,6 +748,8 @@ const commandNeedsTarget = (command: Command, dryRun: boolean): boolean => {
 };
 
 const commandSupportsDryRun = (command: Command): boolean =>
+  command.name === "console" ||
+  command.name === "debug-command" ||
   command.name === "install" ||
   command.name === "launch" ||
   command.name === "package" ||
@@ -717,6 +772,27 @@ const dryRunData = (command: Command): unknown => {
       keys: command.args.keys,
       maxAttempts: command.args.maxAttempts,
       until: command.args.until ? formatNodeData(command.args.until) : undefined,
+    };
+  }
+
+  if (command.name === "console") {
+    return {
+      durationMs: command.args.durationMs,
+      path: timestampOutputPath(
+        resolveFileOutputPath(command.args.outputPath, "console output path"),
+      ),
+      port: 8085,
+    };
+  }
+
+  if (command.name === "debug-command") {
+    return {
+      args: command.args.command.args,
+      command: command.args.command.command,
+      durationMs: command.args.durationMs,
+      idleTimeoutMs: command.args.idleTimeoutMs,
+      port: command.args.command.port,
+      request: command.args.command.request.trim(),
     };
   }
 
@@ -885,6 +961,14 @@ const parseCommand = (options: CliOptions): Command => {
 
   if (name === "check") {
     return { name };
+  }
+
+  if (name === "console") {
+    return { name, args: parseConsoleArgs(args) };
+  }
+
+  if (name === "debug-command") {
+    return { name, args: parseDebugCommandArgs(args) };
   }
 
   if (name === "discover") {
@@ -1132,6 +1216,75 @@ const parseOutputPath = (args: readonly string[], usage: string): string => {
   return fail(`usage: ${usage}`);
 };
 
+const parseConsoleArgs = (args: readonly string[]): ConsoleArgs => {
+  let outputPath: string | undefined;
+  let durationMs = defaultConsoleDurationMs;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--duration-ms") {
+      durationMs = parsePositiveInteger(args[index + 1] ?? "", "duration");
+      index += 1;
+      continue;
+    }
+
+    if (arg?.startsWith("--")) {
+      fail(`Unknown console option: ${arg}`);
+    }
+
+    if (outputPath !== undefined || arg === undefined) {
+      fail("usage: rokit console <output-path> [--duration-ms <ms>]");
+    }
+
+    outputPath = arg;
+  }
+
+  if (outputPath !== undefined) {
+    return { durationMs, outputPath };
+  }
+
+  return fail("usage: rokit console <output-path> [--duration-ms <ms>]");
+};
+
+const parseDebugCommandArgs = (args: readonly string[]): DebugCommandArgs => {
+  let durationMs = defaultDebugCommandDurationMs;
+  let idleTimeoutMs = defaultDebugCommandIdleTimeoutMs;
+  const commandArgs: string[] = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (arg === "--duration-ms") {
+      durationMs = parsePositiveInteger(args[index + 1] ?? "", "duration");
+      index += 1;
+      continue;
+    }
+
+    if (arg === "--idle-timeout-ms") {
+      idleTimeoutMs = parsePositiveInteger(args[index + 1] ?? "", "idle timeout");
+      index += 1;
+      continue;
+    }
+
+    if (arg !== undefined) {
+      commandArgs.push(arg);
+    }
+  }
+
+  const [command, ...debugArgs] = commandArgs;
+
+  if (command === undefined) {
+    fail("usage: rokit debug-command <command> [args...] [--duration-ms <ms>]");
+  }
+
+  return {
+    command: buildDebugCommand(command, debugArgs),
+    durationMs,
+    idleTimeoutMs,
+  };
+};
+
 const parseProofArgs = (args: readonly string[]): Extract<Command, { name: "proof" }> => {
   let outputDir: string | undefined;
   let screenshot = false;
@@ -1234,6 +1387,31 @@ const parseInputJson = (value: string): Command => {
 
   if (command === "check" || command === "device-info" || command === "active-app") {
     return { name: command };
+  }
+
+  if (command === "console") {
+    return {
+      args: {
+        durationMs: readOptionalNumber(parsed, "durationMs") ?? defaultConsoleDurationMs,
+        outputPath: readString(parsed, "outputPath"),
+      },
+      name: "console",
+    };
+  }
+
+  if (command === "debug-command") {
+    return {
+      args: {
+        command: buildDebugCommand(
+          readString(parsed, "debugCommand"),
+          readOptionalStringArray(parsed, "args") ?? [],
+        ),
+        durationMs: readOptionalNumber(parsed, "durationMs") ?? defaultDebugCommandDurationMs,
+        idleTimeoutMs:
+          readOptionalNumber(parsed, "idleTimeoutMs") ?? defaultDebugCommandIdleTimeoutMs,
+      },
+      name: "debug-command",
+    };
   }
 
   if (command === "media-player" || command === "sgnodes" || command === "snapshot") {
@@ -1400,6 +1578,23 @@ const readOptionalNumber = (record: Record<string, unknown>, key: string): numbe
 
 const readStringArray = (record: Record<string, unknown>, key: string): readonly string[] => {
   const value = record[key];
+
+  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
+    return fail(`input JSON field must be a string array: ${key}`);
+  }
+
+  return value.map((item) => String(item));
+};
+
+const readOptionalStringArray = (
+  record: Record<string, unknown>,
+  key: string,
+): readonly string[] | undefined => {
+  const value = record[key];
+
+  if (value === undefined) {
+    return undefined;
+  }
 
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
     return fail(`input JSON field must be a string array: ${key}`);
@@ -1633,6 +1828,20 @@ const describeCli = () => ({
   commands: [
     commandSchema("describe", "Print machine-readable command schemas.", false, false, []),
     commandSchema("check", "Check ECP and developer installer reachability.", true, false, []),
+    commandSchema("console", "Capture BrightScript console output from port 8085.", true, true, [
+      argumentField("outputPath", "path", "Console log output path inside the current app root."),
+      optionField("durationMs", "positive-integer", "Capture duration in milliseconds."),
+    ]),
+    commandSchema("debug-command", "Run an allowlisted Roku debug command.", true, true, [
+      argumentField("debugCommand", "string", "Allowlisted Roku debug command."),
+      argumentField("args", "string[]", "Debug command arguments.", false, true),
+      optionField("durationMs", "positive-integer", "Maximum read duration in milliseconds."),
+      optionField(
+        "idleTimeoutMs",
+        "positive-integer",
+        "Stop reading after this many idle milliseconds.",
+      ),
+    ]),
     commandSchema("discover", "Discover Roku ECP devices with SSDP.", false, false, [
       optionField("timeoutMs", "positive-integer", "Discovery timeout in milliseconds."),
     ]),
@@ -1838,6 +2047,8 @@ const printHelp = () => {
 usage:
   rokit describe
   rokit check
+  rokit console <output-path> [--duration-ms <ms>]
+  rokit debug-command <command> [args...] [--duration-ms <ms>] [--idle-timeout-ms <ms>]
   rokit discover [--timeout-ms <ms>]
   rokit device-info
   rokit active-app
@@ -1871,6 +2082,6 @@ environment:
   ROKIT_USERNAME=rokudev
   ROKIT_TIMEOUT_MS=10000
 
-compatibility:
-  ROKU_DEV_TARGET and ROKU_DEV_PASSWORD are accepted as fallbacks.`);
+aliases:
+  ROKU_DEV_TARGET and ROKU_DEV_PASSWORD are accepted when ROKIT_* names are unset.`);
 };

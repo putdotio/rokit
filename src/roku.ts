@@ -40,6 +40,8 @@ const remoteKeySet: ReadonlySet<string> = new Set(remoteKeys);
 export type RemoteKey = (typeof remoteKeys)[number] | `Lit_${string}`;
 
 export type RokuContext = {
+  readonly debugConsolePort?: number;
+  readonly debugServerPort?: number;
   readonly password?: string;
   readonly target: string;
   readonly timeoutMs: number;

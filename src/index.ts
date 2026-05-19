@@ -1,3 +1,10 @@
+export { buildDebugCommand, captureDebugConsole, runDebugCommand } from "./debug.js";
+export type {
+  DebugCommandResult,
+  DebugConsoleCapture,
+  RokuDebugCommand,
+  RokuDebugPort,
+} from "./debug.js";
 export {
   assertMediaPlayerContainer,
   assertSceneGraphNode,
