@@ -66,11 +66,11 @@
     "@effect/vitest": "4.0.0-beta.69",
     "@types/node": "^25.8.0",
     "typescript": "^6.0.2",
-    "vite-plus": "^0.1.20",
+    "vite-plus": "^0.1.22",
     "vitest": "^4.1.6"
   },
   "engines": {
     "node": ">=24.14.0"
   },
-  "packageManager": "pnpm@11.0.0"
+  "packageManager": "pnpm@11.2.2"
 }

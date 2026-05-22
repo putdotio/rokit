@@ -14,14 +14,8 @@ jobs:
     name: Verify rokit
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        node-version:
-          - "24.14.0"
-          - "25.x"
     concurrency:
-      group: verify-${{ github.workflow }}-${{ github.ref }}-${{ matrix.node-version }}
+      group: verify-${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
     permissions:
       contents: read
@@ -34,9 +28,9 @@ jobs:
           persist-credentials: false
 
       - name: Set up Vite+
-        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1.10.0
+        uses: ./.github/actions/setup-vp
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version-file: ".node-version"
           cache: true
 
       - name: Install dependencies
@@ -80,7 +74,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Vite+
-        uses: voidzero-dev/setup-vp@ca1c46663915d6c1042ae23bd39ab85718bfb0fa # v1.10.0
+        uses: ./.github/actions/setup-vp
         with:
           node-version-file: ".node-version"
           cache: false
