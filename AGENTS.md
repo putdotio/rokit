@@ -28,6 +28,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Treat `process.cwd()` as the consumer app root.
 - Keep `.rokit/` consumer-local; it can hold env, generated artifacts, and
   transient device state.
+- Keep `skills/rokit/SKILL.md` aligned with agent-facing command and safety
+  guardrails.
 - Keep `examples/live-probe-channel` generic. It exists only to prove package,
   install, launch, input, SceneGraph, screenshot, and proof mechanics.
 - Wrap `roku-deploy` for package publish, screenshots, and device metadata when
@@ -53,7 +55,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Avoid sleeps in generic commands. App repos can add meaningful wait/assert
   loops around `rokit` primitives.
 - Release details live in `docs/DISTRIBUTION.md`; debugging details live in
-  `docs/DEBUGGING.md`; readiness details live in `docs/READINESS.md`.
+  `docs/DEBUGGING.md`; readiness details live in `docs/READINESS.md`;
+  consumer skill guidance lives in `skills/rokit/SKILL.md`.
 
 ## When Contracts Change
 

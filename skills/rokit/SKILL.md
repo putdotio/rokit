@@ -1,9 +1,9 @@
 ---
-name: rokit-harness
-description: Use rokit as a generic Roku harness adapter for packaging, installing, launching, key input, ECP/SceneGraph/media-player observation, readiness waits, debug console capture, screenshots, and proof bundles.
+name: rokit
+description: Use when testing, sideloading, deploying, or debugging Roku apps with rokit, including package/install/launch flows, remote key input, BrightScript console capture, ECP/SceneGraph/media-player observation, screenshots, readiness waits, and proof bundles.
 ---
 
-# rokit Harness
+# rokit
 
 Use this skill when a repo consumes `@putdotio/rokit` for Roku device harness
 work. Keep `rokit` generic and put app journeys, product selectors, fixture
@@ -32,6 +32,18 @@ repo.
    SceneGraph readiness.
 9. Use `rokit press --until-node ...` for bounded navigation loops instead of
    arbitrary sleeps.
+
+## Common Commands
+
+```bash
+rokit describe
+rokit --json snapshot --fields command,status,data.activeApp,data.mediaPlayer
+rokit --dry-run package --out artifacts/live/channel.zip
+rokit --dry-run launch dev
+rokit --json proof artifacts/live/proof --screenshot
+rokit --input-json '{"command":"press","keys":["Down","Select"]}'
+rokit console artifacts/live/console.log --duration-ms 30000
+```
 
 ## Boundaries
 
