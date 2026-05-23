@@ -33,6 +33,15 @@ repo.
 9. Use `rokit press --until-node ...` for bounded navigation loops instead of
    arbitrary sleeps.
 
+## Start Here
+
+Read only the reference needed for the current task:
+
+- live proof, readiness waits, SceneGraph and media-player observation:
+  [`references/live-proof.md`](references/live-proof.md)
+- BrightScript console capture and debug-server commands:
+  [`references/debugging.md`](references/debugging.md)
+
 ## Common Commands
 
 ```bash
