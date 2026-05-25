@@ -63,7 +63,7 @@
     "roku-deploy": "3.17.4"
   },
   "devDependencies": {
-    "@effect/vitest": "4.0.0-beta.69",
+    "@effect/vitest": "4.0.0-beta.70",
     "@types/node": "^25.8.0",
     "typescript": "^6.0.2",
     "vite-plus": "^0.1.22",
