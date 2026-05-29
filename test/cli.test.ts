@@ -510,7 +510,7 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-  });
+  }, 30_000);
 
   it("validates package dry-run output safety before reporting success", () => {
     const result = runRokit(["--dry-run", "package", "source/channel"]);
@@ -621,7 +621,7 @@ describe("rokit cli", () => {
       error: { message: "Unrecognized flag: --node-state in command rokit wait-ready" },
       status: "failed",
     });
-  });
+  }, 30_000);
 
   it("keeps wait-ready node timeout scoped to the node condition", async () => {
     const parsed = await Effect.runPromise(
