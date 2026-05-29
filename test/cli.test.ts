@@ -4,13 +4,16 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { effectCliCommandNames, parseEffectCliEffect } from "../src/cli-command.js";
 import { commandParameter, globalOption } from "../src/cli-command-metadata.js";
 import { commandMutates, commandRequiresTarget } from "../src/cli-command-traits.js";
 import { describeCli } from "../src/cli-describe.js";
-import { inputJsonCommandNames } from "../src/cli-input-json.js";
+import { runCommandEffect } from "../src/cli-runner.js";
+import type { Command, CommandResult } from "../src/cli-types.js";
+import { inputJsonCommandNames, parseInputJsonEffect } from "../src/cli-input-json.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const builtDistDir = resolve(repoRoot, "dist");
@@ -65,6 +68,38 @@ const childCliEnv = (overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv => {
 
   return { ...env, ...overrides };
 };
+
+const parseCliArgs = async (args: readonly string[]) =>
+  await Effect.runPromise(parseEffectCliEffect(args));
+
+const runCommand = async (command: Command, dryRun: boolean): Promise<CommandResult> =>
+  await Effect.runPromise(
+    runCommandEffect(undefined, command, dryRun).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+const runParsedCommand = async (args: readonly string[]): Promise<CommandResult> => {
+  const parsed = await parseCliArgs(args);
+  if (parsed.command === undefined) {
+    throw new Error("expected parsed command");
+  }
+
+  return await runCommand(parsed.command, parsed.dryRun);
+};
+
+const runInputJsonCommand = async (value: string): Promise<CommandResult> =>
+  await runCommand(await Effect.runPromise(parseInputJsonEffect(value)), true);
+
+const stringDataField = (result: CommandResult, field: string): string => {
+  const data = result.data;
+  if (!isRecord(data) || typeof data[field] !== "string") {
+    throw new Error(`expected string result data field: ${field}`);
+  }
+
+  return data[field];
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 describe("rokit cli", () => {
   it("prints help without a device target", () => {
@@ -405,8 +440,8 @@ describe("rokit cli", () => {
     });
   });
 
-  it("supports dry-run for mutating commands without requiring a target", () => {
-    const result = runRokit([
+  it("supports dry-run for mutating commands without requiring a target", async () => {
+    const result = await runParsedCommand([
       "--dry-run",
       "launch",
       "dev",
@@ -415,33 +450,32 @@ describe("rokit cli", () => {
       "--param",
       "story=app-dialog-empty",
     ]);
-    const launchParamWithEquals = runRokit([
+    const launchParamWithEquals = await runParsedCommand([
       "--dry-run",
       "launch",
       "dev",
       "--param",
       "token=abc==",
     ]);
-    const discoverResult = runRokit(["--dry-run", "discover", "--timeout-ms", "250"]);
-    const packageResult = runRokit(["--dry-run", "package", "out/channel"]);
-    const proofResult = runRokit(["--dry-run", "proof", "artifacts/proof"]);
-    const reorderedProofResult = runRokit([
+    const discoverResult = await runParsedCommand(["--dry-run", "discover", "--timeout-ms", "250"]);
+    const packageResult = await runParsedCommand(["--dry-run", "package", "out/channel"]);
+    const proofResult = await runParsedCommand(["--dry-run", "proof", "artifacts/proof"]);
+    const reorderedProofResult = await runParsedCommand([
       "--dry-run",
       "proof",
       "artifacts/proof",
       "--screenshot",
     ]);
-    const consoleResult = runRokit([
+    const consoleResult = await runParsedCommand([
       "--dry-run",
       "console",
       "artifacts/debug/console.log",
       "--duration-ms",
       "250",
     ]);
-    const debugCommandResult = runRokit(["--dry-run", "debug-command", "help"]);
+    const debugCommandResult = await runParsedCommand(["--dry-run", "debug-command", "help"]);
 
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(result).toMatchObject({
       command: "launch",
       data: {
         appId: "dev",
@@ -450,8 +484,7 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-    expect(launchParamWithEquals.status).toBe(0);
-    expect(JSON.parse(launchParamWithEquals.stdout)).toMatchObject({
+    expect(launchParamWithEquals).toMatchObject({
       command: "launch",
       data: {
         appId: "dev",
@@ -460,29 +493,25 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-    expect(discoverResult.status).toBe(0);
-    expect(JSON.parse(discoverResult.stdout)).toMatchObject({
+    expect(discoverResult).toMatchObject({
       command: "discover",
       data: { timeoutMs: 250 },
       dryRun: true,
       status: "ok",
     });
-    expect(packageResult.status).toBe(0);
-    expect(JSON.parse(packageResult.stdout)).toMatchObject({
+    expect(packageResult).toMatchObject({
       command: "package",
       data: { path: resolve(repoRoot, "out/channel.zip") },
       dryRun: true,
       status: "ok",
     });
-    expect(proofResult.status).toBe(0);
-    expect(JSON.parse(proofResult.stdout)).toMatchObject({
+    expect(proofResult).toMatchObject({
       command: "proof",
       data: { outputDir: resolve(repoRoot, "artifacts/proof") },
       dryRun: true,
       status: "ok",
     });
-    expect(reorderedProofResult.status).toBe(0);
-    expect(JSON.parse(reorderedProofResult.stdout)).toMatchObject({
+    expect(reorderedProofResult).toMatchObject({
       command: "proof",
       data: {
         outputDir: resolve(repoRoot, "artifacts/proof"),
@@ -491,8 +520,7 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-    expect(consoleResult.status).toBe(0);
-    expect(JSON.parse(consoleResult.stdout)).toMatchObject({
+    expect(consoleResult).toMatchObject({
       command: "console",
       data: {
         durationMs: 250,
@@ -501,8 +529,7 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-    expect(debugCommandResult.status).toBe(0);
-    expect(JSON.parse(debugCommandResult.stdout)).toMatchObject({
+    expect(debugCommandResult).toMatchObject({
       command: "debug-command",
       data: {
         command: "help",
@@ -510,23 +537,23 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-  }, 30_000);
-
-  it("validates package dry-run output safety before reporting success", () => {
-    const result = runRokit(["--dry-run", "package", "source/channel"]);
-
-    expect(result.status).toBe(1);
-    expect(JSON.parse(result.stderr)).toEqual({
-      error: {
-        message: `package output path must be outside packaged roots: ${resolve(repoRoot, "source/channel.zip")}`,
-      },
-      status: "failed",
-    });
   });
 
-  it("validates dry-run command payloads like live command payloads", () => {
-    const zeroDelayPress = runRokit(["--dry-run", "press", "Down", "--delay-ms", "0"]);
-    const cappedPress = runRokit([
+  it("validates package dry-run output safety before reporting success", async () => {
+    await expect(runParsedCommand(["--dry-run", "package", "source/channel"])).rejects.toThrow(
+      `package output path must be outside packaged roots: ${resolve(repoRoot, "source/channel.zip")}`,
+    );
+  });
+
+  it("validates dry-run command payloads like live command payloads", async () => {
+    const zeroDelayPress = await runParsedCommand([
+      "--dry-run",
+      "press",
+      "Down",
+      "--delay-ms",
+      "0",
+    ]);
+    const cappedPress = await runParsedCommand([
       "--dry-run",
       "press",
       "Down",
@@ -537,96 +564,59 @@ describe("rokit cli", () => {
       "--max",
       "2",
     ]);
-    const positionalUntilState = runRokit([
-      "--dry-run",
-      "press",
-      "--max",
-      "2",
-      "Down",
-      "--until-node",
-      "videoPlayerScreen",
-      "visible",
-    ]);
-    const waitReadyNodeCondition = runRokit([
-      "--json",
-      "wait-ready",
-      "dev",
-      "title",
-      "text",
-      "Rokit",
-    ]);
-    const invalidLaunchParam = runRokit(["--dry-run", "launch", "dev", "--param", "nope"]);
-    const invalidPress = runRokit(["--dry-run", "press", "Bogus"]);
-    const invalidDebugCommand = runRokit(["--json", "debug-command", "bogus"]);
 
-    expect(zeroDelayPress.status).toBe(0);
-    expect(JSON.parse(zeroDelayPress.stdout)).toMatchObject({
+    expect(zeroDelayPress).toMatchObject({
       command: "press",
       data: { delayMs: 0 },
       dryRun: true,
       status: "ok",
     });
-    expect(cappedPress.status).toBe(0);
-    expect(JSON.parse(cappedPress.stdout)).toMatchObject({
+    expect(cappedPress).toMatchObject({
       command: "press",
       data: { maxAttempts: 2 },
       dryRun: true,
       status: "ok",
     });
-    expect(positionalUntilState.status).toBe(1);
-    expect(JSON.parse(positionalUntilState.stderr)).toEqual({
-      error: {
-        message:
-          'Invalid value for argument <key>: "visible". Expected: unsupported remote key: visible',
-      },
-      status: "failed",
-    });
-    expect(waitReadyNodeCondition.status).toBe(1);
-    expect(JSON.parse(waitReadyNodeCondition.stderr)).toEqual({
-      error: { message: "ROKIT_TARGET is not set" },
-      status: "failed",
-    });
-    expect(invalidLaunchParam.status).toBe(1);
-    expect(JSON.parse(invalidLaunchParam.stderr)).toEqual({
-      error: {
-        message:
-          'Invalid value for flag --param: "nope". Expected: Invalid --param value "nope". Expected key=value.',
-      },
-      status: "failed",
-    });
-    expect(invalidPress.status).toBe(1);
-    expect(JSON.parse(invalidPress.stderr)).toEqual({
-      error: {
-        message:
-          'Invalid value for argument <key>: "Bogus". Expected: unsupported remote key: Bogus',
-      },
-      status: "failed",
-    });
-    expect(invalidDebugCommand.status).toBe(1);
-    expect(JSON.parse(invalidDebugCommand.stderr)).toEqual({
-      error: { message: "Unsupported Roku debug command: bogus" },
-      status: "failed",
-    });
-
-    const danglingUntilState = runRokit(["--dry-run", "press", "Down", "--until-state", "hidden"]);
-    const oldWaitReadyNodeFlag = runRokit(["wait-ready", "dev", "--node-state", "hidden"]);
-
-    expect(danglingUntilState.status).toBe(1);
-    expect(JSON.parse(danglingUntilState.stderr)).toEqual({
-      error: { message: "usage: rokit press --until-node <node-name>" },
-      status: "failed",
-    });
-    expect(oldWaitReadyNodeFlag.status).toBe(1);
-    expect(JSON.parse(oldWaitReadyNodeFlag.stderr)).toEqual({
-      error: { message: "Unrecognized flag: --node-state in command rokit wait-ready" },
-      status: "failed",
-    });
-  }, 30_000);
+    await expect(
+      parseCliArgs([
+        "--dry-run",
+        "press",
+        "--max",
+        "2",
+        "Down",
+        "--until-node",
+        "videoPlayerScreen",
+        "visible",
+      ]),
+    ).rejects.toThrow("unsupported remote key: visible");
+    await expect(
+      runParsedCommand(["--json", "wait-ready", "dev", "title", "text", "Rokit"]),
+    ).rejects.toThrow("ROKIT_TARGET is not set");
+    await expect(parseCliArgs(["--dry-run", "launch", "dev", "--param", "nope"])).rejects.toThrow(
+      'Invalid --param value "nope". Expected key=value.',
+    );
+    await expect(parseCliArgs(["--dry-run", "press", "Bogus"])).rejects.toThrow(
+      "unsupported remote key: Bogus",
+    );
+    await expect(parseCliArgs(["--json", "debug-command", "bogus"])).rejects.toThrow(
+      "Unsupported Roku debug command: bogus",
+    );
+    await expect(
+      parseCliArgs(["--dry-run", "press", "Down", "--until-state", "hidden"]),
+    ).rejects.toThrow("usage: rokit press --until-node <node-name>");
+    await expect(parseCliArgs(["wait-ready", "dev", "--node-state", "hidden"])).rejects.toThrow(
+      "Unrecognized flag: --node-state in command rokit wait-ready",
+    );
+  });
 
   it("keeps wait-ready node timeout scoped to the node condition", async () => {
-    const parsed = await Effect.runPromise(
-      parseEffectCliEffect(["wait-ready", "dev", "videoPlayerScreen", "--node-timeout-ms", "250"]),
-    );
+    const parsed = await parseCliArgs([
+      "wait-ready",
+      "dev",
+      "videoPlayerScreen",
+      "--node-timeout-ms",
+      "250",
+    ]);
 
     expect(parsed.command).toMatchObject({
       appId: "dev",
@@ -641,9 +631,7 @@ describe("rokit cli", () => {
   });
 
   it("uses positional node conditions for wait-ready", async () => {
-    const parsed = await Effect.runPromise(
-      parseEffectCliEffect(["wait-ready", "dev", "title", "text", "Rokit"]),
-    );
+    const parsed = await parseCliArgs(["wait-ready", "dev", "title", "text", "Rokit"]);
 
     expect(parsed.command).toMatchObject({
       appId: "dev",
@@ -655,15 +643,12 @@ describe("rokit cli", () => {
     });
   });
 
-  it("accepts typed JSON payloads", () => {
-    const result = runRokit([
-      "--dry-run",
-      "--input-json",
+  it("accepts typed JSON payloads", async () => {
+    const result = await runInputJsonCommand(
       JSON.stringify({ command: "press", delayMs: 0, keys: ["Down", "Select"] }),
-    ]);
+    );
 
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(result).toMatchObject({
       command: "press",
       data: {
         delayMs: 0,
@@ -703,29 +688,22 @@ describe("rokit cli", () => {
     });
   });
 
-  it("accepts raw JSON payloads for mutating command schemas", () => {
-    const launch = runRokit([
-      "--dry-run",
-      "--input-json",
-      JSON.stringify({
-        appId: "dev",
-        command: "launch",
-        params: { story: "app-dialog-empty", token: "abc==" },
-      }),
-    ]);
-    const proof = runRokit([
-      "--dry-run",
-      "--input-json",
-      JSON.stringify({ command: "proof", outputDir: "artifacts/proof", screenshot: true }),
-    ]);
-    const pack = runRokit([
-      "--dry-run",
-      "--input-json",
-      JSON.stringify({ command: "package", outputPath: "out/channel" }),
+  it("accepts raw JSON payloads for mutating command schemas", async () => {
+    const [launch, proof, pack] = await Promise.all([
+      runInputJsonCommand(
+        JSON.stringify({
+          appId: "dev",
+          command: "launch",
+          params: { story: "app-dialog-empty", token: "abc==" },
+        }),
+      ),
+      runInputJsonCommand(
+        JSON.stringify({ command: "proof", outputDir: "artifacts/proof", screenshot: true }),
+      ),
+      runInputJsonCommand(JSON.stringify({ command: "package", outputPath: "out/channel" })),
     ]);
 
-    expect(launch.status).toBe(0);
-    expect(JSON.parse(launch.stdout)).toMatchObject({
+    expect(launch).toMatchObject({
       command: "launch",
       data: {
         appId: "dev",
@@ -734,8 +712,7 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-    expect(proof.status).toBe(0);
-    expect(JSON.parse(proof.stdout)).toMatchObject({
+    expect(proof).toMatchObject({
       command: "proof",
       data: {
         outputDir: resolve(repoRoot, "artifacts/proof"),
@@ -744,8 +721,7 @@ describe("rokit cli", () => {
       dryRun: true,
       status: "ok",
     });
-    expect(pack.status).toBe(0);
-    expect(JSON.parse(pack.stdout)).toMatchObject({
+    expect(pack).toMatchObject({
       command: "package",
       data: { path: resolve(repoRoot, "out/channel.zip") },
       dryRun: true,
@@ -795,10 +771,8 @@ describe("rokit cli", () => {
     });
   });
 
-  it("matches JSON press defaults to the CLI press surface", () => {
-    const result = runRokit([
-      "--dry-run",
-      "--input-json",
+  it("matches JSON press defaults to the CLI press surface", async () => {
+    const result = await runInputJsonCommand(
       JSON.stringify({
         command: "press",
         keys: ["Down"],
@@ -807,10 +781,9 @@ describe("rokit cli", () => {
           nodeName: "videoPlayerScreen",
         },
       }),
-    ]);
+    );
 
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(result).toMatchObject({
       command: "press",
       data: { maxAttempts: 8 },
       dryRun: true,
@@ -818,14 +791,10 @@ describe("rokit cli", () => {
     });
   });
 
-  it("keeps required JSON payload fields aligned with CLI arguments", () => {
-    const result = runRokit(["--dry-run", "--input-json", '{"command":"press","keys":[]}']);
-
-    expect(result.status).toBe(1);
-    expect(JSON.parse(result.stderr)).toEqual({
-      error: { message: "input JSON field must include at least one key: keys" },
-      status: "failed",
-    });
+  it("keeps required JSON payload fields aligned with CLI arguments", async () => {
+    await expect(
+      Effect.runPromise(parseInputJsonEffect('{"command":"press","keys":[]}')),
+    ).rejects.toThrow("input JSON field must include at least one key: keys");
   });
 
   it("filters JSON output with field masks", () => {
@@ -872,79 +841,49 @@ describe("rokit cli", () => {
     expect(result.stdout).toBe("");
   });
 
-  it("hardens ECP paths for agent mistakes", () => {
-    const badQuery = runRokit(["--dry-run", "query", "/query/active-app?x=1"]);
-    const protocolRelativeQuery = runRokit([
-      "--dry-run",
-      "query",
-      "//example.com/query/device-info",
-    ]);
-    const backslashHostQuery = runRokit([
-      "--dry-run",
-      "query",
-      "\\\\example.com/query/device-info",
-    ]);
-    const slashBackslashHostQuery = runRokit([
-      "--dry-run",
-      "query",
-      "/\\example.com/query/device-info",
-    ]);
-
-    expect(badQuery.status).toBe(1);
-    expect(JSON.parse(badQuery.stderr).error.message).toBe(
+  it("hardens ECP paths for agent mistakes", async () => {
+    await expect(runParsedCommand(["--dry-run", "query", "/query/active-app?x=1"])).rejects.toThrow(
       "ECP path must not include query strings or fragments",
     );
-    expect(protocolRelativeQuery.status).toBe(1);
-    expect(JSON.parse(protocolRelativeQuery.stderr).error.message).toBe(
-      "ECP path must be device-relative",
-    );
-    expect(backslashHostQuery.status).toBe(1);
-    expect(JSON.parse(backslashHostQuery.stderr).error.message).toBe(
-      "ECP path must not include backslashes",
-    );
-    expect(slashBackslashHostQuery.status).toBe(1);
-    expect(JSON.parse(slashBackslashHostQuery.stderr).error.message).toBe(
-      "ECP path must not include backslashes",
-    );
+    await expect(
+      runParsedCommand(["--dry-run", "query", "//example.com/query/device-info"]),
+    ).rejects.toThrow("ECP path must be device-relative");
+    await expect(
+      runParsedCommand(["--dry-run", "query", "\\\\example.com/query/device-info"]),
+    ).rejects.toThrow("ECP path must not include backslashes");
+    await expect(
+      runParsedCommand(["--dry-run", "query", "/\\example.com/query/device-info"]),
+    ).rejects.toThrow("ECP path must not include backslashes");
   });
 
-  it("hardens output paths for agent mistakes", () => {
-    const badScreenshot = runRokit(["--dry-run", "screenshot", "../outside.png"]);
-    const cwdScreenshotOutput = runRokit(["--dry-run", "screenshot", "."]);
-    const cwdPackageOutput = runRokit(["--dry-run", "package", "."]);
-    const duplicateProofOutput = runRokit(["--dry-run", "proof", "first", "second"]);
-    const duplicatePackageOutput = runRokit(["--dry-run", "package", "out/one", "out/two"]);
-
-    expect(badScreenshot.status).toBe(1);
-    expect(JSON.parse(badScreenshot.stderr).error.message).toBe(
+  it("hardens output paths for agent mistakes", async () => {
+    await expect(runParsedCommand(["--dry-run", "screenshot", "../outside.png"])).rejects.toThrow(
       "screenshot output path must stay within the current working directory",
     );
-    expect(cwdScreenshotOutput.status).toBe(1);
-    expect(JSON.parse(cwdScreenshotOutput.stderr).error.message).toBe(
+    await expect(runParsedCommand(["--dry-run", "screenshot", "."])).rejects.toThrow(
       "screenshot output path must name a file within the current working directory",
     );
-    expect(cwdPackageOutput.status).toBe(1);
-    expect(JSON.parse(cwdPackageOutput.stderr).error.message).toBe(
+    await expect(runParsedCommand(["--dry-run", "package", "."])).rejects.toThrow(
       "package output path must name a file within the current working directory",
     );
-    expect(duplicateProofOutput.status).toBe(1);
-    expect(JSON.parse(duplicateProofOutput.stderr).error.message).toBe(
+    await expect(runParsedCommand(["--dry-run", "proof", "first", "second"])).rejects.toThrow(
       "Unexpected extra argument: second",
     );
-    expect(duplicatePackageOutput.status).toBe(1);
-    expect(JSON.parse(duplicatePackageOutput.stderr).error.message).toBe(
+    await expect(runParsedCommand(["--dry-run", "package", "out/one", "out/two"])).rejects.toThrow(
       "Unexpected extra argument: out/two",
     );
   });
 
-  it("timestamps screenshot output paths", () => {
-    const result = runRokit(["--dry-run", "screenshot", "artifacts/lab/story.jpg"]);
+  it("timestamps screenshot output paths", async () => {
+    const result = await runParsedCommand(["--dry-run", "screenshot", "artifacts/lab/story.jpg"]);
 
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.data.path).not.toBe(resolve(repoRoot, "artifacts/lab/story.jpg"));
-    expect(parsed.data.path).toContain(`${resolve(repoRoot, "artifacts/lab")}/`);
-    expect(parsed.data.path).toMatch(/story-\d{8}-\d{6}-\d{3}\.jpg$/);
+    const path = stringDataField(result, "path");
+
+    expect(result.data).toMatchObject({
+      path: expect.stringMatching(/story-\d{8}-\d{6}-\d{3}\.jpg$/),
+    });
+    expect(path).not.toBe(resolve(repoRoot, "artifacts/lab/story.jpg"));
+    expect(path).toContain(`${resolve(repoRoot, "artifacts/lab")}/`);
   });
 
   it("keeps partial observation metadata visible through field masks", () => {
