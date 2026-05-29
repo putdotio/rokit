@@ -13,7 +13,8 @@ repo.
 ## Workflow
 
 1. Run `rokit describe` to inspect the command surface instead of guessing
-   flags or `--input-json` payload fields.
+   flags or `--input-json` payload fields. Use `rokit describe <command>` when
+   you only need one command schema.
 2. Use `--dry-run` before mutating commands such as `package`, `install`,
    `launch`, `press`, `screenshot`, or `proof`.
 3. Prefer structured output. In automation, rely on the non-TTY JSON default or
@@ -28,10 +29,10 @@ repo.
 7. For crash/debug proof, start `rokit console <output-path>` before
    reproducing the problem so startup errors and crash traces are captured.
    Use `rokit debug-command <command>` only for generic Roku debug commands.
-8. Use `rokit wait-ready <app-id>` after launch when the app can race ECP or
-   SceneGraph readiness.
-9. Use `rokit press --until-node ...` for bounded navigation loops instead of
-   arbitrary sleeps.
+8. Use `rokit wait-ready <app-id> [node-name] [condition] [value]` after launch
+   when the app can race ECP or SceneGraph readiness.
+9. Use `rokit press <keys...> --until-node <node> --until-state visible` for
+   bounded navigation loops instead of arbitrary sleeps.
 
 ## Start Here
 
@@ -46,11 +47,15 @@ Read only the reference needed for the current task:
 
 ```bash
 rokit describe
+rokit describe proof
 rokit --json snapshot --fields command,status,data.activeApp,data.mediaPlayer
-rokit --dry-run package --out artifacts/live/channel.zip
+rokit --dry-run package artifacts/live/channel.zip
 rokit --dry-run launch dev
 rokit --json proof artifacts/live/proof --screenshot
+rokit wait-node title text "Ready"
 rokit --input-json '{"command":"press","keys":["Down","Select"]}'
+rokit --input-json @artifacts/rokit-payload.json
+printf '{"command":"press","keys":["Back"]}' | rokit --input-json -
 rokit console artifacts/live/console.log --duration-ms 30000
 ```
 
