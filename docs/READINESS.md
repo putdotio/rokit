@@ -1,6 +1,6 @@
 # Agent Readiness
 
-Status: current as of 2026-05-17
+Status: current as of 2026-05-28
 
 `rokit` is a CLI/package repo. There is no long-running app to boot; readiness is based on deterministic package verification plus optional live Roku proof.
 
@@ -30,17 +30,33 @@ Overall: B+
 - The CLI entrypoint runs through Effect's Node runtime, and expected CLI
   failures are schema-backed errors rendered without stack traces.
 - `rokit describe` exposes the machine-readable command surface, parameters,
-  JSON payload fields, and global options without a Roku target.
+  JSON payload fields, and global options without a Roku target. `rokit
+describe <command>` returns one command schema for context-window control.
 - Non-TTY command output defaults to JSON. Use `--output text` when a human
   transcript is required.
-- `--input-json` lets agents provide typed command payloads without translating
-  everything into flags.
+- `--input-json` lets agents provide typed command payloads inline, from a file
+  with `@path`, or from stdin with `-` without translating everything into
+  flags.
 - `--fields` trims JSON output for context-window control.
 - `--dry-run` validates mutating commands without touching a device or writing
   files.
 - ECP paths and generated output paths are hardened against common agent
   mistakes: query strings, fragments, traversal, backslashes, control
   characters, encoded path segments, and writes outside the current app root.
+
+## Agent DX Score
+
+Current score: 16/21, agent-first lower bound.
+
+| Axis                    | Score | Evidence                                           | Gap                            |
+| ----------------------- | ----- | -------------------------------------------------- | ------------------------------ |
+| machine output          | 2     | consistent JSON output and structured JSON errors  | no NDJSON streaming surface    |
+| raw payload input       | 2     | `--input-json` covers command payloads             | schemas are local, not API-gen |
+| schema introspection    | 2     | `rokit describe` and `rokit describe <command>`    | not runtime-resolved from Roku |
+| context discipline      | 2     | `--fields` trims JSON output everywhere            | no pagination surface          |
+| input hardening         | 3     | hardened ECP paths and output-path sandboxing      | none known                     |
+| safety rails            | 2     | mutating commands support `--dry-run`              | no response sanitization layer |
+| agent knowledge package | 3     | `AGENTS.md` plus `skills/rokit/SKILL.md` ship cues | none known                     |
 
 ## Setup For Agents
 

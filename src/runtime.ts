@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
+import { validateEcpPath } from "./ecp.js";
 import { InvalidInput, MissingPassword, MissingTarget } from "./errors.js";
-import { validateEcpPath } from "./roku.js";
 
 export const appDir = process.cwd();
 export const rokitDir = join(appDir, ".rokit");

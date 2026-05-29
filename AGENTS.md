@@ -20,7 +20,12 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 - Use Effect at the runtime boundary and for reusable effectful operations. Keep
   errors schema-backed and render them without stack traces in CLI output.
+- Use `effect/unstable/cli` `Argument` and `Flag` primitives for command
+  grammar before adding custom argv parsing.
 - Keep CLI wiring thin: parse/dispatch commands, then call named Roku helpers.
+- Keep `src/roku.ts` as a public compatibility barrel. Put implementation in
+  focused modules such as `app-control`, `device`, `media-player-query`,
+  `scenegraph-query`, and `roku-context`.
 - Keep human output stable; `--json` / `--output json` should wrap every
   command result and error in a deterministic object for agents.
 - Keep `src/index.ts` as the public library surface for app-specific scenario
@@ -32,8 +37,10 @@ Keep it platform-focused, typed, and useful for both humans and agents.
   guardrails.
 - Keep `examples/live-probe-channel` generic. It exists only to prove package,
   install, launch, input, SceneGraph, screenshot, and proof mechanics.
-- Wrap `roku-deploy` for package publish, screenshots, and device metadata when
-  it already owns the platform mechanics.
+- Use native developer-installer, screenshot, device-info, and package-ZIP
+  helpers where rokit owns the platform mechanics. Keep `roku-deploy` only for
+  package-command compatibility with existing `rokudeploy.json` file rules until
+  native glob parity replaces that adapter.
 - Use Roku ECP for launch, keypresses, active-app queries, and raw runtime
   state.
 - Media-player helpers can parse and wait on Roku `/query/media-player` state,

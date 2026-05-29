@@ -1,7 +1,8 @@
 import { createConnection } from "node:net";
-import { DebugPortUnavailable } from "./errors.js";
-import { fail, rejectUnsafeInput } from "./runtime.js";
-import type { RokuContext } from "./roku.js";
+import { Effect } from "effect";
+import { DebugPortUnavailable, normalizeError, type RokitError } from "./errors.js";
+import { fail, formatErrorMessage, rejectUnsafeInput } from "./runtime.js";
+import type { RokuContext } from "./roku-context.js";
 
 export type RokuDebugPort = 8080 | 8085;
 
@@ -85,21 +86,38 @@ export const buildDebugCommand = (command: string, args: readonly string[]): Rok
   return fail(`Unsupported Roku debug command: ${command}`);
 };
 
-export const runDebugCommand = async (
+export const buildDebugCommandEffect: (
+  command: string,
+  args: readonly string[],
+) => Effect.Effect<RokuDebugCommand, RokitError> = Effect.fn("buildDebugCommand")(
+  function* (command, args) {
+    return yield* Effect.try({
+      catch: normalizeError,
+      try: () => buildDebugCommand(command, args),
+    });
+  },
+);
+
+export const runDebugCommandEffect: (
   context: RokuContext,
   command: RokuDebugCommand,
   durationMs: number,
   idleTimeoutMs: number,
-): Promise<DebugCommandResult> => {
-  const safeCommand = buildDebugCommand(command.command, command.args);
-  const startedAt = Date.now();
+) => Effect.Effect<DebugCommandResult, RokitError> = Effect.fn("runDebugCommand")(function* (
+  context: RokuContext,
+  command: RokuDebugCommand,
+  durationMs: number,
+  idleTimeoutMs: number,
+) {
+  const safeCommand = yield* buildDebugCommandEffect(command.command, command.args);
+  const startedAt = yield* Effect.sync(() => Date.now());
   const port = resolveDebugPort(context, safeCommand.port);
-  const body = await readDebugSocket(context, port, {
+  const body = yield* readDebugSocketEffect(context, port, {
     durationMs,
     idleTimeoutMs,
     request: safeCommand.request,
   });
-  const elapsedMs = Date.now() - startedAt;
+  const elapsedMs = yield* Effect.sync(() => Date.now() - startedAt);
 
   return {
     args: safeCommand.args,
@@ -109,25 +127,41 @@ export const runDebugCommand = async (
     elapsedMs,
     port,
   };
-};
+});
+
+export const captureDebugConsoleEffect: (
+  context: RokuContext,
+  durationMs: number,
+) => Effect.Effect<DebugConsoleCapture, DebugPortUnavailable> = Effect.fn("captureDebugConsole")(
+  function* (context: RokuContext, durationMs: number) {
+    const startedAt = yield* Effect.sync(() => Date.now());
+    const port = resolveDebugPort(context, brightScriptConsolePort);
+    const body = yield* readDebugSocketEffect(context, port, { durationMs });
+    const elapsedMs = yield* Effect.sync(() => Date.now() - startedAt);
+
+    return {
+      body,
+      bytes: Buffer.byteLength(body),
+      durationMs,
+      elapsedMs,
+      port,
+    };
+  },
+);
+
+export const runDebugCommand = async (
+  context: RokuContext,
+  command: RokuDebugCommand,
+  durationMs: number,
+  idleTimeoutMs: number,
+): Promise<DebugCommandResult> =>
+  await Effect.runPromise(runDebugCommandEffect(context, command, durationMs, idleTimeoutMs));
 
 export const captureDebugConsole = async (
   context: RokuContext,
   durationMs: number,
-): Promise<DebugConsoleCapture> => {
-  const startedAt = Date.now();
-  const port = resolveDebugPort(context, brightScriptConsolePort);
-  const body = await readDebugSocket(context, port, { durationMs });
-  const elapsedMs = Date.now() - startedAt;
-
-  return {
-    body,
-    bytes: Buffer.byteLength(body),
-    durationMs,
-    elapsedMs,
-    port,
-  };
-};
+): Promise<DebugConsoleCapture> =>
+  await Effect.runPromise(captureDebugConsoleEffect(context, durationMs));
 
 const debugServerCommand = (command: string, args: readonly string[]): RokuDebugCommand => ({
   args,
@@ -146,15 +180,15 @@ const brightScriptConsoleCommand = (
   request: formatDebugRequest(command, args),
 });
 
-const readDebugSocket = async (
+const readDebugSocketEffect = Effect.fn("readDebugSocket")(function* (
   context: RokuContext,
   port: number,
   options: DebugSocketReadOptions,
-): Promise<string> =>
-  await new Promise<string>((resolve, reject) => {
+) {
+  return yield* Effect.callback<string, DebugPortUnavailable>((resume) => {
     let body = "";
-    let durationTimer: NodeJS.Timeout | undefined;
-    let idleTimer: NodeJS.Timeout | undefined;
+    let durationTimer: ReturnType<typeof setTimeout> | undefined;
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
     let settled = false;
 
     const socket = createConnection({ host: context.target, port });
@@ -169,26 +203,24 @@ const readDebugSocket = async (
       }
     };
 
-    const finish = (): void => {
+    const complete = (effect: Effect.Effect<string, DebugPortUnavailable>): void => {
       if (settled) {
         return;
       }
 
       settled = true;
       clearTimers();
+      socket.removeAllListeners();
       socket.destroy();
-      resolve(body);
+      resume(effect);
+    };
+
+    const finish = (): void => {
+      complete(Effect.succeed(body));
     };
 
     const failRead = (detail: string): void => {
-      if (settled) {
-        return;
-      }
-
-      settled = true;
-      clearTimers();
-      socket.destroy();
-      reject(DebugPortUnavailable.make({ detail, port }));
+      complete(Effect.fail(DebugPortUnavailable.make({ detail, port })));
     };
 
     const scheduleIdleTimer = (): void => {
@@ -211,7 +243,11 @@ const readDebugSocket = async (
       durationTimer = setTimeout(finish, options.durationMs);
 
       if (options.request !== undefined) {
-        socket.write(options.request);
+        try {
+          socket.write(options.request);
+        } catch (error) {
+          failRead(formatErrorMessage(error));
+        }
       }
     });
 
@@ -232,7 +268,17 @@ const readDebugSocket = async (
       failRead(error.message);
     });
     socket.once("close", finish);
+
+    return Effect.sync(() => {
+      if (!settled) {
+        settled = true;
+        clearTimers();
+        socket.removeAllListeners();
+        socket.destroy();
+      }
+    });
   });
+});
 
 const formatDebugRequest = (command: string, args: readonly string[]): string =>
   `${[command, ...args].join(" ")}\r\n`;

@@ -45,12 +45,12 @@ pnpm run build
 node dist/rokit.mjs check --json
 
 cd "${PROBE_APP_DIR}"
-node "${ROOT_DIR}/dist/rokit.mjs" package --out "${PROBE_ZIP}" --json
+node "${ROOT_DIR}/dist/rokit.mjs" package "${PROBE_ZIP}" --json
 
 cd "${ROOT_DIR}"
 node dist/rokit.mjs install "${PROBE_APP_DIR}/${PROBE_ZIP}" --json
 node dist/rokit.mjs launch dev --json
-node dist/rokit.mjs wait-ready dev --node title text "Rokit Live Probe" --timeout-ms 10000 --json
+node dist/rokit.mjs wait-ready dev title text "Rokit Live Probe" --timeout-ms 10000 --json
 node dist/rokit.mjs press Info Back --delay-ms 250 --json
 node dist/rokit.mjs assert-node status text "Install, launch, input, and proof OK" --json
 node dist/rokit.mjs proof "${PROBE_ARTIFACT_DIR}" --screenshot --json

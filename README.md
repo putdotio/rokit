@@ -36,7 +36,7 @@ Then run the generic device checks and actions you need:
 
 ```bash
 pnpm exec rokit check
-pnpm exec rokit package --out artifacts/live/channel.zip
+pnpm exec rokit package artifacts/live/channel.zip
 pnpm exec rokit install artifacts/live/channel.zip
 pnpm exec rokit launch dev
 pnpm exec rokit press Down Select
@@ -54,16 +54,22 @@ Prefer JSON when `rokit` feeds another tool:
 
 ```bash
 pnpm exec rokit describe
+pnpm exec rokit describe proof
 pnpm exec rokit --json active-app
 pnpm exec rokit --dry-run launch dev
 pnpm exec rokit --fields status,data.state media-player
 pnpm exec rokit --input-json '{"command":"press","keys":["Down","Select"]}'
+pnpm exec rokit --input-json @artifacts/rokit-payload.json
+printf '{"command":"press","keys":["Back"]}' | pnpm exec rokit --input-json -
 ```
 
 `describe` prints the machine-readable command surface, including command
 names, parameters, JSON payload fields, global options, and automation feature
-flags. When stdout is not a TTY, command output defaults to JSON unless
-`--output text` is explicit.
+flags. Pass a command name, such as `rokit describe proof`, to return a
+one-command schema when you only need a small payload. When stdout is not a TTY,
+command output defaults to JSON unless `--output text` is explicit.
+Use inline `--input-json` for small payloads, `--input-json @file` for larger
+payloads, and `--input-json -` to read the payload from stdin.
 
 ## Command Surface
 
@@ -71,7 +77,7 @@ Common commands:
 
 | Command                                            | Purpose                                            |
 | -------------------------------------------------- | -------------------------------------------------- |
-| `describe`                                         | Print the machine-readable command surface         |
+| `describe [command]`                               | Print command schemas for all commands or one      |
 | `check`                                            | Confirm ECP and developer-installer reachability   |
 | `discover`                                         | Find Roku ECP devices with SSDP                    |
 | `device-info`                                      | Read Roku device metadata                          |
@@ -81,7 +87,7 @@ Common commands:
 | `media-player`                                     | Read parsed `/query/media-player` state            |
 | `snapshot`                                         | Read a compact state snapshot                      |
 | `proof <output-dir>`                               | Write reviewable local proof artifacts             |
-| `package --out <zip-path>`                         | Create a sideload ZIP from the current app root    |
+| `package <zip-path>`                               | Create a sideload ZIP from the current app root    |
 | `install <zip-path>`                               | Publish an existing ZIP to the Roku developer slot |
 | `launch <app-id>`                                  | Launch an app by id with optional params           |
 | `press <key...>`                                   | Send Roku remote keys                              |
@@ -90,6 +96,12 @@ Common commands:
 | `assert-node` / `wait-node`                        | Check generic SceneGraph node state                |
 | `wait-active` / `wait-media-player` / `wait-ready` | Poll generic runtime readiness                     |
 | `screenshot <output-path>`                         | Save a timestamped developer screenshot            |
+
+Node waits use positional node conditions, for example
+`wait-ready dev videoPlayerScreen visible` and `wait-node title text "Ready"`.
+Remote navigation keeps the keys as positional arguments and uses options for
+the bounded loop: `press Down --until-node videoPlayerScreen --until-state visible --max 8`.
+Use `--input-json` for literal values that look like flags.
 
 Mutating commands support `--dry-run` where the platform can validate without
 changing device or filesystem state. ECP paths reject query strings, fragments,
@@ -107,6 +119,8 @@ import {
   assertMediaPlayerContainer,
   assertSceneGraphNode,
   captureScreenshot,
+  createPackageZip,
+  deleteInstalledChannel,
   pressKey,
   querySceneGraph,
   waitForSceneGraphAssertion,
@@ -138,6 +152,14 @@ await waitForSceneGraphAssertion(context, "player ready", (xml) => {
     throw new Error("expected player screen");
   }
 });
+
+await createPackageZip({
+  rootDir: process.cwd(),
+  outFile: "artifacts/channel.zip",
+  exclude: (path) => path.startsWith("components/lab/"),
+  overrides: [{ path: "manifest", contents: "title=Example Channel\n" }],
+});
+await deleteInstalledChannel({ ...context, password: process.env.ROKIT_PASSWORD ?? "" });
 ```
 
 ## Boundaries

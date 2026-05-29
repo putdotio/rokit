@@ -9,10 +9,13 @@ Start with the runtime contract:
 
 ```bash
 rokit describe
+rokit describe proof
 ```
 
 Use `README.md` for the public command overview and `docs/READINESS.md` for the
-agent-readiness model. Use `src/cli.ts` when command behavior and docs disagree.
+agent-readiness model. Use the one-command form to keep context small when you
+already know the command family. Use `src/cli.ts` when command behavior and docs
+disagree.
 
 ## Quick Reads
 
@@ -33,7 +36,7 @@ media-player, or proof paths matter.
 Dry-run platform mutations before touching a device:
 
 ```bash
-rokit --dry-run package --out artifacts/live/channel.zip
+rokit --dry-run package artifacts/live/channel.zip
 rokit --dry-run install artifacts/live/channel.zip
 rokit --dry-run launch dev
 rokit --dry-run press Down Select
@@ -56,8 +59,8 @@ Avoid arbitrary sleeps. Use bounded waits:
 ```bash
 rokit wait-active dev --timeout-ms 10000
 rokit wait-media-player play --timeout-ms 10000
-rokit wait-ready dev --media-state play --node videoPlayerScreen visible --timeout-ms 15000
-rokit press --until-node videoPlayerScreen visible --max 8 Down Select
+rokit wait-ready dev videoPlayerScreen visible --media-state play --timeout-ms 15000
+rokit press Down Select --until-node videoPlayerScreen --until-state visible --max 8
 ```
 
 Rokit can assert generic ECP, media-player, and SceneGraph state. Consumer repos
