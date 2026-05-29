@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { parseEffectCliEffect } from "../src/cli-command.js";
 import { describeCli } from "../src/cli-describe.js";
 import { parseInputJsonEffect } from "../src/cli-input-json.js";
 import { runCommandEffect } from "../src/cli-runner.js";
@@ -65,15 +66,36 @@ const runDryCommand = async (command: Command): Promise<CommandResult> =>
 const parseJsonCommand = async (value: string): Promise<Command> =>
   await Effect.runPromise(parseInputJsonEffect(value));
 
+const parseCliCommand = async (args: readonly string[]): Promise<Command> => {
+  const parsed = await Effect.runPromise(parseEffectCliEffect(args));
+  if (parsed.command === undefined) {
+    throw new Error("expected command");
+  }
+
+  return parsed.command;
+};
+
 const runJsonDryCommand = async (value: string): Promise<CommandResult> =>
   await runDryCommand(await parseJsonCommand(value));
 
 describe("rokit CLI functionality", () => {
   it("boots the packaged binary", () => {
     const result = runRokit(["--version"]);
+    const shortResult = runRokit(["-v"]);
 
     expect(result.status).toBe(0);
     expect(result.stdout.trim()).toMatch(/^rokit v\d+\.\d+\.\d+/);
+    expect(result.stderr).toBe("");
+    expect(shortResult.status).toBe(0);
+    expect(shortResult.stdout.trim()).toBe(result.stdout.trim());
+    expect(shortResult.stderr).toBe("");
+  });
+
+  it("prints advertised shell completions", () => {
+    const result = runRokit(["--completions", "bash"]);
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("rokit");
     expect(result.stderr).toBe("");
   });
 
@@ -236,6 +258,20 @@ describe("rokit CLI functionality", () => {
         path: expect.stringMatching(/story-\d{8}-\d{6}-\d{3}\.jpg$/),
       },
     });
+  });
+
+  it("keeps the legacy package --out contract", async () => {
+    await expect(parseCliCommand(["package", "--out", "out/channel"])).resolves.toEqual({
+      name: "package",
+      outputPath: "out/channel",
+    });
+    await expect(parseCliCommand(["package", "out/channel"])).resolves.toEqual({
+      name: "package",
+      outputPath: "out/channel",
+    });
+    await expect(parseCliCommand(["package", "out/channel", "--out", "out/other"])).rejects.toThrow(
+      "usage: rokit package <zip-path> or rokit package --out <zip-path>",
+    );
   });
 
   it("validates dry-run command data before reporting success", async () => {

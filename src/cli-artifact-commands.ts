@@ -1,8 +1,15 @@
-import { Command as EffectCommand, Flag } from "effect/unstable/cli";
-import { fileArgumentField, pathArgumentField } from "./cli-argument.js";
+import { Effect } from "effect";
+import { Argument, Command as EffectCommand, Flag } from "effect/unstable/cli";
+import {
+  fileArgumentField,
+  optionToUndefined,
+  pathArgumentField,
+  stringArgumentField,
+} from "./cli-argument.js";
 import { commandDescription, commandParameter } from "./cli-command-metadata.js";
 import type { CommandCapture } from "./cli-command-shared.js";
 import { strictCommand, withCommandDescription } from "./cli-command-shared.js";
+import { InvalidInput } from "./errors.js";
 
 export const artifactCommands = (capture: CommandCapture) => [
   strictCommand("screenshot", {
@@ -27,10 +34,27 @@ export const artifactCommands = (capture: CommandCapture) => [
     ),
   ),
   strictCommand("package", {
-    outputPath: pathArgumentField(commandParameter("package", "zip-path")),
+    outputPath: stringArgumentField(commandParameter("package", "zip-path")).pipe(
+      Argument.optional,
+    ),
+    out: Flag.string("out").pipe(
+      Flag.withMetavar("zip-path"),
+      Flag.withDescription(commandParameter("package", "zip-path").description),
+      Flag.optional,
+      Flag.withHidden,
+    ),
   }).pipe(
     withCommandDescription(commandDescription("package")),
-    EffectCommand.withHandler(({ outputPath }) => capture({ name: "package", outputPath })),
+    EffectCommand.withHandler(({ out, outputPath }) => {
+      const selectedOutputPath = packageOutputPath(
+        optionToUndefined(outputPath),
+        optionToUndefined(out),
+      );
+
+      return selectedOutputPath === undefined
+        ? Effect.fail(InvalidInput.make({ message: packageUsage }))
+        : capture({ name: "package", outputPath: selectedOutputPath });
+    }),
   ),
   strictCommand("install", {
     zipPath: fileArgumentField(commandParameter("install", "zip-path"), { mustExist: false }),
@@ -39,3 +63,16 @@ export const artifactCommands = (capture: CommandCapture) => [
     EffectCommand.withHandler(({ zipPath }) => capture({ name: "install", zipPath })),
   ),
 ];
+
+const packageUsage = "usage: rokit package <zip-path> or rokit package --out <zip-path>";
+
+const packageOutputPath = (
+  positional: string | undefined,
+  out: string | undefined,
+): string | undefined => {
+  if (positional !== undefined && out !== undefined) {
+    throw InvalidInput.make({ message: packageUsage });
+  }
+
+  return positional ?? out;
+};

@@ -46,7 +46,7 @@ const runMainEffect: (
   }
 
   if (isEffectCliActionRequest(argv)) {
-    yield* runEffectCliActionEffect(argv);
+    yield* runEffectCliActionEffect(normalizeEffectCliActionArgs(argv));
     return;
   }
 
@@ -120,8 +120,16 @@ const parseCommandEffect: (
 
 const isHelpFlag = (arg: string | undefined): boolean => arg === "--help" || arg === "-h";
 
+const isVersionFlag = (arg: string | undefined): boolean => arg === "--version" || arg === "-v";
+
 const isEffectCliActionRequest = (args: readonly string[]): boolean =>
-  hasPreTerminatorArg(args, (arg) => isHelpFlag(arg) || arg === "--version");
+  hasPreTerminatorArg(
+    args,
+    (arg) => isHelpFlag(arg) || isVersionFlag(arg) || arg === "--completions",
+  );
+
+const normalizeEffectCliActionArgs = (args: readonly string[]): readonly string[] =>
+  args.map((arg) => (arg === "-v" ? "--version" : arg));
 
 const hasPreTerminatorArg = (
   args: readonly string[],
