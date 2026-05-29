@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -11,6 +11,8 @@ import { effectCliCommandNames, parseEffectCliEffect } from "../src/cli-command.
 import { commandParameter, globalOption } from "../src/cli-command-metadata.js";
 import { commandMutates, commandRequiresTarget } from "../src/cli-command-traits.js";
 import { describeCli } from "../src/cli-describe.js";
+import { resolveInputJsonSource } from "../src/cli-input-source.js";
+import { applyFields } from "../src/cli-output.js";
 import { runCommandEffect } from "../src/cli-runner.js";
 import type { Command, CommandResult } from "../src/cli-types.js";
 import { inputJsonCommandNames, parseInputJsonEffect } from "../src/cli-input-json.js";
@@ -35,6 +37,12 @@ type RunRokitOptions = {
   readonly input?: string;
 };
 
+type RokitProcessResult = {
+  readonly status: number | null;
+  readonly stderr: string;
+  readonly stdout: string;
+};
+
 const runRokit = (args: string[], options: RunRokitOptions = {}) =>
   spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repoRoot,
@@ -48,6 +56,34 @@ const runRokitWithEnv = (args: string[], env: NodeJS.ProcessEnv) =>
     cwd: repoRoot,
     encoding: "utf8",
     env: childCliEnv(env),
+  });
+
+const runRokitAsync = (
+  args: readonly string[],
+  options: RunRokitOptions = {},
+): Promise<RokitProcessResult> =>
+  new Promise((resolveResult, reject) => {
+    const child = spawn(process.execPath, [cliPath, ...args], {
+      cwd: repoRoot,
+      env: childCliEnv(),
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on("error", reject);
+    child.on("close", (status) => {
+      resolveResult({ status, stderr, stdout });
+    });
+    child.stdin.end(options.input);
   });
 
 const childCliEnv = (overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv => {
@@ -89,6 +125,15 @@ const runParsedCommand = async (args: readonly string[]): Promise<CommandResult>
 const runInputJsonCommand = async (value: string): Promise<CommandResult> =>
   await runCommand(await Effect.runPromise(parseInputJsonEffect(value)), true);
 
+const runParsedAndApplyFields = async (args: readonly string[]): Promise<unknown> => {
+  const parsed = await parseCliArgs(args);
+  if (parsed.command === undefined) {
+    throw new Error("expected parsed command");
+  }
+
+  return applyFields(await runCommand(parsed.command, parsed.dryRun), parsed.fields);
+};
+
 const stringDataField = (result: CommandResult, field: string): string => {
   const data = result.data;
   if (!isRecord(data) || typeof data[field] !== "string") {
@@ -98,14 +143,27 @@ const stringDataField = (result: CommandResult, field: string): string => {
   return data[field];
 };
 
+const describedCommands = (result: CommandResult): readonly unknown[] => {
+  const data = result.data;
+  if (!isRecord(data) || !Array.isArray(data.commands)) {
+    throw new Error("expected describe result commands");
+  }
+
+  return data.commands;
+};
+
+const describedCommandCount = (result: CommandResult): number => describedCommands(result).length;
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 describe("rokit cli", () => {
-  it("prints help without a device target", () => {
-    const result = runRokit(["--help"]);
-    const jsonOnly = runRokit(["--json"]);
-    const dryRunOnly = runRokit(["--dry-run"]);
+  it("prints help without a device target", async () => {
+    const [result, jsonOnly, dryRunOnly] = await Promise.all([
+      runRokitAsync(["--help"]),
+      runRokitAsync(["--json"]),
+      runRokitAsync(["--dry-run"]),
+    ]);
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("Roku device harness helper");
@@ -144,9 +202,11 @@ describe("rokit cli", () => {
     expect(result.stderr).toBe("");
   });
 
-  it("prints the package version", () => {
-    const result = runRokit(["--version"]);
-    const withGlobalFlag = runRokit(["--output", "text", "--version"]);
+  it("prints the package version", async () => {
+    const [result, withGlobalFlag] = await Promise.all([
+      runRokitAsync(["--version"]),
+      runRokitAsync(["--output", "text", "--version"]),
+    ]);
 
     expect(result.status).toBe(0);
     expect(result.stdout.trim()).toMatch(/^rokit v\d+\.\d+\.\d+/);
@@ -156,10 +216,12 @@ describe("rokit cli", () => {
     expect(withGlobalFlag.stderr).toBe("");
   });
 
-  it("uses Effect CLI action-flag semantics before the argument terminator", () => {
-    const shortVersionOperand = runRokit(["assert-node", "title", "text", "-v"]);
-    const longVersionOperand = runRokit(["assert-node", "title", "text", "--version", "--json"]);
-    const trailingHelpOperand = runRokit(["assert-node", "title", "text", "--", "--help"]);
+  it("uses Effect CLI action-flag semantics before the argument terminator", async () => {
+    const [shortVersionOperand, longVersionOperand, trailingHelpOperand] = await Promise.all([
+      runRokitAsync(["assert-node", "title", "text", "-v"]),
+      runRokitAsync(["assert-node", "title", "text", "--version", "--json"]),
+      runRokitAsync(["assert-node", "title", "text", "--", "--help"]),
+    ]);
 
     expect(shortVersionOperand.status).toBe(1);
     expect(JSON.parse(shortVersionOperand.stderr)).toEqual({
@@ -180,20 +242,13 @@ describe("rokit cli", () => {
     expect(trailingHelpOperand.stdout).not.toContain("USAGE");
   });
 
-  it("accepts node assertion values as positional arguments", () => {
-    const textValue = runRokit(["--json", "assert-node", "title", "text", "plain"]);
-    const duplicateValue = runRokit(["--json", "assert-node", "title", "text", "plain", "extra"]);
-
-    expect(textValue.status).toBe(1);
-    expect(JSON.parse(textValue.stderr)).toEqual({
-      error: { message: "ROKIT_TARGET is not set" },
-      status: "failed",
-    });
-    expect(duplicateValue.status).toBe(1);
-    expect(JSON.parse(duplicateValue.stderr)).toEqual({
-      error: { message: "Unexpected extra argument: extra" },
-      status: "failed",
-    });
+  it("accepts node assertion values as positional arguments", async () => {
+    await expect(
+      runParsedCommand(["--json", "assert-node", "title", "text", "plain"]),
+    ).rejects.toThrow("ROKIT_TARGET is not set");
+    await expect(
+      parseCliArgs(["--json", "assert-node", "title", "text", "plain", "extra"]),
+    ).rejects.toThrow("Unexpected extra argument: extra");
   });
 
   it("reports missing target without a stack trace", () => {
@@ -346,11 +401,13 @@ describe("rokit cli", () => {
     expect(describedCommandNames).toEqual([...inputJsonCommandNames].sort());
   });
 
-  it("keeps Effect CLI help text backed by described field metadata", () => {
-    const rootHelp = runRokit(["--help"]);
-    const packageHelp = runRokit(["package", "--help"]);
-    const pressHelp = runRokit(["press", "--help"]);
-    const waitReadyHelp = runRokit(["wait-ready", "--help"]);
+  it("keeps Effect CLI help text backed by described field metadata", async () => {
+    const [rootHelp, packageHelp, pressHelp, waitReadyHelp] = await Promise.all([
+      runRokitAsync(["--help"]),
+      runRokitAsync(["package", "--help"]),
+      runRokitAsync(["press", "--help"]),
+      runRokitAsync(["wait-ready", "--help"]),
+    ]);
 
     expect(rootHelp.status).toBe(0);
     expect(packageHelp.status).toBe(0);
@@ -383,16 +440,13 @@ describe("rokit cli", () => {
     }
   });
 
-  it("describes a single command schema for context-window control", () => {
-    const result = runRokit(["describe", "proof"]);
-    const inputJsonResult = runRokit([
-      "--input-json",
+  it("describes a single command schema for context-window control", async () => {
+    const result = await runParsedCommand(["describe", "proof"]);
+    const inputJsonResult = await runInputJsonCommand(
       JSON.stringify({ command: "describe", commandName: "press" }),
-    ]);
-    const unknownResult = runRokit(["describe", "nope"]);
+    );
 
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(result).toMatchObject({
       command: "describe",
       data: {
         commands: [
@@ -407,37 +461,39 @@ describe("rokit cli", () => {
       },
       status: "ok",
     });
-    expect(JSON.parse(result.stdout).data.commands).toHaveLength(1);
+    expect(describedCommandCount(result)).toBe(1);
 
-    expect(inputJsonResult.status).toBe(0);
-    expect(JSON.parse(inputJsonResult.stdout).data.commands).toEqual([
+    expect(describedCommands(inputJsonResult)).toEqual([
       expect.objectContaining({ name: "press" }),
     ]);
-
-    expect(unknownResult.status).toBe(1);
-    expect(JSON.parse(unknownResult.stderr)).toEqual({
-      error: { message: "Unknown described command: nope" },
-      status: "failed",
-    });
+    await expect(runParsedCommand(["describe", "nope"])).rejects.toThrow(
+      "Unknown described command: nope",
+    );
   });
 
-  it("does not parse device env for target-free commands", () => {
-    const describeResult = runRokitWithEnv(["describe"], { ROKIT_TIMEOUT_MS: "bad" });
-    const dryRunResult = runRokitWithEnv(["--dry-run", "launch", "dev"], {
-      ROKIT_TIMEOUT_MS: "bad",
-    });
+  it("does not parse device env for target-free commands", async () => {
+    const previousTimeout = process.env.ROKIT_TIMEOUT_MS;
+    process.env.ROKIT_TIMEOUT_MS = "bad";
+    try {
+      const describeResult = await runParsedCommand(["describe"]);
+      const dryRunResult = await runParsedCommand(["--dry-run", "launch", "dev"]);
 
-    expect(describeResult.status).toBe(0);
-    expect(JSON.parse(describeResult.stdout)).toMatchObject({
-      command: "describe",
-      status: "ok",
-    });
-    expect(dryRunResult.status).toBe(0);
-    expect(JSON.parse(dryRunResult.stdout)).toMatchObject({
-      command: "launch",
-      dryRun: true,
-      status: "ok",
-    });
+      expect(describeResult).toMatchObject({
+        command: "describe",
+        status: "ok",
+      });
+      expect(dryRunResult).toMatchObject({
+        command: "launch",
+        dryRun: true,
+        status: "ok",
+      });
+    } finally {
+      if (previousTimeout === undefined) {
+        delete process.env.ROKIT_TIMEOUT_MS;
+      } else {
+        process.env.ROKIT_TIMEOUT_MS = previousTimeout;
+      }
+    }
   });
 
   it("supports dry-run for mutating commands without requiring a target", async () => {
@@ -658,14 +714,16 @@ describe("rokit cli", () => {
     });
   });
 
-  it("accepts typed JSON payloads from files and stdin", () => {
+  it("accepts typed JSON payloads from files and stdin", async () => {
     const payloadPath = join(testDistDir, "input-payload.json");
     writeFileSync(payloadPath, JSON.stringify({ command: "press", delayMs: 0, keys: ["Down"] }));
 
-    const fromFile = runRokit(["--dry-run", "--input-json", `@${payloadPath}`]);
-    const fromStdin = runRokit(["--dry-run", "--input-json", "-"], {
-      input: JSON.stringify({ command: "press", keys: ["Back"] }),
-    });
+    const [fromFile, fromStdin] = await Promise.all([
+      runRokitAsync(["--dry-run", "--input-json", `@${payloadPath}`]),
+      runRokitAsync(["--dry-run", "--input-json", "-"], {
+        input: JSON.stringify({ command: "press", keys: ["Back"] }),
+      }),
+    ]);
 
     expect(fromFile.status).toBe(0);
     expect(JSON.parse(fromFile.stdout)).toMatchObject({
@@ -745,30 +803,18 @@ describe("rokit cli", () => {
     });
   });
 
-  it("reports malformed input-json before command dispatch", () => {
-    const result = runRokit(["--dry-run", "--input-json", "{"]);
-    const missingFile = runRokit(["--dry-run", "--input-json", "@"]);
-    const invalidDiscoverTimeout = runRokit([
-      "--dry-run",
-      "--input-json",
-      JSON.stringify({ command: "discover", timeoutMs: 0 }),
-    ]);
-
-    expect(result.status).toBe(1);
-    expect(JSON.parse(result.stderr)).toEqual({
-      error: { message: "input JSON must be valid JSON" },
-      status: "failed",
-    });
-    expect(missingFile.status).toBe(1);
-    expect(JSON.parse(missingFile.stderr)).toEqual({
-      error: { message: "--input-json @file requires a file path" },
-      status: "failed",
-    });
-    expect(invalidDiscoverTimeout.status).toBe(1);
-    expect(JSON.parse(invalidDiscoverTimeout.stderr)).toEqual({
-      error: { message: "input JSON field must be a positive integer: timeoutMs" },
-      status: "failed",
-    });
+  it("reports malformed input-json before command dispatch", async () => {
+    await expect(Effect.runPromise(parseInputJsonEffect("{"))).rejects.toThrow(
+      "input JSON must be valid JSON",
+    );
+    await expect(
+      Effect.runPromise(resolveInputJsonSource("@").pipe(Effect.provide(NodeServices.layer))),
+    ).rejects.toThrow("--input-json @file requires a file path");
+    await expect(
+      Effect.runPromise(
+        parseInputJsonEffect(JSON.stringify({ command: "discover", timeoutMs: 0 })),
+      ),
+    ).rejects.toThrow("input JSON field must be a positive integer: timeoutMs");
   });
 
   it("matches JSON press defaults to the CLI press surface", async () => {
@@ -797,27 +843,36 @@ describe("rokit cli", () => {
     ).rejects.toThrow("input JSON field must include at least one key: keys");
   });
 
-  it("filters JSON output with field masks", () => {
-    const result = runRokit(["--dry-run", "--fields", "status,data.appId", "launch", "dev"]);
-    const missingField = runRokit(["--dry-run", "--fields", "data.missing", "launch", "dev"]);
-    const arrayField = runRokit([
+  it("filters JSON output with field masks", async () => {
+    const result = await runParsedAndApplyFields([
+      "--dry-run",
+      "--fields",
+      "status,data.appId",
+      "launch",
+      "dev",
+    ]);
+    const missingField = await runParsedAndApplyFields([
+      "--dry-run",
+      "--fields",
+      "data.missing",
+      "launch",
+      "dev",
+    ]);
+    const arrayField = await runParsedAndApplyFields([
       "--fields",
       "status,data.commands.0.name,data.commands.0.parameters.0.name",
       "describe",
       "press",
     ]);
 
-    expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout)).toEqual({
+    expect(result).toEqual({
       data: { appId: "dev" },
       status: "ok",
     });
-    expect(missingField.status).toBe(0);
-    expect(JSON.parse(missingField.stdout)).toEqual({
+    expect(missingField).toEqual({
       status: "ok",
     });
-    expect(arrayField.status).toBe(0);
-    expect(JSON.parse(arrayField.stdout)).toEqual({
+    expect(arrayField).toEqual({
       data: {
         commands: [
           {
