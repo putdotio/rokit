@@ -68,28 +68,6 @@ const parseJsonCommand = async (value: string): Promise<Command> =>
 const runJsonDryCommand = async (value: string): Promise<CommandResult> =>
   await runDryCommand(await parseJsonCommand(value));
 
-const resultData = (result: CommandResult): Record<string, unknown> => {
-  if (!isRecord(result.data)) {
-    throw new Error("expected result data object");
-  }
-
-  return result.data;
-};
-
-const stringDataField = (result: CommandResult, field: string): string => {
-  const data = resultData(result);
-  const value = data[field];
-
-  if (typeof value !== "string") {
-    throw new Error(`expected string result data field: ${field}`);
-  }
-
-  return value;
-};
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
 describe("rokit CLI functionality", () => {
   it("boots the packaged binary", () => {
     const result = runRokit(["--version"]);
@@ -248,10 +226,16 @@ describe("rokit CLI functionality", () => {
       status: "ok",
     });
 
-    const screenshotPath = stringDataField(screenshot, "path");
-    expect(screenshotPath).not.toBe(resolve(repoRoot, "artifacts/lab/story.jpg"));
-    expect(screenshotPath).toContain(`${resolve(repoRoot, "artifacts/lab")}/`);
-    expect(screenshotPath).toMatch(/story-\d{8}-\d{6}-\d{3}\.jpg$/);
+    expect(screenshot).toMatchObject({
+      data: {
+        path: expect.stringContaining(`${resolve(repoRoot, "artifacts/lab")}/story-`),
+      },
+    });
+    expect(screenshot).toMatchObject({
+      data: {
+        path: expect.stringMatching(/story-\d{8}-\d{6}-\d{3}\.jpg$/),
+      },
+    });
   });
 
   it("validates dry-run command data before reporting success", async () => {
@@ -360,7 +344,11 @@ describe("rokit CLI functionality", () => {
       },
       status: "ok",
     });
-    expect(resultData(proof).commands).toHaveLength(1);
+    expect(proof).toMatchObject({
+      data: {
+        commands: [expect.objectContaining({ name: "proof" })],
+      },
+    });
     await expect(runCommand({ commandName: "nope", name: "describe" }, false)).rejects.toThrow(
       "Unknown described command: nope",
     );
