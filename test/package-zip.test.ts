@@ -306,7 +306,6 @@ describe("package zip helper", () => {
 
   it("reports malformed Roku deploy config as a typed package error", async () => {
     const root = await mkdtemp(join(tmpdir(), "rokit-package-"));
-    const previousCwd = process.cwd();
 
     try {
       await mkdir(join(root, "source"), { recursive: true });
@@ -314,7 +313,6 @@ describe("package zip helper", () => {
       await writeFile(join(root, "source/Main.brs"), "sub Main()\nend sub\n");
       await writeFile(join(root, "rokudeploy.json"), "{");
 
-      process.chdir(root);
       await expect(resolveSafePackageOutputPath("out/channel", root)).rejects.toThrow(
         "failed to read Roku package options",
       );
@@ -322,7 +320,6 @@ describe("package zip helper", () => {
         "failed to read Roku package options",
       );
     } finally {
-      process.chdir(previousCwd);
       await rm(root, { force: true, recursive: true });
     }
   });
@@ -508,7 +505,6 @@ describe("package zip helper", () => {
 
   it("keeps manifest mutation configs on the Roku deploy compatibility path", async () => {
     const root = await mkdtemp(join(tmpdir(), "rokit-package-"));
-    const previousCwd = process.cwd();
 
     try {
       await mkdir(join(root, "source"), { recursive: true });
@@ -519,7 +515,6 @@ describe("package zip helper", () => {
         JSON.stringify({ files: ["manifest", "source/**/*"], incrementBuildNumber: true }),
       );
 
-      process.chdir(root);
       const result = await packageChannel("out/channel", root);
       const zip = await JSZip.loadAsync(await readFile(result.path));
       const manifest = await zip.file("manifest")?.async("string");
@@ -528,7 +523,6 @@ describe("package zip helper", () => {
       expect(manifest).not.toContain("build_version=1");
       expect(manifest).toMatch(/build_version=\d{10}/);
     } finally {
-      process.chdir(previousCwd);
       await rm(root, { force: true, recursive: true });
     }
   });

@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { Effect } from "effect";
+import * as rokuDeploy from "roku-deploy";
 import { describe, expect, it, vi } from "vitest";
 import { discoverRokuDevicesEffect, readSsdpHeaders } from "../src/discovery.js";
 import { fetchEcpTextEffect, postEcpEffect } from "../src/ecp.js";
@@ -56,33 +57,27 @@ describe("Roku helpers", () => {
     expect(fetchCalls).toEqual(["http://192.0.2.1:8060/keypress/Lit_%2F"]);
   });
 
-  it("reads enhanced device info through native ECP fetch", async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        new Response(
-          [
-            "<device-info>",
-            "<friendly-device-name>Living Room &amp; Lab</friendly-device-name>",
-            "<is-tv>true</is-tv>",
-            "<uptime>42</uptime>",
-            "<model-name>Roku Ultra</model-name>",
-            "</device-info>",
-          ].join(""),
-        ),
-      );
-    vi.stubGlobal("fetch", fetchMock);
+  it("reads enhanced device info through roku-deploy", async () => {
+    const getDeviceInfoSpy = vi.spyOn(rokuDeploy, "getDeviceInfo").mockResolvedValueOnce({
+      friendlyDeviceName: "Living Room & Lab",
+      isTv: true,
+      modelName: "Roku Ultra",
+    });
 
     try {
       await expect(getDeviceInfo(context)).resolves.toEqual({
         friendlyDeviceName: "Living Room & Lab",
         isTv: true,
         modelName: "Roku Ultra",
-        uptime: 42,
       });
-      expect(String(fetchMock.mock.calls[0]?.[0])).toBe("http://192.0.2.1:8060/query/device-info");
+      expect(getDeviceInfoSpy).toHaveBeenCalledWith({
+        enhance: true,
+        host: "192.0.2.1",
+        remotePort: 8060,
+        timeout: 100,
+      });
     } finally {
-      vi.unstubAllGlobals();
+      getDeviceInfoSpy.mockRestore();
     }
   });
 

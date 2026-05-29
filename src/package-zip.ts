@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, Schema } from "effect";
 import type { PlatformError } from "effect/PlatformError";
@@ -53,14 +54,16 @@ export const packageChannelEffect = Effect.fn("packageChannel")(function* (
   outputPath: string,
   rootDir?: string,
 ) {
+  const path = yield* Path.Path;
+  const fallbackRootDir = path.resolve(rootDir ?? process.cwd());
   const baseOptions = yield* packageOptionsEffect(outputPath, rootDir);
-  const options = yield* getRokuDeployOptionsEffect(baseOptions);
-  const outputZipPath = yield* resolvePackageChannelOutputPath(options, rootDir ?? process.cwd());
-  const hasRokuDeployConfig = yield* hasRokuDeployConfigEffect(process.cwd());
+  const options = yield* getRokuDeployOptionsEffect(baseOptions, fallbackRootDir);
+  const outputZipPath = yield* resolvePackageChannelOutputPath(options, fallbackRootDir);
+  const hasRokuDeployConfig = yield* hasRokuDeployConfigEffect(fallbackRootDir);
   const nativeOptions =
     hasRokuDeployConfig || !canUseNativePackageZip(outputZipPath)
       ? undefined
-      : nativePackageOptionsFromRokuDeploy(options, outputZipPath, rootDir ?? process.cwd());
+      : nativePackageOptionsFromRokuDeploy(options, outputZipPath, fallbackRootDir);
 
   if (nativeOptions !== undefined) {
     const result = yield* createPackageZipEffect(nativeOptions);
@@ -82,8 +85,10 @@ export const resolvePackageOutputPathEffect = Effect.fn("resolvePackageOutputPat
   outputPath: string,
   rootDir?: string,
 ) {
+  const path = yield* Path.Path;
+  const fallbackRootDir = path.resolve(rootDir ?? process.cwd());
   const options = yield* packageOptionsEffect(outputPath, rootDir);
-  return yield* getRokuDeployOutputZipFilePathEffect(options);
+  return yield* getRokuDeployOutputZipFilePathEffect(options, fallbackRootDir);
 });
 
 export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
@@ -196,9 +201,11 @@ export const resolveSafePackageOutputPath = async (
 
 export const resolveSafePackageOutputPathEffect = Effect.fn("resolveSafePackageOutputPath")(
   function* (outputPath: string, rootDir?: string) {
+    const path = yield* Path.Path;
+    const fallbackRootDir = path.resolve(rootDir ?? process.cwd());
     const baseOptions = yield* packageOptionsEffect(outputPath, rootDir);
-    const options = yield* getRokuDeployOptionsEffect(baseOptions);
-    return yield* resolvePackageChannelOutputPath(options, rootDir ?? process.cwd());
+    const options = yield* getRokuDeployOptionsEffect(baseOptions, fallbackRootDir);
+    return yield* resolvePackageChannelOutputPath(options, fallbackRootDir);
   },
 );
 
@@ -432,7 +439,7 @@ const resolvePackageChannelOutputPath = Effect.fn("resolvePackageChannelOutputPa
   const rootDir = path.resolve(options.rootDir ?? fallbackRootDir);
   const rootRealPath = yield* fs.realPath(rootDir);
   const sandboxRealPath = yield* fs.realPath(path.resolve(fallbackRootDir));
-  const outputZipPath = yield* getRokuDeployOutputZipFilePathEffect(options);
+  const outputZipPath = yield* getRokuDeployOutputZipFilePathEffect(options, rootDir);
   const packageRootSpec = packageRootSpecFromRokuDeployFiles(options.files);
   const includedPackageRoots: string[] = [];
   const excludedPackageRoots: string[] = [];
@@ -622,9 +629,10 @@ const hasRokuDeployConfigEffect = Effect.fn("hasRokuDeployConfig")(function* (ro
 
 const getRokuDeployOptionsEffect = Effect.fn("getRokuDeployOptions")(function* (
   options: RokuDeployInputOptions,
+  configRootDir: string,
 ) {
   return yield* Effect.try({
-    try: () => rokuDeploy.getOptions(options),
+    try: () => withCwd(configRootDir, () => rokuDeploy.getOptions(options)),
     catch: (error) =>
       PackageZipError.make({
         detail: `failed to read Roku package options: ${formatErrorMessage(error)}`,
@@ -634,15 +642,30 @@ const getRokuDeployOptionsEffect = Effect.fn("getRokuDeployOptions")(function* (
 
 const getRokuDeployOutputZipFilePathEffect = Effect.fn("getRokuDeployOutputZipFilePath")(function* (
   options: RokuDeployInputOptions | RokuDeployResolvedOptions,
+  configRootDir = process.cwd(),
 ) {
   return yield* Effect.try({
-    try: () => rokuDeploy.getOutputZipFilePath(options),
+    try: () => withCwd(configRootDir, () => rokuDeploy.getOutputZipFilePath(options)),
     catch: (error) =>
       PackageZipError.make({
         detail: `failed to resolve Roku package output path: ${formatErrorMessage(error)}`,
       }),
   });
 });
+
+const withCwd = <A>(cwd: string, run: () => A): A => {
+  if (!existsSync(cwd)) {
+    return run();
+  }
+
+  const previousCwd = process.cwd();
+  process.chdir(cwd);
+  try {
+    return run();
+  } finally {
+    process.chdir(previousCwd);
+  }
+};
 
 const formatErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);

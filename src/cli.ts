@@ -1,4 +1,5 @@
 import { Effect, FileSystem, Path, Stdio } from "effect";
+import PackageJson from "../package.json" with { type: "json" };
 import { parseEffectCliEffect, runEffectCliActionEffect } from "./cli-command.js";
 import { commandNeedsTarget } from "./cli-command-traits.js";
 import { parseInputJsonEffect } from "./cli-input-json.js";
@@ -42,6 +43,13 @@ const runMainEffect: (
 )(function* (argv, setOutputMode, setFields) {
   if (argv.length === 0) {
     yield* runEffectCliActionEffect(["--help"]);
+    return;
+  }
+
+  if (isVersionActionRequest(argv)) {
+    yield* Effect.sync(() => {
+      console.log(PackageJson.version);
+    });
     return;
   }
 
@@ -121,6 +129,9 @@ const parseCommandEffect: (
 const isHelpFlag = (arg: string | undefined): boolean => arg === "--help" || arg === "-h";
 
 const isVersionFlag = (arg: string | undefined): boolean => arg === "--version" || arg === "-v";
+
+const isVersionActionRequest = (args: readonly string[]): boolean =>
+  hasPreTerminatorArg(args, isVersionFlag);
 
 const isEffectCliActionRequest = (args: readonly string[]): boolean =>
   hasPreTerminatorArg(

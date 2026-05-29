@@ -45,16 +45,13 @@ export const artifactCommands = (capture: CommandCapture) => [
     ),
   }).pipe(
     withCommandDescription(commandDescription("package")),
-    EffectCommand.withHandler(({ out, outputPath }) => {
-      const selectedOutputPath = packageOutputPath(
-        optionToUndefined(outputPath),
-        optionToUndefined(out),
-      );
-
-      return selectedOutputPath === undefined
-        ? Effect.fail(InvalidInput.make({ message: packageUsage }))
-        : capture({ name: "package", outputPath: selectedOutputPath });
-    }),
+    EffectCommand.withHandler(({ out, outputPath }) =>
+      packageOutputPath(optionToUndefined(outputPath), optionToUndefined(out)).pipe(
+        Effect.flatMap((selectedOutputPath) =>
+          capture({ name: "package", outputPath: selectedOutputPath }),
+        ),
+      ),
+    ),
   ),
   strictCommand("install", {
     zipPath: fileArgumentField(commandParameter("install", "zip-path"), { mustExist: false }),
@@ -69,10 +66,13 @@ const packageUsage = "usage: rokit package <zip-path> or rokit package --out <zi
 const packageOutputPath = (
   positional: string | undefined,
   out: string | undefined,
-): string | undefined => {
+): Effect.Effect<string, InvalidInput> => {
   if (positional !== undefined && out !== undefined) {
-    throw InvalidInput.make({ message: packageUsage });
+    return Effect.fail(InvalidInput.make({ message: packageUsage }));
   }
 
-  return positional ?? out;
+  const outputPath = positional ?? out;
+  return outputPath === undefined
+    ? Effect.fail(InvalidInput.make({ message: packageUsage }))
+    : Effect.succeed(outputPath);
 };

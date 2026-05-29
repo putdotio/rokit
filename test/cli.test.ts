@@ -84,7 +84,7 @@ describe("rokit CLI functionality", () => {
     const shortResult = runRokit(["-v"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout.trim()).toMatch(/^rokit v\d+\.\d+\.\d+/);
+    expect(result.stdout.trim()).toMatch(/^\d+\.\d+\.\d+/);
     expect(result.stderr).toBe("");
     expect(shortResult.status).toBe(0);
     expect(shortResult.stdout.trim()).toBe(result.stdout.trim());
@@ -272,6 +272,18 @@ describe("rokit CLI functionality", () => {
     await expect(parseCliCommand(["package", "out/channel", "--out", "out/other"])).rejects.toThrow(
       "usage: rokit package <zip-path> or rokit package --out <zip-path>",
     );
+  });
+
+  it("prints package output usage errors without stack traces", () => {
+    const result = runRokit(["--json", "package", "out/channel", "--out", "out/other"]);
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(JSON.parse(result.stderr)).toEqual({
+      error: { message: "usage: rokit package <zip-path> or rokit package --out <zip-path>" },
+      status: "failed",
+    });
+    expect(result.stderr).not.toContain(" at ");
   });
 
   it("validates dry-run command data before reporting success", async () => {

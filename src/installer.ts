@@ -105,7 +105,6 @@ export const installPackage = async (
 
 export const deleteInstalledChannel = async (
   context: RokuContext & { readonly password: string },
-  _rootDir = process.cwd(),
 ): Promise<string> =>
   await Effect.runPromise(
     Effect.provide(deleteInstalledChannelEffect(context), nodeInstallerLayer),

@@ -99,9 +99,9 @@ describe("Roku retry helpers", () => {
       .mockResolvedValueOnce(new Response('<font color="red">Uninstall Success.</font>'));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(
-      deleteInstalledChannel({ ...context, password: "pass" }, "/tmp/app-root"),
-    ).resolves.toBe("Uninstall Success.");
+    await expect(deleteInstalledChannel({ ...context, password: "pass" })).resolves.toBe(
+      "Uninstall Success.",
+    );
 
     const challengeRequest = fetchMock.mock.calls[0];
     expect(String(challengeRequest?.[0])).toBe("http://192.0.2.1/plugin_install");
@@ -139,9 +139,9 @@ describe("Roku retry helpers", () => {
       .mockResolvedValueOnce(new Response('<font color="red">Uninstall Success.</font>'));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(
-      deleteInstalledChannel({ ...context, password: "pass" }, "/tmp/app-root"),
-    ).resolves.toBe("Uninstall Success.");
+    await expect(deleteInstalledChannel({ ...context, password: "pass" })).resolves.toBe(
+      "Uninstall Success.",
+    );
 
     const authorization = readAuthorization(fetchMock.mock.calls[1]?.[1]);
     expect(authorization).toContain('Digest username="rokudev"');
@@ -165,9 +165,9 @@ describe("Roku retry helpers", () => {
       .mockResolvedValueOnce(new Response("<html>not deleted</html>"));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(
-      deleteInstalledChannel({ ...context, password: "pass" }, "/tmp/app-root"),
-    ).rejects.toThrow("Unrecognized Roku installer response");
+    await expect(deleteInstalledChannel({ ...context, password: "pass" })).rejects.toThrow(
+      "Unrecognized Roku installer response",
+    );
   });
 
   it("installs a package through the native Roku installer form", async () => {
