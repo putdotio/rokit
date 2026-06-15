@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "@effect/platform-node": "4.0.0-beta.78",
-    "effect": "4.0.0-beta.78",
+    "effect": "4.0.0-beta.83",
     "jszip": "^3.10.1",
     "roku-deploy": "3.17.6"
   },
