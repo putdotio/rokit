@@ -58,14 +58,14 @@
     "verify": "vp check . && tsc --noEmit && vp run test && npm pack --dry-run"
   },
   "dependencies": {
-    "@effect/platform-node": "4.0.0-beta.78",
-    "effect": "4.0.0-beta.78",
+    "@effect/platform-node": "4.0.0-beta.83",
+    "effect": "4.0.0-beta.83",
     "jszip": "^3.10.1",
     "roku-deploy": "3.17.6"
   },
   "devDependencies": {
-    "@effect/vitest": "4.0.0-beta.78",
-    "@types/node": "^25.8.0",
+    "@effect/vitest": "4.0.0-beta.83",
+    "@types/node": "^25.9.3",
     "typescript": "^6.0.2",
     "vite-plus": "^0.1.22",
     "vitest": "^4.1.7"
