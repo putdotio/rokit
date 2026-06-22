@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { runCommandEffect } from "../src/cli-runner.js";
 import type { Command } from "../src/cli-types.js";
 import type { RokuContext } from "../src/roku.js";

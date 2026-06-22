@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
 import { parseEffectCliEffect } from "../src/cli-command.js";
 import { describeCli } from "../src/cli-describe.js";
 import { parseInputJsonEffect } from "../src/cli-input-json.js";

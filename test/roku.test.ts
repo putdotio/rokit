@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { Effect } from "effect";
 import * as rokuDeploy from "roku-deploy";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { discoverRokuDevicesEffect, readSsdpHeaders } from "../src/discovery.js";
 import { fetchEcpTextEffect, postEcpEffect } from "../src/ecp.js";
 import {

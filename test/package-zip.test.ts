@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import JSZip from "jszip";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { createPackageZip, packageChannel, resolveSafePackageOutputPath } from "../src/roku.js";
 
 describe("package zip helper", () => {

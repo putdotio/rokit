@@ -53,7 +53,7 @@
     "prepare": "./scripts/prepare-effect.sh",
     "prepack": "vp pack src/index.ts src/rokit.ts --dts",
     "smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null",
-    "test": "vp pack src/index.ts src/rokit.ts --dts && vitest run --passWithNoTests",
+    "test": "vp pack src/index.ts src/rokit.ts --dts && vp test run --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "verify": "vp check . && tsc --noEmit && vp run test && npm pack --dry-run"
   },
@@ -67,8 +67,9 @@
     "@effect/vitest": "4.0.0-beta.85",
     "@types/node": "^26.0.0",
     "typescript": "^6.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.1",
     "vite-plus": "^0.2.1",
-    "vitest": "^4.1.7"
+    "vitest": "4.1.9"
   },
   "engines": {
     "node": ">=24.14.0"
