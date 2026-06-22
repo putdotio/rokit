@@ -67,7 +67,7 @@
     "@effect/vitest": "4.0.0-beta.83",
     "@types/node": "^25.9.3",
     "typescript": "^6.0.2",
-    "vite-plus": "^0.1.22",
+    "vite-plus": "^0.2.1",
     "vitest": "^4.1.7"
   },
   "engines": {
