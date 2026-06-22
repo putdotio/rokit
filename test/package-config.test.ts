@@ -44,14 +44,25 @@ const readPackageConfig = (): PackageConfig => {
   };
 };
 
+const readNodeTypesMajor = (specifier: string): string => {
+  const match = /^\^(\d+)\./.exec(specifier);
+
+  if (match?.[1] === undefined) {
+    throw new Error("@types/node must use a caret major version specifier");
+  }
+
+  return match[1];
+};
+
 describe("package config", () => {
   it("keeps Node ambient types at or above the minimum supported engine major", () => {
     const packageConfig = readPackageConfig();
     const lockfile = readFileSync("pnpm-lock.yaml", "utf8");
+    const nodeTypesMajor = readNodeTypesMajor(packageConfig.devDependencies["@types/node"]);
 
     expect(packageConfig.engines.node).toContain(">=24.");
     expect(packageConfig.devDependencies["@types/node"]).toMatch(/^\^(2[5-9]|[3-9]\d)\./);
-    expect(lockfile).toContain("@types/node@25.");
+    expect(lockfile).toContain(`@types/node@${nodeTypesMajor}.`);
   });
 
   it("packages the generic live probe with agent-facing docs", () => {

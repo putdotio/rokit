@@ -65,7 +65,7 @@
   },
   "devDependencies": {
     "@effect/vitest": "4.0.0-beta.85",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.0.0",
     "typescript": "^6.0.2",
     "vite-plus": "^0.2.1",
     "vitest": "^4.1.7"
