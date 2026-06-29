@@ -12,8 +12,8 @@ importers:
   .:
     dependencies:
       '@effect/platform-node':
-        specifier: 4.0.0-beta.85
-        version: 4.0.0-beta.85(effect@4.0.0-beta.85)(ioredis@5.10.1)
+        specifier: 4.0.0-beta.90
+        version: 4.0.0-beta.90(effect@4.0.0-beta.85)(ioredis@5.10.1)
       effect:
         specifier: 4.0.0-beta.85
         version: 4.0.0-beta.85
@@ -60,17 +60,17 @@ packages:
   '@blazediff/core@1.9.1':
     resolution: {integrity: sha512-ehg3jIkYKulZh+8om/O25vkvSsXXwC+skXmyA87FFx6A/45eqOkZsBltMw/TVteb0mloiGT8oGRTcjRAz66zaA==}
 
-  '@effect/platform-node-shared@4.0.0-beta.85':
-    resolution: {integrity: sha512-JXM5f2j2L2oGxuQG12sysPJeFYKtB388BruyHb/IfxJ/5Wx8KDo3eKLRe6tmg7y7BNeZTxEb14tPKC853+mqeg==}
+  '@effect/platform-node-shared@4.0.0-beta.90':
+    resolution: {integrity: sha512-0UlZgqJdAjcEr6RtLSqeOtTBeuLO03cTX4FKpzW1nTCScz3wGpELgcaU/T+fURf4LBiD0QQS3tcOYTN/T+qFsw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-beta.85
+      effect: ^4.0.0-beta.90
 
-  '@effect/platform-node@4.0.0-beta.85':
-    resolution: {integrity: sha512-tfZ/nUGB6gsw/b7ZQuhIv6w0iXNKOYj5m7dltd3SouY3y1BvIYrS/KxIUi4s3w8Qfx83i9l17q2Wa2b9Fzth5A==}
+  '@effect/platform-node@4.0.0-beta.90':
+    resolution: {integrity: sha512-c7/1+ULH3Np8vhOQdYU9iP2RoXnyGqFxbyitccs5YDQgRGNU24isvdhtI/1gCRjZJXDXOmLPi36IKlPoKxwefA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-beta.85
+      effect: ^4.0.0-beta.90
       ioredis: ^5.7.0
 
   '@effect/vitest@4.0.0-beta.85':
@@ -1357,8 +1357,8 @@ packages:
   undici-types@8.3.0:
     resolution: {integrity: sha512-j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==}
 
-  undici@8.3.0:
-    resolution: {integrity: sha512-TkUDgb6tl7KOGZ+7e8E3d2FYgUQgF6z5YypqjWmixVQSQERFcVrVg0ySADm2LVLRh5ljAaHTCR5Fmz3Q34rB7Q==}
+  undici@8.5.0:
+    resolution: {integrity: sha512-xamtWoB1EshgjpmlXd7GGm2VfdDtw1+rD8uhry8pSNW3If6S8E0m2T2+orSKeZXEn/aPJMviCpDBA65WJt8zhg==}
     engines: {node: '>=22.19.0'}
 
   universalify@0.1.2:
@@ -1486,7 +1486,7 @@ snapshots:
 
   '@blazediff/core@1.9.1': {}
 
-  '@effect/platform-node-shared@4.0.0-beta.85(effect@4.0.0-beta.85)':
+  '@effect/platform-node-shared@4.0.0-beta.90(effect@4.0.0-beta.85)':
     dependencies:
       '@types/ws': 8.18.1
       effect: 4.0.0-beta.85
@@ -1495,13 +1495,13 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.0-beta.85(effect@4.0.0-beta.85)(ioredis@5.10.1)':
+  '@effect/platform-node@4.0.0-beta.90(effect@4.0.0-beta.85)(ioredis@5.10.1)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-beta.85(effect@4.0.0-beta.85)
+      '@effect/platform-node-shared': 4.0.0-beta.90(effect@4.0.0-beta.85)
       effect: 4.0.0-beta.85
       ioredis: 5.10.1
       mime: 4.1.0
-      undici: 8.3.0
+      undici: 8.5.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -2586,7 +2586,7 @@ snapshots:
 
   undici-types@8.3.0: {}
 
-  undici@8.3.0: {}
+  undici@8.5.0: {}
 
   universalify@0.1.2: {}
 
