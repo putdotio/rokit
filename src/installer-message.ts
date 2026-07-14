@@ -31,7 +31,7 @@ export const isEmptyDeveloperSlotMessage = (message: string): boolean =>
 
 export const isDeleteSuccess = (message: string): boolean =>
   isRecognizedInstallerMessage(message) &&
-  (/\b(?:uninstall|delete|remove|deletion)\b.*\bsuccess(?:ful)?\b/i.test(message) ||
+  (/\b(?:uninstall|delete|remove|deletion)\b.*\b(?:success(?:ful)?|succeeded)\b/i.test(message) ||
     isEmptyDeveloperSlotMessage(message));
 
 const isRecognizedInstallerMessage = (message: string): boolean =>

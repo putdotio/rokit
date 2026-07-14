@@ -125,6 +125,25 @@ describe("Roku retry helpers", () => {
     expect(init.body.get("archive")).toBe("");
   });
 
+  it("accepts Roku's Delete Succeeded response", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response("", {
+          headers: {
+            "WWW-Authenticate": 'Digest qop="auth", realm="rokudev", nonce="nonce"',
+          },
+          status: 401,
+        }),
+      )
+      .mockResolvedValueOnce(new Response('<font color="red">Delete Succeeded.</font>'));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(deleteInstalledChannel({ ...context, password: "pass" })).resolves.toBe(
+      "Delete Succeeded.",
+    );
+  });
+
   it("supports qop-less Digest installer challenges", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
