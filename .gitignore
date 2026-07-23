@@ -1,9 +1,10 @@
 .DS_Store
+.claude/worktrees/
 .env
 .env.*
 !.env.example
 .rokit/
-.repos/effect
+/.repos
 .turbo
 coverage
 dist
