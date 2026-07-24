@@ -26,8 +26,12 @@ export const normalizeInstallSuccessMessage = (message: string): string =>
     ? "Identical to previous version -- not replacing"
     : "Successful deploy";
 
+// Both are empty-developer-slot signals: newer devices report "no plugin
+// installed", while older ones (e.g. Roku Stick 3500X) fail a delete/replace of
+// an empty slot with "No such file or directory". Treating either as an empty
+// slot makes delete idempotent and lets a Replace fall back to a fresh Install.
 export const isEmptyDeveloperSlotMessage = (message: string): boolean =>
-  /no plugin installed/i.test(message);
+  /no plugin installed/i.test(message) || /no such file or directory/i.test(message);
 
 export const isDeleteSuccess = (message: string): boolean =>
   isRecognizedInstallerMessage(message) &&
