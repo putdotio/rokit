@@ -62,18 +62,13 @@ Current score: 16/21, agent-first lower bound.
 
 ```bash
 pnpm install
+pnpm hooks:install
 pnpm verify
 ```
 
 `pnpm install` runs the local Effect source setup outside CI only. When `CI` is
 set to any non-empty value, `scripts/prepare-effect.sh` exits without cloning
 `.repos/effect` so install, pack, publish, and CI/CD workspaces stay predictable.
-
-Optional local hook:
-
-```bash
-pnpm hooks:install
-```
 
 Optional live smoke:
 

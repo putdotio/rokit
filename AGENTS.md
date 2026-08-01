@@ -75,14 +75,16 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 ## Worktrees
 
-`.worktreeinclude` carries env and `.repos` into managed worktrees; Claude
-symlinks `.repos`. Run `vp install` and `vp run verify`. If device config is
-missing, copy `.env.example` to `.env` or `.rokit/.env`.
+`.worktreeinclude` carries env and `.repos/effect` into managed worktrees;
+Claude symlinks `.repos`. Run `vp install`, `vp run hooks:install`, and
+`vp run verify`. If device config is missing, copy `.env.example` to `.env` or
+`.rokit/.env`.
 
 ## Checks
 
 ```bash
 vp install
+vp run hooks:install
 vp run verify
 ```
 
