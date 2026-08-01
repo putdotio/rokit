@@ -61,14 +61,14 @@
     "@effect/platform-node": "4.0.0-beta.97",
     "effect": "4.0.0-beta.97",
     "jszip": "^3.10.1",
-    "roku-deploy": "3.17.7"
+    "roku-deploy": "3.18.2"
   },
   "devDependencies": {
     "@effect/vitest": "4.0.0-beta.97",
     "@types/node": "^26.1.0",
     "typescript": "^6.0.2",
     "vite": "catalog:",
-    "vite-plus": "0.2.4",
+    "vite-plus": "0.2.6",
     "vitest": "catalog:"
   },
   "engines": {
