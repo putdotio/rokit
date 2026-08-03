@@ -34,7 +34,7 @@ The npm package uses Trusted Publishing from GitHub Actions. On npm, configure o
 
 During the `@semantic-release/npm` publish step, npm detects the GitHub OIDC identity, mints short-lived publish credentials, and publishes provenance for the release job.
 
-Release writes use the `putio-release-bot` installation token. The default `GITHUB_TOKEN` remains read-only, and the release-bot remote is configured only after dependencies are installed.
+Release writes use the `putio-releaser` installation token. The default `GITHUB_TOKEN` remains read-only, and the release-bot remote is configured only after dependencies are installed.
 
 ## Package Contents
 
