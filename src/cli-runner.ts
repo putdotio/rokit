@@ -50,7 +50,7 @@ export const runCommandEffect: (
 
     if (data === undefined) {
       return yield* Effect.fail(
-        InvalidInput.make({ message: `Unknown described command: ${command.commandName ?? ""}` }),
+        new InvalidInput({ message: `Unknown described command: ${command.commandName ?? ""}` }),
       );
     }
 
@@ -297,7 +297,7 @@ export const runCommandEffect: (
     return { command: command.name, data: { message }, message, status: "ok" };
   }
 
-  return yield* Effect.fail(InvalidInput.make({ message: "unsupported command" }));
+  return yield* Effect.fail(new InvalidInput({ message: "unsupported command" }));
 });
 
 export const runCommand = async (

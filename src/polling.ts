@@ -31,25 +31,24 @@ export const pollPending = <S>(state: S): PollDecision<never, S> => ({
   status: "pending",
 });
 
-export const pollUntilEffect = <A, E, S, R>(
+export const pollUntilEffect = Effect.fn("pollUntil")(function* <A, E, S, R>(
   options: PollOptions<A, E, S, R>,
-): Effect.Effect<A, E, R> =>
-  Effect.gen(function* () {
-    const start = yield* Clock.currentTimeMillis;
-    let state = options.initialState;
+): Effect.fn.Return<A, E, R> {
+  const start = yield* Clock.currentTimeMillis;
+  let state = options.initialState;
 
-    while (true) {
-      const decision = yield* options.poll(state);
-      if (decision.status === "done") {
-        return decision.value;
-      }
-
-      state = decision.state;
-      const now = yield* Clock.currentTimeMillis;
-      if (now - start >= options.timeoutMs) {
-        return yield* options.timeout(state);
-      }
-
-      yield* Effect.sleep(options.intervalMs);
+  while (true) {
+    const decision = yield* options.poll(state);
+    if (decision.status === "done") {
+      return decision.value;
     }
-  });
+
+    state = decision.state;
+    const now = yield* Clock.currentTimeMillis;
+    if (now - start >= options.timeoutMs) {
+      return yield* options.timeout(state);
+    }
+
+    yield* Effect.sleep(options.intervalMs);
+  }
+});

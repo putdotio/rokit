@@ -1,6 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { cpSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
@@ -19,7 +18,6 @@ const testDistParent = resolve(repoRoot, ".rokit");
 mkdirSync(testDistParent, { recursive: true });
 const testDistDir = mkdtempSync(join(testDistParent, "cli-test-dist-"));
 const cliPath = resolve(testDistDir, "rokit.mjs");
-const prepareEffectPath = resolve(repoRoot, "scripts/prepare-effect.sh");
 
 beforeAll(() => {
   cpSync(builtDistDir, testDistDir, { recursive: true });
@@ -404,18 +402,5 @@ describe("rokit CLI functionality", () => {
 
   it("does not run target-required commands without a context", async () => {
     await expect(runCommand({ name: "check" }, false)).rejects.toThrow("ROKIT_TARGET is not set");
-  });
-
-  it("does not clone the local Effect checkout in CI", () => {
-    const cwd = mkdtempSync(join(tmpdir(), "rokit-effect-ci-"));
-    const result = spawnSync(prepareEffectPath, {
-      cwd,
-      encoding: "utf8",
-      env: { ...process.env, CI: "true" },
-    });
-
-    expect(result.status).toBe(0);
-    expect(result.stderr).toBe("");
-    expect(existsSync(join(cwd, ".repos"))).toBe(false);
   });
 });

@@ -36,7 +36,7 @@ export const parseJsonRecordEffect: (
 ) => Effect.Effect<InputJsonRecord, InvalidInput> = Effect.fn("parseJsonRecord")(function* (value) {
   const parsed = yield* Effect.try({
     try: (): unknown => JSON.parse(value),
-    catch: () => InvalidInput.make({ message: "input JSON must be valid JSON" }),
+    catch: () => new InvalidInput({ message: "input JSON must be valid JSON" }),
   });
 
   return yield* readRecordEffect(parsed, "input JSON must be an object");
@@ -54,8 +54,8 @@ export const readStringEffect: (
     }
 
     return yield* Schema.decodeUnknownEffect(NonEmptyString)(value).pipe(
-      Effect.mapError(() =>
-        InvalidInput.make({ message: `input JSON is missing string field: ${key}` }),
+      Effect.mapError(
+        () => new InvalidInput({ message: `input JSON is missing string field: ${key}` }),
       ),
     );
   },
@@ -73,8 +73,8 @@ export const readOptionalStringEffect: (
     }
 
     return yield* Schema.decodeUnknownEffect(Schema.String)(value).pipe(
-      Effect.mapError(() =>
-        InvalidInput.make({ message: `input JSON field must be a string: ${key}` }),
+      Effect.mapError(
+        () => new InvalidInput({ message: `input JSON field must be a string: ${key}` }),
       ),
     );
   },
@@ -92,8 +92,8 @@ export const readOptionalBooleanEffect: (
     }
 
     return yield* Schema.decodeUnknownEffect(Schema.Boolean)(value).pipe(
-      Effect.mapError(() =>
-        InvalidInput.make({ message: `input JSON field must be a boolean: ${key}` }),
+      Effect.mapError(
+        () => new InvalidInput({ message: `input JSON field must be a boolean: ${key}` }),
       ),
     );
   },
@@ -111,8 +111,8 @@ export const readOptionalNumberEffect: (
     }
 
     return yield* Schema.decodeUnknownEffect(PositiveInteger)(value).pipe(
-      Effect.mapError(() =>
-        InvalidInput.make({ message: `input JSON field must be a positive integer: ${key}` }),
+      Effect.mapError(
+        () => new InvalidInput({ message: `input JSON field must be a positive integer: ${key}` }),
       ),
     );
   },
@@ -131,8 +131,9 @@ export const readOptionalNonNegativeNumberEffect: (
   }
 
   return yield* Schema.decodeUnknownEffect(NonNegativeInteger)(value).pipe(
-    Effect.mapError(() =>
-      InvalidInput.make({ message: `input JSON field must be a non-negative integer: ${key}` }),
+    Effect.mapError(
+      () =>
+        new InvalidInput({ message: `input JSON field must be a non-negative integer: ${key}` }),
     ),
   );
 });
@@ -143,8 +144,8 @@ export const readStringArrayEffect: (
 ) => Effect.Effect<readonly string[], InvalidInput> = Effect.fn("readInputJsonStringArray")(
   function* (record, key) {
     return yield* Schema.decodeUnknownEffect(StringArray)(record[key]).pipe(
-      Effect.mapError(() =>
-        InvalidInput.make({ message: `input JSON field must be a string array: ${key}` }),
+      Effect.mapError(
+        () => new InvalidInput({ message: `input JSON field must be a string array: ${key}` }),
       ),
     );
   },
@@ -163,8 +164,8 @@ export const readOptionalStringArrayEffect: (
   }
 
   return yield* Schema.decodeUnknownEffect(StringArray)(value).pipe(
-    Effect.mapError(() =>
-      InvalidInput.make({ message: `input JSON field must be a string array: ${key}` }),
+    Effect.mapError(
+      () => new InvalidInput({ message: `input JSON field must be a string array: ${key}` }),
     ),
   );
 });
@@ -222,8 +223,8 @@ export const readNodeExpectationEffect: (
 
     if ((state === "visible" || state === "hidden" || state === "absent") && text !== undefined) {
       yield* Schema.decodeUnknownEffect(Schema.String)(text).pipe(
-        Effect.mapError(() =>
-          InvalidInput.make({ message: "input JSON node expectation text must be a string" }),
+        Effect.mapError(
+          () => new InvalidInput({ message: "input JSON node expectation text must be a string" }),
         ),
       );
     }
@@ -238,7 +239,7 @@ const readRecordEffect: (
 ) => Effect.Effect<InputJsonRecord, InvalidInput> = Effect.fn("readInputJsonRecord")(
   function* (value, message) {
     return yield* Schema.decodeUnknownEffect(InputJsonRecord)(value).pipe(
-      Effect.mapError(() => InvalidInput.make({ message })),
+      Effect.mapError(() => new InvalidInput({ message })),
     );
   },
 );

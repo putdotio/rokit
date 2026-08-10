@@ -5,4 +5,4 @@ export const syncRokit = <A>(trySync: () => A): Effect.Effect<A, RokitError> =>
   Effect.try({ catch: normalizeError, try: trySync });
 
 export const failRokit = (message: string): Effect.Effect<never, InvalidInput> =>
-  Effect.fail(InvalidInput.make({ message }));
+  Effect.fail(new InvalidInput({ message }));

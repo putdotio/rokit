@@ -110,7 +110,7 @@ const parseCommandEffect: (
 )(function* (parsed) {
   if (parsed.inputJson !== undefined && parsed.command !== undefined) {
     return yield* Effect.fail(
-      InvalidInput.make({ message: "usage: rokit --input-json <json|@file|->" }),
+      new InvalidInput({ message: "usage: rokit --input-json <json|@file|->" }),
     );
   }
 
@@ -120,7 +120,7 @@ const parseCommandEffect: (
   }
 
   if (parsed.command === undefined) {
-    return yield* Effect.fail(InvalidInput.make({ message: "No command parsed" }));
+    return yield* Effect.fail(new InvalidInput({ message: "No command parsed" }));
   }
 
   return parsed.command;

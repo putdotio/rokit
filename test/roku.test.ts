@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { Effect } from "effect";
+import { Effect, Fiber } from "effect";
 import * as rokuDeploy from "roku-deploy";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { discoverRokuDevicesEffect, readSsdpHeaders } from "../src/discovery.js";
@@ -55,6 +55,50 @@ describe("Roku helpers", () => {
     }
 
     expect(fetchCalls).toEqual(["http://192.0.2.1:8060/keypress/Lit_%2F"]);
+  });
+
+  it("aborts in-flight ECP requests when the Effect is interrupted", async () => {
+    const originalFetch = globalThis.fetch;
+    let requestSignal: AbortSignal | undefined;
+    globalThis.fetch = (_input, init) => {
+      requestSignal = init?.signal ?? undefined;
+      return new Promise<Response>(() => {});
+    };
+
+    try {
+      const fiber = Effect.runFork(fetchEcpTextEffect(context, "/query/device-info"));
+      await Effect.runPromise(Fiber.interrupt(fiber));
+      expect(requestSignal?.aborted).toBe(true);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("cancels ECP response body reads when the Effect is interrupted", async () => {
+    const originalFetch = globalThis.fetch;
+    const bodyRead = Promise.withResolvers<void>();
+    const bodyCanceled = Promise.withResolvers<void>();
+    globalThis.fetch = async () =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          pull: () => {
+            bodyRead.resolve();
+            return new Promise<void>(() => {});
+          },
+          cancel: () => {
+            bodyCanceled.resolve();
+          },
+        }),
+      );
+
+    try {
+      const fiber = Effect.runFork(fetchEcpTextEffect(context, "/query/device-info"));
+      await bodyRead.promise;
+      await Effect.runPromise(Fiber.interrupt(fiber));
+      await bodyCanceled.promise;
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it("reads enhanced device info through roku-deploy", async () => {

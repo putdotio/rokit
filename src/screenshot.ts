@@ -2,7 +2,9 @@ import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, Schema } from "effect";
 import type { PlatformError } from "effect/PlatformError";
 import { digestAuthHeaderEffect, parseDigestChallenge } from "./digest-auth.js";
+import { readResponseBytesEffect, readResponseTextEffect } from "./response-body.js";
 import type { RokuContext } from "./roku-context.js";
+import { abortSignalWithTimeout } from "./timing.js";
 
 export type ScreenshotCaptureOptions = {
   readonly attempts?: number;
@@ -10,7 +12,7 @@ export type ScreenshotCaptureOptions = {
   readonly tempDirPrefix?: string;
 };
 
-class ScreenshotCaptureError extends Schema.TaggedErrorClass<ScreenshotCaptureError>()(
+class ScreenshotCaptureError extends Schema.TaggedError<ScreenshotCaptureError>()(
   "ScreenshotCaptureError",
   {
     detail: Schema.String,
@@ -49,11 +51,12 @@ export const takeScreenshotEffect: (
 
   yield* fs.makeDirectory(path.dirname(outputWithDeviceExtension), { recursive: true });
   yield* fs.writeFile(outputWithDeviceExtension, image).pipe(
-    Effect.mapError((error) =>
-      ScreenshotCaptureError.make({
-        detail: formatErrorMessage(error),
-        outputPath: path.basename(outputWithDeviceExtension),
-      }),
+    Effect.mapError(
+      (error) =>
+        new ScreenshotCaptureError({
+          detail: formatErrorMessage(error),
+          outputPath: path.basename(outputWithDeviceExtension),
+        }),
     ),
   );
 
@@ -82,7 +85,7 @@ const createScreenshotOnDeviceEffect = Effect.fn("createScreenshotOnDevice")(fun
   }
 
   return yield* Effect.fail(
-    ScreenshotCaptureError.make({
+    new ScreenshotCaptureError({
       detail: "Roku did not return a screenshot URL",
       outputPath: "screenshot",
     }),
@@ -97,17 +100,17 @@ const postPluginInspectFormEffect = Effect.fn("postPluginInspectForm")(function*
   const challenge = yield* readScreenshotDigestChallengeEffect(context, url);
   const authorization = yield* digestAuthHeaderEffect(context, "POST", url.pathname, challenge);
   const response = yield* Effect.tryPromise({
-    try: () =>
+    try: (signal) =>
       fetch(url, {
         body: makeBody(),
         headers: {
           Authorization: authorization,
         },
         method: "POST",
-        signal: AbortSignal.timeout(context.timeoutMs),
+        signal: abortSignalWithTimeout(signal, context.timeoutMs),
       }),
     catch: (error) =>
-      ScreenshotCaptureError.make({
+      new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath: "screenshot",
       }),
@@ -128,21 +131,21 @@ const fetchScreenshotImageEffect = Effect.fn("fetchScreenshotImage")(function* (
 
   if (!response.ok) {
     return yield* Effect.fail(
-      ScreenshotCaptureError.make({
+      new ScreenshotCaptureError({
         detail: `image request failed with HTTP ${response.status}`,
         outputPath: url.pathname,
       }),
     );
   }
 
-  return yield* Effect.tryPromise({
-    try: async () => new Uint8Array(await response.arrayBuffer()),
-    catch: (error) =>
-      ScreenshotCaptureError.make({
+  return yield* readResponseBytesEffect(
+    response,
+    (error) =>
+      new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath: url.pathname,
       }),
-  });
+  );
 });
 
 const fetchAuthorizedScreenshotImageEffect = Effect.fn("fetchAuthorizedScreenshotImage")(function* (
@@ -153,7 +156,7 @@ const fetchAuthorizedScreenshotImageEffect = Effect.fn("fetchAuthorizedScreensho
   const challenge = parseDigestChallenge(challengeResponse.headers.get("www-authenticate"));
   if (challenge === undefined) {
     return yield* Effect.fail(
-      ScreenshotCaptureError.make({
+      new ScreenshotCaptureError({
         detail: "Roku screenshot image did not provide a Digest auth challenge",
         outputPath: url.pathname,
       }),
@@ -170,13 +173,13 @@ const fetchScreenshotImageRequestEffect = Effect.fn("fetchScreenshotImageRequest
   timeoutMs: number,
 ) {
   return yield* Effect.tryPromise({
-    try: () =>
+    try: (signal) =>
       fetch(url, {
         headers: authorization === undefined ? undefined : { Authorization: authorization },
-        signal: AbortSignal.timeout(timeoutMs),
+        signal: abortSignalWithTimeout(signal, timeoutMs),
       }),
     catch: (error) =>
-      ScreenshotCaptureError.make({
+      new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath: url.pathname,
       }),
@@ -188,9 +191,13 @@ const readScreenshotDigestChallengeEffect = Effect.fn("readScreenshotDigestChall
   url: URL,
 ) {
   const response = yield* Effect.tryPromise({
-    try: () => fetch(url, { method: "GET", signal: AbortSignal.timeout(context.timeoutMs) }),
+    try: (signal) =>
+      fetch(url, {
+        method: "GET",
+        signal: abortSignalWithTimeout(signal, context.timeoutMs),
+      }),
     catch: (error) =>
-      ScreenshotCaptureError.make({
+      new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath: "screenshot",
       }),
@@ -199,7 +206,7 @@ const readScreenshotDigestChallengeEffect = Effect.fn("readScreenshotDigestChall
 
   if (challenge === undefined) {
     return yield* Effect.fail(
-      ScreenshotCaptureError.make({
+      new ScreenshotCaptureError({
         detail: "Roku developer inspector did not provide a Digest auth challenge",
         outputPath: "screenshot",
       }),
@@ -213,18 +220,18 @@ const readScreenshotResponseTextEffect = Effect.fn("readScreenshotResponseText")
   response: Response,
   outputPath: string,
 ) {
-  const body = yield* Effect.tryPromise({
-    try: () => response.text(),
-    catch: (error) =>
-      ScreenshotCaptureError.make({
+  const body = yield* readResponseTextEffect(
+    response,
+    (error) =>
+      new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath,
       }),
-  });
+  );
 
   if (!response.ok) {
     return yield* Effect.fail(
-      ScreenshotCaptureError.make({
+      new ScreenshotCaptureError({
         detail: `HTTP ${response.status}: ${body.trim() || response.statusText}`,
         outputPath,
       }),
@@ -310,19 +317,16 @@ export const captureScreenshotEffect: (
         }
 
         return yield* Effect.fail(
-          ScreenshotCaptureError.make({
+          new ScreenshotCaptureError({
             detail: "screenshot capture succeeded without writing an image file",
             outputPath: outputFileName,
           }),
         );
       }),
     ).pipe(
-      Effect.match({
-        onFailure: (error) => {
-          lastError = formatErrorMessage(error);
-          return undefined;
-        },
-        onSuccess: (result) => result,
+      Effect.catchTag("ScreenshotCaptureError", (error) => {
+        lastError = error.detail;
+        return Effect.succeed(undefined);
       }),
     );
 
@@ -336,7 +340,7 @@ export const captureScreenshotEffect: (
   }
 
   return yield* Effect.fail(
-    ScreenshotCaptureError.make({
+    new ScreenshotCaptureError({
       detail: lastError,
       outputPath: outputFileName,
     }),

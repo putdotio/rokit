@@ -2,6 +2,7 @@ packages:
   - "."
 
 overrides:
+  "@effect/platform-node-shared": 4.0.0-beta.107
   vite: "catalog:"
   vitest: "catalog:"
 
@@ -9,10 +10,12 @@ allowBuilds:
   "@parcel/watcher": true
   msgpackr-extract: true
 minimumReleaseAgeExclude:
-  - "@effect/platform-node-shared@4.0.0-beta.78"
-  - "@effect/platform-node@4.0.0-beta.78"
-  - "@effect/vitest@4.0.0-beta.78"
-  - effect@4.0.0-beta.78
+  # Vite+ 0.2.6 ignores package@version entries in its supply-chain verifier.
+  # Keep Effect exact in package.json and re-pin here when the verifier supports it.
+  - "@effect/platform-node-shared"
+  - "@effect/platform-node"
+  - "@effect/vitest"
+  - effect
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.6
   vitest: 4.1.10

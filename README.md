@@ -17,7 +17,7 @@
 
 ## Install
 
-Requires Node `>=24.14.0`; install it in a consumer repo with:
+Requires Node `>=24.18.0`; install it in a consumer repo with:
 
 ```bash
 pnpm add -D @putdotio/rokit
@@ -181,7 +181,6 @@ artifacts.
 - [Contributing](./CONTRIBUTING.md)
 - [Roku debugging](./docs/DEBUGGING.md)
 - [Distribution](./docs/DISTRIBUTION.md)
-- [Agent readiness](./docs/READINESS.md)
 - [rokit skill](./skills/rokit/SKILL.md)
 - [Security](./SECURITY.md)
 

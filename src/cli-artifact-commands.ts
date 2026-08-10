@@ -68,11 +68,11 @@ const packageOutputPath = (
   out: string | undefined,
 ): Effect.Effect<string, InvalidInput> => {
   if (positional !== undefined && out !== undefined) {
-    return Effect.fail(InvalidInput.make({ message: packageUsage }));
+    return Effect.fail(new InvalidInput({ message: packageUsage }));
   }
 
   const outputPath = positional ?? out;
   return outputPath === undefined
-    ? Effect.fail(InvalidInput.make({ message: packageUsage }))
+    ? Effect.fail(new InvalidInput({ message: packageUsage }))
     : Effect.succeed(outputPath);
 };

@@ -52,6 +52,16 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Keep app journeys, content IDs, account data, and product assertions out of
   the generic harness.
 
+## Learning more about the Effect
+
+This repository uses the Effect Typescript library.
+
+Before writing any Effect code, first read `node_modules/effect/AGENTS.md`
+**completely**, and follow the links in the file when required.
+
+If you need to learn more about particular Effect apis and concepts that the
+guide doesn't cover, search through the source code in `node_modules/effect/src`.
+
 ## Sharp Edges
 
 - Missing config/env and child-command failures should not print stack traces.
@@ -62,8 +72,8 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Avoid sleeps in generic commands. App repos can add meaningful wait/assert
   loops around `rokit` primitives.
 - Release details live in `docs/DISTRIBUTION.md`; debugging details live in
-  `docs/DEBUGGING.md`; readiness details live in `docs/READINESS.md`;
-  consumer skill guidance lives in `skills/rokit/SKILL.md`.
+  `docs/DEBUGGING.md`; consumer skill guidance lives in
+  `skills/rokit/SKILL.md`.
 
 ## When Contracts Change
 
@@ -75,10 +85,9 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 ## Worktrees
 
-`.worktreeinclude` carries env and `.repos/effect` into managed worktrees;
-Claude symlinks `.repos`. Run `vp install`, `vp run hooks:install`, and
-`vp run verify`. If device config is missing, copy `.env.example` to `.env` or
-`.rokit/.env`.
+`.worktreeinclude` carries local env files into managed worktrees. Run
+`vp install`, `vp run hooks:install`, and `vp run verify`. If device config is
+missing, copy `.env.example` to `.env` or `.rokit/.env`.
 
 ## Checks
 

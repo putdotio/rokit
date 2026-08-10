@@ -68,5 +68,3 @@ rokit console artifacts/live/console.log --duration-ms 30000
   expectations, and review narratives.
 - ECP query paths must be plain paths. Do not include query strings, fragments,
   traversal, backslashes, or encoded path segments.
-- The local Effect source setup is skipped whenever `CI` is set. Do not make CI,
-  install, pack, or publish flows depend on cloning `.repos/effect`.

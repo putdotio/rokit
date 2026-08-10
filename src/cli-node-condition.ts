@@ -43,7 +43,7 @@ export const optionalNodeConditionFromCliInputEffect: (
   if (parsedNodeName === undefined) {
     if (parsedState !== undefined || parsedValue !== undefined || parsedTimeoutMs !== undefined) {
       return yield* Effect.fail(
-        InvalidInput.make({ message: `usage: rokit ${commandName} <node-name>` }),
+        new InvalidInput({ message: `usage: rokit ${commandName} <node-name>` }),
       );
     }
 

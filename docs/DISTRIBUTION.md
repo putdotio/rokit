@@ -41,8 +41,8 @@ Release writes use the `putio-releaser` installation token. The default `GITHUB_
 The npm package includes `dist`, `README.md`, `docs`, `examples`, `skills`,
 `AGENTS.md`, `CONTRIBUTING.md`, and `SECURITY.md`. The docs, consumer skill, and
 generic live probe are included so agents consuming the package can inspect
-readiness, distribution, security, and generic Roku proof mechanics without
-cloning extra private context.
+distribution, security, and generic Roku proof mechanics without cloning extra
+private context.
 
 ## Release Smoke
 

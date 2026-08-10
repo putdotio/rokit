@@ -1,5 +1,5 @@
 import { createConnection } from "node:net";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 import { DebugPortUnavailable, normalizeError, type RokitError } from "./errors.js";
 import { fail, formatErrorMessage, rejectUnsafeInput } from "./runtime.js";
 import type { RokuContext } from "./roku-context.js";
@@ -110,14 +110,14 @@ export const runDebugCommandEffect: (
   idleTimeoutMs: number,
 ) {
   const safeCommand = yield* buildDebugCommandEffect(command.command, command.args);
-  const startedAt = yield* Effect.sync(() => Date.now());
+  const startedAt = yield* Clock.currentTimeMillis;
   const port = resolveDebugPort(context, safeCommand.port);
   const body = yield* readDebugSocketEffect(context, port, {
     durationMs,
     idleTimeoutMs,
     request: safeCommand.request,
   });
-  const elapsedMs = yield* Effect.sync(() => Date.now() - startedAt);
+  const elapsedMs = (yield* Clock.currentTimeMillis) - startedAt;
 
   return {
     args: safeCommand.args,
@@ -134,10 +134,10 @@ export const captureDebugConsoleEffect: (
   durationMs: number,
 ) => Effect.Effect<DebugConsoleCapture, DebugPortUnavailable> = Effect.fn("captureDebugConsole")(
   function* (context: RokuContext, durationMs: number) {
-    const startedAt = yield* Effect.sync(() => Date.now());
+    const startedAt = yield* Clock.currentTimeMillis;
     const port = resolveDebugPort(context, brightScriptConsolePort);
     const body = yield* readDebugSocketEffect(context, port, { durationMs });
-    const elapsedMs = yield* Effect.sync(() => Date.now() - startedAt);
+    const elapsedMs = (yield* Clock.currentTimeMillis) - startedAt;
 
     return {
       body,
@@ -220,7 +220,7 @@ const readDebugSocketEffect = Effect.fn("readDebugSocket")(function* (
     };
 
     const failRead = (detail: string): void => {
-      complete(Effect.fail(DebugPortUnavailable.make({ detail, port })));
+      complete(Effect.fail(new DebugPortUnavailable({ detail, port })));
     };
 
     const scheduleIdleTimer = (): void => {
