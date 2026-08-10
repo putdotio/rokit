@@ -97,7 +97,7 @@ describe("Roku retry helpers", () => {
           attempts: 2,
           retryDelayMs: 1,
         }),
-      ).rejects.toThrow("transport detail");
+      ).rejects.toThrow("failed to capture story.jpg: transport detail");
       expect(fetchMock).toHaveBeenCalledTimes(2);
     } finally {
       await rm(root, { force: true, recursive: true });

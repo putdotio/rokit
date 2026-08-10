@@ -324,7 +324,7 @@ export const captureScreenshotEffect: (
       }),
     ).pipe(
       Effect.catchTag("ScreenshotCaptureError", (error) => {
-        lastError = error.message;
+        lastError = error.detail;
         return Effect.succeed(undefined);
       }),
     );
