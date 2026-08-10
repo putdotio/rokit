@@ -9,6 +9,8 @@ allowBuilds:
   "@parcel/watcher": true
   msgpackr-extract: true
 minimumReleaseAgeExclude:
+  # Vite+ 0.2.6 ignores package@version entries in its supply-chain verifier.
+  # Keep Effect exact in package.json and re-pin here when the verifier supports it.
   - "@effect/platform-node-shared"
   - "@effect/platform-node"
   - "@effect/vitest"
