@@ -2,6 +2,7 @@ packages:
   - "."
 
 overrides:
+  "@effect/platform-node-shared": 4.0.0-beta.107
   vite: "catalog:"
   vitest: "catalog:"
 
