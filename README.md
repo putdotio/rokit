@@ -181,7 +181,6 @@ artifacts.
 - [Contributing](./CONTRIBUTING.md)
 - [Roku debugging](./docs/DEBUGGING.md)
 - [Distribution](./docs/DISTRIBUTION.md)
-- [Agent readiness](./docs/READINESS.md)
 - [rokit skill](./skills/rokit/SKILL.md)
 - [Security](./SECURITY.md)
 

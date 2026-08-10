@@ -50,7 +50,6 @@
     "hooks:install": "git config core.hooksPath .git-hooks",
     "live:smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs check",
     "live:probe": "scripts/live-probe.sh",
-    "prepare": "./scripts/prepare-effect.sh",
     "prepack": "vp pack src/index.ts src/rokit.ts --dts",
     "smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null",
     "test": "vp pack src/index.ts src/rokit.ts --dts && vp test run --passWithNoTests",

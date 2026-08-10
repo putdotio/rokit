@@ -72,8 +72,8 @@ guide doesn't cover, search through the source code in `node_modules/effect/src`
 - Avoid sleeps in generic commands. App repos can add meaningful wait/assert
   loops around `rokit` primitives.
 - Release details live in `docs/DISTRIBUTION.md`; debugging details live in
-  `docs/DEBUGGING.md`; readiness details live in `docs/READINESS.md`;
-  consumer skill guidance lives in `skills/rokit/SKILL.md`.
+  `docs/DEBUGGING.md`; consumer skill guidance lives in
+  `skills/rokit/SKILL.md`.
 
 ## When Contracts Change
 
@@ -85,10 +85,9 @@ guide doesn't cover, search through the source code in `node_modules/effect/src`
 
 ## Worktrees
 
-`.worktreeinclude` carries env and `.repos/effect` into managed worktrees;
-Claude symlinks `.repos`. Run `vp install`, `vp run hooks:install`, and
-`vp run verify`. If device config is missing, copy `.env.example` to `.env` or
-`.rokit/.env`.
+`.worktreeinclude` carries local env files into managed worktrees. Run
+`vp install`, `vp run hooks:install`, and `vp run verify`. If device config is
+missing, copy `.env.example` to `.env` or `.rokit/.env`.
 
 ## Checks
 
