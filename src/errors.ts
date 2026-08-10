@@ -1,25 +1,22 @@
 import { Schema } from "effect";
 
-export class InvalidInput extends Schema.TaggedErrorClass<InvalidInput>()("InvalidInput", {
+export class InvalidInput extends Schema.TaggedError<InvalidInput>()("InvalidInput", {
   message: Schema.String,
 }) {}
 
-export class MissingTarget extends Schema.TaggedErrorClass<MissingTarget>()("MissingTarget", {}) {
+export class MissingTarget extends Schema.TaggedError<MissingTarget>()("MissingTarget", {}) {
   override get message(): string {
     return "ROKIT_TARGET is not set";
   }
 }
 
-export class MissingPassword extends Schema.TaggedErrorClass<MissingPassword>()(
-  "MissingPassword",
-  {},
-) {
+export class MissingPassword extends Schema.TaggedError<MissingPassword>()("MissingPassword", {}) {
   override get message(): string {
     return "ROKIT_PASSWORD is not set";
   }
 }
 
-export class DebugPortUnavailable extends Schema.TaggedErrorClass<DebugPortUnavailable>()(
+export class DebugPortUnavailable extends Schema.TaggedError<DebugPortUnavailable>()(
   "DebugPortUnavailable",
   {
     detail: Schema.String,
@@ -31,7 +28,7 @@ export class DebugPortUnavailable extends Schema.TaggedErrorClass<DebugPortUnava
   }
 }
 
-export class UnexpectedRokitFailure extends Schema.TaggedErrorClass<UnexpectedRokitFailure>()(
+export class UnexpectedRokitFailure extends Schema.TaggedError<UnexpectedRokitFailure>()(
   "UnexpectedRokitFailure",
   {
     message: Schema.String,
@@ -52,7 +49,7 @@ export const normalizeError = (error: unknown): RokitError => {
     return error;
   }
 
-  return UnexpectedRokitFailure.make({
+  return new UnexpectedRokitFailure({
     message: error instanceof Error ? error.message : String(error),
   });
 };

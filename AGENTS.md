@@ -52,6 +52,16 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Keep app journeys, content IDs, account data, and product assertions out of
   the generic harness.
 
+## Learning more about the Effect
+
+This repository uses the Effect Typescript library.
+
+Before writing any Effect code, first read `node_modules/effect/AGENTS.md`
+**completely**, and follow the links in the file when required.
+
+If you need to learn more about particular Effect apis and concepts that the
+guide doesn't cover, search through the source code in `node_modules/effect/src`.
+
 ## Sharp Edges
 
 - Missing config/env and child-command failures should not print stack traces.

@@ -7,8 +7,17 @@ if [ -n "${CI:-}" ]; then
 fi
 
 effect_upstream="https://github.com/Effect-TS/effect.git"
-effect_ref="effect@4.0.0-beta.102"
 script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+effect_ref="$(node -e '
+const { readFileSync } = require("node:fs");
+const packageJson = JSON.parse(readFileSync(process.argv[1], "utf8"));
+const version = packageJson.dependencies?.effect;
+if (typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
+  console.error("package.json dependencies.effect must be an exact version");
+  process.exit(1);
+}
+process.stdout.write(`effect@${version}`);
+' "$script_dir/../package.json")"
 repo_dir="$(dirname "$script_dir")/.repos/effect"
 
 if [ -e "$repo_dir" ] && [ ! -d "$repo_dir/.git" ]; then

@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect";
 import type { RokuContext } from "./roku-context.js";
+import { abortSignalWithTimeout } from "./timing.js";
 
 export const ecpPort = 8060;
 
@@ -36,7 +37,7 @@ const remoteKeySet: ReadonlySet<string> = new Set(remoteKeys);
 
 export type RemoteKey = (typeof remoteKeys)[number] | `Lit_${string}`;
 
-class EcpTransportError extends Schema.TaggedErrorClass<EcpTransportError>()("EcpTransportError", {
+class EcpTransportError extends Schema.TaggedError<EcpTransportError>()("EcpTransportError", {
   detail: Schema.String,
   method: Schema.String,
   path: Schema.String,
@@ -46,7 +47,7 @@ class EcpTransportError extends Schema.TaggedErrorClass<EcpTransportError>()("Ec
   }
 }
 
-class EcpHttpError extends Schema.TaggedErrorClass<EcpHttpError>()("EcpHttpError", {
+class EcpHttpError extends Schema.TaggedError<EcpHttpError>()("EcpHttpError", {
   method: Schema.String,
   path: Schema.String,
   status: Schema.Number,
@@ -56,7 +57,7 @@ class EcpHttpError extends Schema.TaggedErrorClass<EcpHttpError>()("EcpHttpError
   }
 }
 
-class EcpPathError extends Schema.TaggedErrorClass<EcpPathError>()("EcpPathError", {
+class EcpPathError extends Schema.TaggedError<EcpPathError>()("EcpPathError", {
   detail: Schema.String,
   path: Schema.String,
 }) {
@@ -74,21 +75,21 @@ export const fetchEcpTextEffect = Effect.fn("fetchEcpText")(function* (
   const safePath = yield* safeDeviceRelativePath(path);
   const url = ecpUrl(context, safePath);
   const response = yield* Effect.tryPromise({
-    try: () => fetch(url, { signal: AbortSignal.timeout(context.timeoutMs) }),
+    try: (signal) => fetch(url, { signal: abortSignalWithTimeout(signal, context.timeoutMs) }),
     catch: (error) =>
-      EcpTransportError.make({ detail: formatErrorMessage(error), method: "GET", path: safePath }),
+      new EcpTransportError({ detail: formatErrorMessage(error), method: "GET", path: safePath }),
   });
 
   if (!response.ok) {
     return yield* Effect.fail(
-      EcpHttpError.make({ method: "GET", path: safePath, status: response.status }),
+      new EcpHttpError({ method: "GET", path: safePath, status: response.status }),
     );
   }
 
   return yield* Effect.tryPromise({
     try: () => response.text(),
     catch: (error) =>
-      EcpTransportError.make({ detail: formatErrorMessage(error), method: "GET", path: safePath }),
+      new EcpTransportError({ detail: formatErrorMessage(error), method: "GET", path: safePath }),
   });
 });
 
@@ -103,17 +104,17 @@ const postEcpUrlEffect = Effect.fn("postEcpUrl")(function* (
   path: string,
 ) {
   const response = yield* Effect.tryPromise({
-    try: () =>
+    try: (signal) =>
       fetch(url, {
         method: "POST",
-        signal: AbortSignal.timeout(context.timeoutMs),
+        signal: abortSignalWithTimeout(signal, context.timeoutMs),
       }),
     catch: (error) =>
-      EcpTransportError.make({ detail: formatErrorMessage(error), method: "POST", path }),
+      new EcpTransportError({ detail: formatErrorMessage(error), method: "POST", path }),
   });
 
   if (!response.ok) {
-    return yield* Effect.fail(EcpHttpError.make({ method: "POST", path, status: response.status }));
+    return yield* Effect.fail(new EcpHttpError({ method: "POST", path, status: response.status }));
   }
 });
 
@@ -128,13 +129,13 @@ export const postKeypressEffect = Effect.fn("postKeypress")(function* (
 
 export const postLaunchEffect = Effect.fn("postLaunch")(function* (context: RokuContext, url: URL) {
   const response = yield* Effect.tryPromise({
-    try: () =>
+    try: (signal) =>
       fetch(url, {
         method: "POST",
-        signal: AbortSignal.timeout(context.timeoutMs),
+        signal: abortSignalWithTimeout(signal, context.timeoutMs),
       }),
     catch: (error) =>
-      EcpTransportError.make({
+      new EcpTransportError({
         detail: formatErrorMessage(error),
         method: "POST",
         path: url.pathname,
@@ -152,7 +153,7 @@ export const postLaunchEffect = Effect.fn("postLaunch")(function* (context: Roku
   }
 
   return yield* Effect.fail(
-    EcpHttpError.make({ method: "POST", path: url.pathname, status: response.status }),
+    new EcpHttpError({ method: "POST", path: url.pathname, status: response.status }),
   );
 });
 
@@ -180,7 +181,7 @@ const safeDeviceRelativePath = (path: string): Effect.Effect<string, EcpPathErro
       const safePath = validateEcpPath(path);
       return safePath.startsWith("/") ? safePath : `/${safePath}`;
     },
-    catch: (error) => EcpPathError.make({ detail: formatErrorMessage(error), path }),
+    catch: (error) => new EcpPathError({ detail: formatErrorMessage(error), path }),
   });
 
 const remoteKeyEffect = (key: string): Effect.Effect<string, EcpPathError> =>
@@ -190,7 +191,7 @@ const remoteKeyEffect = (key: string): Effect.Effect<string, EcpPathError> =>
       return key;
     },
     catch: (error) =>
-      EcpPathError.make({ detail: formatErrorMessage(error), path: `/keypress/${key}` }),
+      new EcpPathError({ detail: formatErrorMessage(error), path: `/keypress/${key}` }),
   });
 
 export const validateEcpPath = (path: string): string => {

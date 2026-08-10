@@ -36,7 +36,7 @@ const validateDiscoveryTimeoutEffect = Effect.fn("validateDiscoveryTimeout")(fun
 ) {
   if (!Number.isInteger(timeoutMs) || timeoutMs <= 0) {
     return yield* Effect.fail(
-      InvalidInput.make({ message: `Invalid discovery timeout: ${timeoutMs}` }),
+      new InvalidInput({ message: `Invalid discovery timeout: ${timeoutMs}` }),
     );
   }
 

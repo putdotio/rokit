@@ -1,7 +1,5 @@
 # Agent Readiness
 
-Status: current as of 2026-05-28
-
 `rokit` is a CLI/package repo. There is no long-running app to boot; readiness is based on deterministic package verification plus optional live Roku proof.
 
 ## Grade
@@ -66,9 +64,10 @@ pnpm hooks:install
 pnpm verify
 ```
 
-`pnpm install` runs the local Effect source setup outside CI only. When `CI` is
-set to any non-empty value, `scripts/prepare-effect.sh` exits without cloning
-`.repos/effect` so install, pack, publish, and CI/CD workspaces stay predictable.
+`pnpm install` checks out the exact `effect` dependency tag into
+`.repos/effect` outside CI only. When `CI` is set to any non-empty value,
+`scripts/prepare-effect.sh` exits without cloning the source so install, pack,
+publish, and CI/CD workspaces stay predictable.
 
 Optional live smoke:
 

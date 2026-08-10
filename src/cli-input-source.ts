@@ -15,7 +15,7 @@ export const resolveInputJsonSource: (
 
     if (path.length === 0) {
       return yield* Effect.fail(
-        InvalidInput.make({ message: "--input-json @file requires a file path" }),
+        new InvalidInput({ message: "--input-json @file requires a file path" }),
       );
     }
 

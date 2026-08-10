@@ -4,6 +4,7 @@ import type { DeviceInfo } from "roku-deploy";
 import { ecpPort, fetchEcpTextEffect } from "./ecp.js";
 import { normalizeError } from "./errors.js";
 import type { RokuContext } from "./roku-context.js";
+import { abortSignalWithTimeout } from "./timing.js";
 import { readXmlTag } from "./xml.js";
 
 export type DeviceSummary = {
@@ -54,9 +55,9 @@ const fetchInstallerStatusEffect = Effect.fn("fetchInstallerStatus")(function* (
 ) {
   const response = yield* Effect.tryPromise({
     catch: normalizeError,
-    try: () =>
+    try: (signal) =>
       fetch(`http://${context.target}`, {
-        signal: AbortSignal.timeout(context.timeoutMs),
+        signal: abortSignalWithTimeout(signal, context.timeoutMs),
       }),
   });
 

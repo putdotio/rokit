@@ -9,13 +9,14 @@ import {
   readInstallerMessage,
 } from "./installer-message.js";
 import type { RokuContext } from "./roku-context.js";
+import { abortSignalWithTimeout } from "./timing.js";
 
 type InstallerAction = "delete" | "install";
 type InstallerSubmitValue = "Delete" | "Install" | "Replace";
 
 const nodeInstallerLayer = Layer.merge(NodeFileSystem.layer, NodePath.layer);
 
-class RokuInstallerTransportError extends Schema.TaggedErrorClass<RokuInstallerTransportError>()(
+class RokuInstallerTransportError extends Schema.TaggedError<RokuInstallerTransportError>()(
   "RokuInstallerTransportError",
   {
     action: Schema.String,
@@ -27,7 +28,7 @@ class RokuInstallerTransportError extends Schema.TaggedErrorClass<RokuInstallerT
   }
 }
 
-class RokuInstallerHttpError extends Schema.TaggedErrorClass<RokuInstallerHttpError>()(
+class RokuInstallerHttpError extends Schema.TaggedError<RokuInstallerHttpError>()(
   "RokuInstallerHttpError",
   {
     action: Schema.String,
@@ -52,11 +53,12 @@ export const installPackageEffect: (
   const path = yield* Path.Path;
   const resolvedZip = withPackageArchiveExtension(path.resolve(zipPath));
   const archive = yield* fs.readFile(resolvedZip).pipe(
-    Effect.mapError((error) =>
-      RokuInstallerTransportError.make({
-        action: "install",
-        detail: formatErrorMessage(error),
-      }),
+    Effect.mapError(
+      (error) =>
+        new RokuInstallerTransportError({
+          action: "install",
+          detail: formatErrorMessage(error),
+        }),
     ),
   );
   const fileName = path.basename(resolvedZip);
@@ -87,7 +89,7 @@ export const deleteInstalledChannelEffect: (
   }
 
   return yield* Effect.fail(
-    RokuInstallerHttpError.make({
+    new RokuInstallerHttpError({
       action: "delete",
       detail: message,
       status: 200,
@@ -119,17 +121,17 @@ const postInstallerForm = Effect.fn("postInstallerForm")(function* (
   const challenge = yield* readDigestChallenge(context, action, url);
   const authorization = yield* digestAuthHeaderEffect(context, "POST", url.pathname, challenge);
   const response = yield* Effect.tryPromise({
-    try: () =>
+    try: (signal) =>
       fetch(url, {
         body: makeBody(),
         headers: {
           Authorization: authorization,
         },
         method: "POST",
-        signal: AbortSignal.timeout(installerPostTimeoutMs(context, action)),
+        signal: abortSignalWithTimeout(signal, installerPostTimeoutMs(context, action)),
       }),
     catch: (error) =>
-      RokuInstallerTransportError.make({
+      new RokuInstallerTransportError({
         action,
         detail: formatErrorMessage(error),
       }),
@@ -137,7 +139,7 @@ const postInstallerForm = Effect.fn("postInstallerForm")(function* (
   const responseBody = yield* Effect.tryPromise({
     try: () => response.text(),
     catch: (error) =>
-      RokuInstallerTransportError.make({
+      new RokuInstallerTransportError({
         action,
         detail: formatErrorMessage(error),
       }),
@@ -146,7 +148,7 @@ const postInstallerForm = Effect.fn("postInstallerForm")(function* (
 
   if (!response.ok) {
     return yield* Effect.fail(
-      RokuInstallerHttpError.make({
+      new RokuInstallerHttpError({
         action,
         detail: message === "OK" ? fallbackHttpDetail(responseBody, response.statusText) : message,
         status: response.status,
@@ -163,9 +165,13 @@ const readDigestChallenge = Effect.fn("readDigestChallenge")(function* (
   url: URL,
 ) {
   const response = yield* Effect.tryPromise({
-    try: () => fetch(url, { method: "GET", signal: AbortSignal.timeout(context.timeoutMs) }),
+    try: (signal) =>
+      fetch(url, {
+        method: "GET",
+        signal: abortSignalWithTimeout(signal, context.timeoutMs),
+      }),
     catch: (error) =>
-      RokuInstallerTransportError.make({
+      new RokuInstallerTransportError({
         action,
         detail: formatErrorMessage(error),
       }),
@@ -174,7 +180,7 @@ const readDigestChallenge = Effect.fn("readDigestChallenge")(function* (
 
   if (challenge === undefined) {
     return yield* Effect.fail(
-      RokuInstallerTransportError.make({
+      new RokuInstallerTransportError({
         action,
         detail: "Roku developer installer did not provide a Digest auth challenge",
       }),
@@ -211,7 +217,7 @@ const postValidatedInstallPackage = Effect.fn("postValidatedInstallPackage")(fun
   }
 
   return yield* Effect.fail(
-    RokuInstallerHttpError.make({
+    new RokuInstallerHttpError({
       action: "install",
       detail: message,
       status: 200,

@@ -11,10 +11,10 @@ import {
 describe("rokit errors", () => {
   it.effect("renders schema-backed CLI errors", () =>
     Effect.sync(() => {
-      assert.strictEqual(renderError(InvalidInput.make({ message: "bad command" })), "bad command");
-      assert.strictEqual(renderError(MissingTarget.make({})), "ROKIT_TARGET is not set");
+      assert.strictEqual(renderError(new InvalidInput({ message: "bad command" })), "bad command");
+      assert.strictEqual(renderError(new MissingTarget({})), "ROKIT_TARGET is not set");
       assert.strictEqual(
-        renderError(DebugPortUnavailable.make({ detail: "connection refused", port: 8085 })),
+        renderError(new DebugPortUnavailable({ detail: "connection refused", port: 8085 })),
         "Roku debug port 8085 unavailable: connection refused",
       );
     }),

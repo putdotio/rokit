@@ -38,7 +38,7 @@ export type PackageZipResult = {
   readonly path: string;
 };
 
-class PackageZipError extends Schema.TaggedErrorClass<PackageZipError>()("PackageZipError", {
+class PackageZipError extends Schema.TaggedError<PackageZipError>()("PackageZipError", {
   detail: Schema.String,
 }) {
   override get message(): string {
@@ -73,7 +73,7 @@ export const packageChannelEffect = Effect.fn("packageChannel")(function* (
   yield* Effect.tryPromise({
     try: () => rokuDeploy.createPackage(options),
     catch: (error) =>
-      PackageZipError.make({
+      new PackageZipError({
         detail: `failed to package Roku channel: ${formatErrorMessage(error)}`,
       }),
   });
@@ -165,15 +165,23 @@ export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
         type: "uint8array",
       }),
     catch: (error) =>
-      PackageZipError.make({
+      new PackageZipError({
         detail: `failed to generate package zip: ${formatErrorMessage(error)}`,
       }),
   });
 
   yield* fs.makeDirectory(path.dirname(outFile), { recursive: true });
   yield* assertPackageOutputFile(outFile);
-  yield* fs.remove(outFile, { force: true });
-  yield* fs.writeFile(outFile, output);
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const tempFile = yield* fs.makeTempFileScoped({
+        directory: path.dirname(outFile),
+        prefix: `.${path.basename(outFile)}-`,
+      });
+      yield* fs.writeFile(tempFile, output);
+      yield* fs.rename(tempFile, outFile);
+    }),
+  );
 
   return {
     fileCount: sortedFiles.length,
@@ -289,7 +297,7 @@ const rejectPackageSymlink = Effect.fn("rejectPackageSymlink")(function* (absolu
   }
 
   return yield* Effect.fail(
-    PackageZipError.make({ detail: `package path must not be a symlink: ${absolutePath}` }),
+    new PackageZipError({ detail: `package path must not be a symlink: ${absolutePath}` }),
   );
 });
 
@@ -307,7 +315,7 @@ const assertInsidePackageRoot = Effect.fn("assertInsidePackageRoot")(function* (
   }
 
   return yield* Effect.fail(
-    PackageZipError.make({ detail: `package path resolves outside root: ${absolutePath}` }),
+    new PackageZipError({ detail: `package path resolves outside root: ${absolutePath}` }),
   );
 });
 
@@ -326,7 +334,7 @@ const assertPackageOutputFile = Effect.fn("assertPackageOutputFile")(function* (
   }
 
   return yield* Effect.fail(
-    PackageZipError.make({
+    new PackageZipError({
       detail: `package output path already exists and is not a file: ${outputPath}`,
     }),
   );
@@ -344,7 +352,7 @@ const normalizePackagePath = Effect.fn("normalizePackagePath")(function* (packag
     segments.some((segment) => segment === "" || segment === "." || segment === "..")
   ) {
     return yield* Effect.fail(
-      PackageZipError.make({ detail: `unsafe package path: ${packagePath}` }),
+      new PackageZipError({ detail: `unsafe package path: ${packagePath}` }),
     );
   }
 
@@ -359,7 +367,7 @@ const rejectUnsafeInput = Effect.fn("rejectUnsafeInput")(function* (value: strin
     })
   ) {
     return yield* Effect.fail(
-      PackageZipError.make({ detail: `${label} contains control characters` }),
+      new PackageZipError({ detail: `${label} contains control characters` }),
     );
   }
 });
@@ -385,7 +393,7 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
   const extension = path.extname(resolvedOutput).toLowerCase();
   if (!allowedExtensions.includes(extension)) {
     return yield* Effect.fail(
-      PackageZipError.make({
+      new PackageZipError({
         detail: `package output path must end with ${formatAllowedExtensions(allowedExtensions)}: ${outputPath}`,
       }),
     );
@@ -411,7 +419,7 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
 
   if (!realOutputIsInsideSandbox) {
     return yield* Effect.fail(
-      PackageZipError.make({
+      new PackageZipError({
         detail: `package output path must stay within the app root: ${outputPath}`,
       }),
     );
@@ -484,7 +492,7 @@ const rejectPackageOutputInsideRoots = Effect.fn("rejectPackageOutputInsideRoots
 
     if (includedByRules === true) {
       return yield* Effect.fail(
-        PackageZipError.make({
+        new PackageZipError({
           detail: `package output path must be outside packaged roots: ${outputPath}`,
         }),
       );
@@ -502,7 +510,7 @@ const rejectPackageOutputInsideRoots = Effect.fn("rejectPackageOutputInsideRoots
   for (const packageRoot of packageRoots.included) {
     if (packageRoot === "") {
       return yield* Effect.fail(
-        PackageZipError.make({
+        new PackageZipError({
           detail: `package output path must be outside packaged roots: ${outputPath}`,
         }),
       );
@@ -510,7 +518,7 @@ const rejectPackageOutputInsideRoots = Effect.fn("rejectPackageOutputInsideRoots
 
     if (isInsidePackageRoots(relativeOutput, [packageRoot])) {
       return yield* Effect.fail(
-        PackageZipError.make({
+        new PackageZipError({
           detail: `package output path must be outside packaged roots: ${outputPath}`,
         }),
       );
@@ -530,7 +538,7 @@ const resolveRealOutputCandidatePath = Effect.fn("resolveRealOutputCandidatePath
 
   if (linkTarget !== undefined) {
     return yield* Effect.fail(
-      PackageZipError.make({
+      new PackageZipError({
         detail: `package output path must not be a symlink: ${outputPath}`,
       }),
     );
@@ -634,7 +642,7 @@ const getRokuDeployOptionsEffect = Effect.fn("getRokuDeployOptions")(function* (
   return yield* Effect.try({
     try: () => withCwd(configRootDir, () => rokuDeploy.getOptions(options)),
     catch: (error) =>
-      PackageZipError.make({
+      new PackageZipError({
         detail: `failed to read Roku package options: ${formatErrorMessage(error)}`,
       }),
   });
@@ -647,7 +655,7 @@ const getRokuDeployOutputZipFilePathEffect = Effect.fn("getRokuDeployOutputZipFi
   return yield* Effect.try({
     try: () => withCwd(configRootDir, () => rokuDeploy.getOutputZipFilePath(options)),
     catch: (error) =>
-      PackageZipError.make({
+      new PackageZipError({
         detail: `failed to resolve Roku package output path: ${formatErrorMessage(error)}`,
       }),
   });

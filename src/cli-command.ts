@@ -79,7 +79,7 @@ export const parseEffectCliEffect: (
   yield* runRokitCli(argv, capture, silentConsole).pipe(Effect.mapError(normalizeCliError));
 
   if (parsedCli === undefined) {
-    return yield* Effect.fail(InvalidInput.make({ message: "No command parsed" }));
+    return yield* Effect.fail(new InvalidInput({ message: "No command parsed" }));
   }
 
   return parsedCli;
@@ -112,7 +112,7 @@ const runRokitCli = (
 
 const normalizeCliError = (error: unknown): RokitError => {
   if (CliError.isCliError(error) && error._tag === "ShowHelp") {
-    return InvalidInput.make({ message: formatShowHelpError(error) });
+    return new InvalidInput({ message: formatShowHelpError(error) });
   }
 
   return normalizeError(error);

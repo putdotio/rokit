@@ -31,7 +31,7 @@ export const requireTarget = (env: RokitEnv): string => {
   const target = env.target?.trim();
 
   if (!target) {
-    throw MissingTarget.make({});
+    throw new MissingTarget({});
   }
 
   return normalizeTarget(target);
@@ -41,7 +41,7 @@ export const requirePassword = (env: RokitEnv): string => {
   const password = env.password;
 
   if (!password) {
-    throw MissingPassword.make({});
+    throw new MissingPassword({});
   }
 
   return password;
@@ -90,7 +90,7 @@ export const rejectUnsafeEcpPath = (value: string): void => {
 };
 
 export const fail = (message: string): never => {
-  throw InvalidInput.make({ message });
+  throw new InvalidInput({ message });
 };
 
 export const formatErrorMessage = (error: unknown): string => {
