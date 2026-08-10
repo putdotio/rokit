@@ -8,6 +8,7 @@ import {
   normalizeInstallSuccessMessage,
   readInstallerMessage,
 } from "./installer-message.js";
+import { readResponseTextEffect } from "./response-body.js";
 import type { RokuContext } from "./roku-context.js";
 import { abortSignalWithTimeout } from "./timing.js";
 
@@ -136,14 +137,14 @@ const postInstallerForm = Effect.fn("postInstallerForm")(function* (
         detail: formatErrorMessage(error),
       }),
   });
-  const responseBody = yield* Effect.tryPromise({
-    try: () => response.text(),
-    catch: (error) =>
+  const responseBody = yield* readResponseTextEffect(
+    response,
+    (error) =>
       new RokuInstallerTransportError({
         action,
         detail: formatErrorMessage(error),
       }),
-  });
+  );
   const message = readInstallerMessage(responseBody);
 
   if (!response.ok) {

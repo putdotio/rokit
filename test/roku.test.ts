@@ -74,6 +74,33 @@ describe("Roku helpers", () => {
     }
   });
 
+  it("cancels ECP response body reads when the Effect is interrupted", async () => {
+    const originalFetch = globalThis.fetch;
+    const bodyRead = Promise.withResolvers<void>();
+    const bodyCanceled = Promise.withResolvers<void>();
+    globalThis.fetch = async () =>
+      new Response(
+        new ReadableStream<Uint8Array>({
+          pull: () => {
+            bodyRead.resolve();
+            return new Promise<void>(() => {});
+          },
+          cancel: () => {
+            bodyCanceled.resolve();
+          },
+        }),
+      );
+
+    try {
+      const fiber = Effect.runFork(fetchEcpTextEffect(context, "/query/device-info"));
+      await bodyRead.promise;
+      await Effect.runPromise(Fiber.interrupt(fiber));
+      await bodyCanceled.promise;
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("reads enhanced device info through roku-deploy", async () => {
     const getDeviceInfoSpy = vi.spyOn(rokuDeploy, "getDeviceInfo").mockResolvedValueOnce({
       friendlyDeviceName: "Living Room & Lab",

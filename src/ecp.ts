@@ -1,4 +1,5 @@
 import { Effect, Schema } from "effect";
+import { readResponseTextEffect } from "./response-body.js";
 import type { RokuContext } from "./roku-context.js";
 import { abortSignalWithTimeout } from "./timing.js";
 
@@ -86,11 +87,11 @@ export const fetchEcpTextEffect = Effect.fn("fetchEcpText")(function* (
     );
   }
 
-  return yield* Effect.tryPromise({
-    try: () => response.text(),
-    catch: (error) =>
+  return yield* readResponseTextEffect(
+    response,
+    (error) =>
       new EcpTransportError({ detail: formatErrorMessage(error), method: "GET", path: safePath }),
-  });
+  );
 });
 
 export const postEcpEffect = Effect.fn("postEcp")(function* (context: RokuContext, path: string) {

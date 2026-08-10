@@ -2,6 +2,7 @@ import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, Schema } from "effect";
 import type { PlatformError } from "effect/PlatformError";
 import { digestAuthHeaderEffect, parseDigestChallenge } from "./digest-auth.js";
+import { readResponseBytesEffect, readResponseTextEffect } from "./response-body.js";
 import type { RokuContext } from "./roku-context.js";
 import { abortSignalWithTimeout } from "./timing.js";
 
@@ -137,14 +138,14 @@ const fetchScreenshotImageEffect = Effect.fn("fetchScreenshotImage")(function* (
     );
   }
 
-  return yield* Effect.tryPromise({
-    try: async () => new Uint8Array(await response.arrayBuffer()),
-    catch: (error) =>
+  return yield* readResponseBytesEffect(
+    response,
+    (error) =>
       new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath: url.pathname,
       }),
-  });
+  );
 });
 
 const fetchAuthorizedScreenshotImageEffect = Effect.fn("fetchAuthorizedScreenshotImage")(function* (
@@ -219,14 +220,14 @@ const readScreenshotResponseTextEffect = Effect.fn("readScreenshotResponseText")
   response: Response,
   outputPath: string,
 ) {
-  const body = yield* Effect.tryPromise({
-    try: () => response.text(),
-    catch: (error) =>
+  const body = yield* readResponseTextEffect(
+    response,
+    (error) =>
       new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath,
       }),
-  });
+  );
 
   if (!response.ok) {
     return yield* Effect.fail(
