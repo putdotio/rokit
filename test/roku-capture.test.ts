@@ -85,6 +85,25 @@ describe("Roku retry helpers", () => {
     }
   });
 
+  it("surfaces the underlying screenshot failure after retries are exhausted", async () => {
+    const root = await mkdtemp(join(tmpdir(), "rokit-capture-test-"));
+
+    try {
+      const fetchMock = vi.fn<typeof fetch>().mockRejectedValue(new Error("transport detail"));
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        captureScreenshot({ ...context, password: "pass" }, join(root, "story.jpg"), {
+          attempts: 2,
+          retryDelayMs: 1,
+        }),
+      ).rejects.toThrow("transport detail");
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      await rm(root, { force: true, recursive: true });
+    }
+  });
+
   it("deletes the installed developer channel through the native Roku installer form", async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

@@ -1,8 +1,11 @@
-import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { NodeFileSystem, NodePath } from "@effect/platform-node";
+import { Effect, FileSystem, Layer } from "effect";
 import JSZip from "jszip";
 import { describe, expect, it } from "vite-plus/test";
+import { createPackageZipEffect } from "../src/package-zip.js";
 import { createPackageZip, packageChannel, resolveSafePackageOutputPath } from "../src/roku.js";
 
 describe("package zip helper", () => {
@@ -44,6 +47,70 @@ describe("package zip helper", () => {
       expect(await zip.file("manifest")?.async("string")).toBe("title=Example Dev\n");
       expect(await zip.file("source/BuildConfig.brs")?.async("string")).toBe("generated config\n");
       expect(zip.file("components/lab/Lab.xml")).toBeNull();
+    } finally {
+      await rm(root, { force: true, recursive: true });
+    }
+  });
+
+  it("atomically replaces an existing package without leaving temporary files", async () => {
+    const root = await mkdtemp(join(tmpdir(), "rokit-package-"));
+
+    try {
+      await mkdir(join(root, "source"), { recursive: true });
+      await mkdir(join(root, "dist"), { recursive: true });
+      await writeFile(join(root, "manifest"), "title=Replacement\n");
+      await writeFile(join(root, "source/Main.brs"), "sub Main()\nend sub\n");
+      await writeFile(join(root, "dist/channel.zip"), "previous package");
+
+      await createPackageZip({
+        outFile: "dist/channel.zip",
+        rootDir: root,
+      });
+
+      const zip = await JSZip.loadAsync(await readFile(join(root, "dist/channel.zip")));
+      expect(await zip.file("manifest")?.async("string")).toBe("title=Replacement\n");
+      expect(await readdir(join(root, "dist"))).toEqual(["channel.zip"]);
+    } finally {
+      await rm(root, { force: true, recursive: true });
+    }
+  });
+
+  it("preserves an existing package and cleans the temporary file when writing fails", async () => {
+    const root = await mkdtemp(join(tmpdir(), "rokit-package-"));
+
+    try {
+      await mkdir(join(root, "source"), { recursive: true });
+      await mkdir(join(root, "dist"), { recursive: true });
+      await writeFile(join(root, "manifest"), "title=Example\n");
+      await writeFile(join(root, "source/Main.brs"), "sub Main()\nend sub\n");
+      await writeFile(join(root, "dist/channel.zip"), "previous package");
+
+      const failingFileSystemLayer = Layer.effect(
+        FileSystem.FileSystem,
+        Effect.map(FileSystem.FileSystem, (fs) =>
+          FileSystem.FileSystem.of({
+            ...fs,
+            writeFile: (path, data, options) =>
+              path.includes(".channel.zip-")
+                ? Effect.die(new Error("simulated package write failure"))
+                : fs.writeFile(path, data, options),
+          }),
+        ),
+      ).pipe(Layer.provide(NodeFileSystem.layer));
+      const testLayer = Layer.merge(failingFileSystemLayer, NodePath.layer);
+
+      await expect(
+        Effect.runPromise(
+          createPackageZipEffect({
+            outFile: "dist/channel.zip",
+            rootDir: root,
+          }).pipe(Effect.provide(testLayer)),
+        ),
+      ).rejects.toThrow("simulated package write failure");
+      await expect(readFile(join(root, "dist/channel.zip"), "utf8")).resolves.toBe(
+        "previous package",
+      );
+      expect(await readdir(join(root, "dist"))).toEqual(["channel.zip"]);
     } finally {
       await rm(root, { force: true, recursive: true });
     }
