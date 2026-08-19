@@ -8,7 +8,14 @@ overrides:
 
 allowBuilds:
   "@parcel/watcher": true
+  # skillcheck lint needs no optional-dep build scripts (eval-only deps).
+  "@playwright/browser-chromium": false
+  "@swc/core": false
+  esbuild: false
   msgpackr-extract: true
+  onnxruntime-node: false
+  protobufjs: false
+  sharp: false
 minimumReleaseAgeExclude:
   # Vite+ 0.2.6 ignores package@version entries in its supply-chain verifier.
   # Keep Effect exact in package.json and re-pin here when the verifier supports it.
@@ -16,7 +23,9 @@ minimumReleaseAgeExclude:
   - "@effect/platform-node"
   - "@effect/vitest"
   - effect
+  - "@uinaf/skillcheck"
 catalog:
+  "@vitest/coverage-v8": 4.1.10
   vite: npm:@voidzero-dev/vite-plus-core@0.2.6
   vitest: 4.1.10
   vite-plus: 0.2.6

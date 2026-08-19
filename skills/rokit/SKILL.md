@@ -1,6 +1,6 @@
 ---
 name: rokit
-description: Use when testing, sideloading, deploying, or debugging Roku apps with rokit, including package/install/launch flows, remote key input, BrightScript console capture, ECP/SceneGraph/media-player observation, screenshots, readiness waits, and proof bundles.
+description: Use when testing, sideloading, deploying, or debugging Roku apps with rokit, including package/install/launch flows, remote key input, BrightScript console capture, ECP/SceneGraph/media-player observation, screenshots, readiness waits, and proof bundles. Do not use for app-specific journeys, product selectors, fixture names, content IDs, account state, or product assertions — those live in the consumer app repo.
 ---
 
 # rokit

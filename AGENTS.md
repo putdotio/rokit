@@ -3,6 +3,15 @@
 `rokit` is a small Node CLI that wraps generic Roku device harness primitives.
 Keep it platform-focused, typed, and useful for both humans and agents.
 
+## Start Here
+
+- [README.md](README.md) — install, command surface, env contract, quick start.
+- [docs/DEBUGGING.md](docs/DEBUGGING.md) — Roku debug surfaces, console
+  capture, crash-proof workflow.
+- [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) — release path, semantic-release
+  wiring, credentials.
+- [skills/rokit/](skills/rokit/) — consumer skill and its command references.
+
 ## Generic Tool Boundary
 
 - Keep `rokit` free of put.io product behavior. Do not add put.io app IDs,
@@ -80,8 +89,7 @@ guide doesn't cover, search through the source code in `node_modules/effect/src`
 - Command, env, or output changes: update `README.md` and CLI tests.
 - CI/release/publishing changes: update workflow docs or release config in the
   same change.
-- Keep `CLAUDE.md` as a symlink to this file if Claude-compatible discovery is
-  added.
+- `CLAUDE.md` is a symlink to this file; keep it pointing here.
 
 ## Worktrees
 

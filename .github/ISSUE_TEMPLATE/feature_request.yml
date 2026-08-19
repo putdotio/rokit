@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest a generic Roku harness primitive
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-command-or-api
+    attributes:
+      label: Proposed command or API
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: proof-artifact
+    attributes:
+      label: Proof artifact
+      description: >-
+        What should the harness leave behind so a human or agent can verify
+        the behavior?
+    validations:
+      required: true
+  - type: textarea
+    id: boundaries
+    attributes:
+      label: Boundaries
+      description: What app-specific behavior should stay out of rokit?
