@@ -10,7 +10,7 @@ The release path starts with the repo-local verification command:
 pnpm verify
 ```
 
-`verify` runs formatting/lint checks, TypeScript, package bundling, tests, and an npm pack dry run. GitHub Actions calls this same command before release.
+`verify` runs formatting/lint checks, skill lint, TypeScript, package bundling, tests with a coverage floor, and an npm pack dry run. GitHub Actions calls this same command before release.
 
 ## Continuous Release
 
