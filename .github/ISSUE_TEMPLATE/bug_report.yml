@@ -1,0 +1,57 @@
+name: Bug report
+description: Report a reproducible rokit problem
+labels:
+  - bug
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Exact commands that reproduce the problem.
+      render: bash
+    validations:
+      required: true
+  - type: input
+    id: rokit-version
+    attributes:
+      label: rokit version
+      placeholder: "2.4.3"
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node version
+      placeholder: "24.18.0"
+    validations:
+      required: true
+  - type: input
+    id: roku-model
+    attributes:
+      label: Roku model or emulator
+      placeholder: Roku Ultra 4802X
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: macOS 15.6
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: >-
+        Add logs, command output, screenshots, or generated artifacts when
+        useful. Do not include device passwords, account tokens, signing keys,
+        private content IDs, or local device identifiers.
