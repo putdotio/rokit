@@ -47,14 +47,16 @@
     "build": "vp pack src/index.ts src/rokit.ts --dts",
     "check": "vp check .",
     "clean": "rm -rf .turbo coverage dist",
+    "coverage": "vp test run --coverage",
     "hooks:install": "git config core.hooksPath .git-hooks",
     "live:smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs check",
     "live:probe": "scripts/live-probe.sh",
     "prepack": "vp pack src/index.ts src/rokit.ts --dts",
+    "skills:lint": "skillcheck lint",
     "smoke": "vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null",
-    "test": "vp pack src/index.ts src/rokit.ts --dts && vp test run --passWithNoTests",
+    "test": "vp pack src/index.ts src/rokit.ts --dts && vp test run",
     "typecheck": "tsc --noEmit",
-    "verify": "vp check . && tsc --noEmit && vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null && vp test run --passWithNoTests && npm pack --dry-run"
+    "verify": "vp check . && skillcheck lint && tsc --noEmit && vp pack src/index.ts src/rokit.ts --dts && node dist/rokit.mjs --version && node dist/rokit.mjs --help >/dev/null && vp test run --coverage && npm pack --dry-run"
   },
   "dependencies": {
     "@effect/platform-node": "4.0.0-beta.107",
@@ -65,6 +67,8 @@
   "devDependencies": {
     "@effect/vitest": "4.0.0-beta.107",
     "@types/node": "^26.1.2",
+    "@uinaf/skillcheck": "0.4.0",
+    "@vitest/coverage-v8": "catalog:",
     "typescript": "^7.0.2",
     "vite": "catalog:",
     "vite-plus": "0.2.6",
