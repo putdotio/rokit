@@ -74,6 +74,10 @@ guide doesn't cover, search through the source code in `node_modules/effect/src`
 ## Sharp Edges
 
 - Missing config/env and child-command failures should not print stack traces.
+- CLI tests default to in-process entry points (`mainEffect` from `src/cli.ts`
+  or the command effects) so V8 coverage attributes them. Spawn
+  `dist/rokit.mjs` only when the process boundary itself is under test; those
+  runs are invisible to coverage on vitest 4 (see `vite.config.ts`).
 - `ROKIT_PASSWORD` is required only for developer-installer operations such as
   install and screenshot.
 - `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are optional fallback aliases, not

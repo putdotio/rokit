@@ -4,7 +4,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
-import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vite-plus/test";
+import { mainEffect } from "../src/cli.js";
 import { parseEffectCliEffect } from "../src/cli-command.js";
 import { describeCli } from "../src/cli-describe.js";
 import { parseInputJsonEffect } from "../src/cli-input-json.js";
@@ -27,12 +28,46 @@ afterAll(() => {
   rmSync(testDistDir, { force: true, recursive: true });
 });
 
+// Kept for the boot test below, which proves the packaged binary itself.
+// Everything else runs the same CLI entry in-process (mainEffect or the
+// command effects) so V8 coverage attributes it.
 const runRokit = (args: readonly string[]) =>
   spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repoRoot,
     encoding: "utf8",
     env: childCliEnv(),
   });
+
+const runRokitInProcess = async (
+  args: readonly string[],
+): Promise<{ readonly status: number; readonly stderr: string; readonly stdout: string }> => {
+  const stdout: string[] = [];
+  const stderr: string[] = [];
+  const format = (parts: readonly unknown[]) => parts.map(String).join(" ");
+  const logSpy = vi.spyOn(console, "log").mockImplementation((...parts: unknown[]) => {
+    stdout.push(format(parts));
+  });
+  const errorSpy = vi.spyOn(console, "error").mockImplementation((...parts: unknown[]) => {
+    stderr.push(format(parts));
+  });
+  const previousExitCode = process.exitCode;
+  process.exitCode = 0;
+
+  try {
+    await Effect.runPromise(mainEffect(args).pipe(Effect.provide(NodeServices.layer)));
+    const joinLines = (lines: readonly string[]) => lines.map((line) => `${line}\n`).join("");
+
+    return {
+      status: process.exitCode === 0 ? 0 : 1,
+      stderr: joinLines(stderr),
+      stdout: joinLines(stdout),
+    };
+  } finally {
+    process.exitCode = previousExitCode;
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+  }
+};
 
 const childCliEnv = (): NodeJS.ProcessEnv => {
   const excludedNames = new Set([
@@ -89,8 +124,8 @@ describe("rokit CLI functionality", () => {
     expect(shortResult.stderr).toBe("");
   });
 
-  it("prints advertised shell completions", () => {
-    const result = runRokit(["--completions", "bash"]);
+  it("prints advertised shell completions", async () => {
+    const result = await runRokitInProcess(["--completions", "bash"]);
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("rokit");
@@ -272,8 +307,14 @@ describe("rokit CLI functionality", () => {
     );
   });
 
-  it("prints package output usage errors without stack traces", () => {
-    const result = runRokit(["--json", "package", "out/channel", "--out", "out/other"]);
+  it("prints package output usage errors without stack traces", async () => {
+    const result = await runRokitInProcess([
+      "--json",
+      "package",
+      "out/channel",
+      "--out",
+      "out/other",
+    ]);
 
     expect(result.status).toBe(1);
     expect(result.stdout).toBe("");
