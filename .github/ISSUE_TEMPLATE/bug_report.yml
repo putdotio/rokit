@@ -34,7 +34,7 @@ body:
     id: node-version
     attributes:
       label: Node version
-      placeholder: "24.18.0"
+      placeholder: "24.19.0"
     validations:
       required: true
   - type: input

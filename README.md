@@ -17,7 +17,7 @@
 
 ## Install
 
-Requires Node `>=24.18.0`; install it in a consumer repo with:
+Requires Node `>=24.19.0`; install it in a consumer repo with:
 
 ```bash
 pnpm add -D @putdotio/rokit
