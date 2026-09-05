@@ -94,9 +94,53 @@ function validatePng(image: Buffer): void {
   PNG.sync.read(image, { checkCRC: true });
 }
 
+// jpeg-js stops a scan at any non-restart marker, even when MCUs remain.
+// Count the restart boundaries the scan's dimensions require before decoding.
+function jpegRestartCount(frame: Buffer | undefined, scan: Buffer, interval: number): number {
+  if (interval === 0) return 0;
+  if (!frame || frame.length < 6 || scan.length < 4) throw new Error("invalid JPEG scan header");
+  const componentCount = frame[5] ?? 0;
+  const selectorCount = scan[0] ?? 0;
+  if (frame.length !== 6 + 3 * componentCount || scan.length !== 4 + 2 * selectorCount)
+    throw new Error("invalid JPEG scan header");
+  const components = new Map<number, { h: number; v: number }>();
+  let maxH = 1;
+  let maxV = 1;
+  for (let index = 6; index < frame.length; index += 3) {
+    const id = frame[index];
+    const sampling = frame[index + 1] ?? 0;
+    const h = sampling >> 4;
+    const v = sampling & 15;
+    if (id === undefined || h < 1 || h > 4 || v < 1 || v > 4 || components.has(id))
+      throw new Error("invalid JPEG frame component");
+    components.set(id, { h, v });
+    maxH = Math.max(maxH, h);
+    maxV = Math.max(maxV, v);
+  }
+  if (selectorCount === 0) throw new Error("invalid JPEG scan components");
+  for (let index = 1; index < 1 + 2 * selectorCount; index += 2) {
+    if (!components.has(scan[index] ?? -1)) throw new Error("invalid JPEG scan component");
+  }
+  const width = frame.readUInt16BE(3);
+  const height = frame.readUInt16BE(1);
+  let mcus = Math.ceil(width / (8 * maxH)) * Math.ceil(height / (8 * maxV));
+  if (selectorCount === 1) {
+    const component = components.get(scan[1] ?? -1);
+    if (!component) throw new Error("invalid JPEG scan component");
+    mcus =
+      Math.ceil((Math.ceil(width / 8) * component.h) / maxH) *
+      Math.ceil((Math.ceil(height / 8) * component.v) / maxV);
+  }
+  return Math.max(0, Math.ceil(mcus / interval) - 1);
+}
+
 function validateJpegSegments(image: Buffer): void {
   let entropy = false;
   let hasScanData = false;
+  let frame: Buffer | undefined;
+  let interval = 0;
+  let expectedRestarts = 0;
+  let restarts = 0;
   for (let offset = 2; offset < image.length;) {
     if (image[offset++] !== 0xff) {
       if (entropy) {
@@ -111,7 +155,12 @@ function validateJpegSegments(image: Buffer): void {
       hasScanData = true;
       continue;
     }
-    if (entropy && marker !== undefined && marker >= 0xd0 && marker <= 0xd7) continue;
+    if (entropy && marker !== undefined && marker >= 0xd0 && marker <= 0xd7) {
+      if (marker !== 0xd0 + (restarts % 8)) throw new Error("invalid JPEG restart sequence");
+      restarts += 1;
+      continue;
+    }
+    if (entropy && restarts !== expectedRestarts) throw new Error("incomplete JPEG restart scan");
     if (marker === 0xd9) {
       if (!hasScanData) throw new Error("JPEG has no image scan data");
       return;
@@ -120,6 +169,16 @@ function validateJpegSegments(image: Buffer): void {
     const length = image.readUInt16BE(offset);
     if (length < 2 || offset + length > image.length)
       throw new Error("invalid JPEG segment length");
+    const segment = image.subarray(offset + 2, offset + length);
+    if (marker === 0xc0 || marker === 0xc1 || marker === 0xc2) frame = segment;
+    if (marker === 0xdd) {
+      if (segment.length !== 2) throw new Error("invalid JPEG restart interval");
+      interval = segment.readUInt16BE(0);
+    }
+    if (marker === 0xda) {
+      expectedRestarts = jpegRestartCount(frame, segment, interval);
+      restarts = 0;
+    }
     offset += length;
     entropy = marker === 0xda;
   }

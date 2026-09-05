@@ -1,7 +1,13 @@
 import { crc32, deflateSync } from "node:zlib";
 import { describe, expect, it } from "vite-plus/test";
 import { validateScreenshotImage } from "../src/screenshot-image.js";
-import { jpegImage, pngImage } from "./fixtures/images.js";
+import {
+  baselineRestartJpeg,
+  progressiveRestartJpeg,
+  grayscaleRestartJpeg,
+  jpegImage,
+  pngImage,
+} from "./fixtures/images.js";
 
 function pngChunk(kind: string, data: Buffer): Buffer {
   const chunk = Buffer.alloc(data.length + 12);
@@ -40,6 +46,43 @@ const emptyScanJpeg = Buffer.concat([
   jpegImage.subarray(0, scanOffset + 2 + jpegImage.readUInt16BE(scanOffset + 2)),
   Buffer.from([0xff, 0xd9]),
 ]);
+// Each copy of the genuine fixture's entropy encodes one complete 8×8 MCU.
+function restartJpeg(declaredMcus: number, includedMcus: number): Buffer {
+  const prefix = Buffer.from(jpegImage.subarray(0, scanOffset));
+  prefix.writeUInt16BE(declaredMcus * 8, frameOffset + 7);
+  const scanEnd = scanOffset + 2 + jpegImage.readUInt16BE(scanOffset + 2);
+  const entropy = jpegImage.subarray(scanEnd, -2);
+  return Buffer.concat([
+    prefix,
+    Buffer.from([0xff, 0xdd, 0, 4, 0, 1]),
+    jpegImage.subarray(scanOffset, scanEnd),
+    ...Array.from({ length: includedMcus }, (_, index) =>
+      index === 0
+        ? entropy
+        : Buffer.concat([Buffer.from([0xff, 0xd0 + ((index - 1) % 8)]), entropy]),
+    ),
+    Buffer.from([0xff, 0xd9]),
+  ]);
+}
+
+const finalInterval = restartJpeg(2, 2);
+const finalIntervalStart = finalInterval.indexOf(Buffer.from([0xff, 0xd0])) + 2;
+const missingFinalInterval = Buffer.concat([
+  finalInterval.subarray(0, finalIntervalStart),
+  Buffer.from([0xff, 0xd9]),
+]);
+const truncatedFinalInterval = Buffer.concat([
+  finalInterval.subarray(0, finalIntervalStart + 1),
+  Buffer.from([0xff, 0xd9]),
+]);
+const badRestartSequence = restartJpeg(2, 2);
+badRestartSequence[badRestartSequence.indexOf(Buffer.from([0xff, 0xd0])) + 1] = 0xd1;
+const restartWithoutInterval = restartJpeg(2, 2);
+restartWithoutInterval.writeUInt16BE(
+  0,
+  restartWithoutInterval.indexOf(Buffer.from([0xff, 0xdd])) + 4,
+);
+
 const ancillary = pngChunk("tEXt", Buffer.from("note\0synthetic"));
 ancillary[ancillary.length - 1] ^= 1;
 const ancillaryCrcPng = Buffer.concat([pngImage.subarray(0, 33), ancillary, pngImage.subarray(33)]);
@@ -52,14 +95,20 @@ const missingZlibChecksumPng = Buffer.concat([
 ]);
 
 describe("screenshot image integrity", () => {
-  it.each([jpegImage, pngImage, interlacedPng])(
-    "decodes a genuine image without changing its bytes",
-    (image) => {
-      const original = Buffer.from(image);
-      expect(() => validateScreenshotImage(image)).not.toThrow();
-      expect(image).toEqual(original);
-    },
-  );
+  it.each([
+    jpegImage,
+    pngImage,
+    interlacedPng,
+    restartJpeg(2, 2),
+    restartJpeg(10, 10),
+    baselineRestartJpeg,
+    progressiveRestartJpeg,
+    grayscaleRestartJpeg,
+  ])("decodes a genuine image without changing its bytes", (image) => {
+    const original = Buffer.from(image);
+    expect(() => validateScreenshotImage(image)).not.toThrow();
+    expect(image).toEqual(original);
+  });
 
   it.each([
     ["empty", Buffer.alloc(0)],
@@ -67,6 +116,12 @@ describe("screenshot image integrity", () => {
     ["truncated JPEG", jpegImage.subarray(0, jpegImage.length - 10)],
     ["corrupt JPEG segment", corruptJpeg],
     ["JPEG without a scan", scanlessJpeg],
+    ["JPEG early EOI before first restart", restartJpeg(2, 1)],
+    ["JPEG early EOI after restart", restartJpeg(3, 2)],
+    ["JPEG missing final interval", missingFinalInterval],
+    ["JPEG truncated final interval", truncatedFinalInterval],
+    ["JPEG restart sequence", badRestartSequence],
+    ["JPEG restart without interval", restartWithoutInterval],
     ["JPEG without scan data", emptyScanJpeg],
     ["PNG ancillary checksum", ancillaryCrcPng],
     ["PNG missing zlib checksum", missingZlibChecksumPng],

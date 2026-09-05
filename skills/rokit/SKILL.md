@@ -23,8 +23,7 @@ repo.
 5. Screenshot commands append a timestamp to the requested filename. Use the
    returned JSON `data.path` as the artifact path instead of assuming the input
    path was written. Non-image responses and detected decoding errors fail
-   capture. The decoder can tolerate incomplete JPEG scans; success is not proof
-   of complete JPEG scan integrity.
+   capture. JPEG restart sequences must cover the intervals declared by each scan.
 6. For live proof, use `rokit snapshot` for a quick state read,
    `rokit proof <output-dir>` for review artifacts, or `pnpm live:probe` in the
    rokit repo for the full generic package/install/launch/input/proof probe.
