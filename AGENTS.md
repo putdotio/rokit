@@ -61,15 +61,11 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Keep app journeys, content IDs, account data, and product assertions out of
   the generic harness.
 
-## Learning more about the Effect
+## Effect
 
-This repository uses the Effect Typescript library.
-
-Before writing any Effect code, first read `node_modules/effect/AGENTS.md`
-**completely**, and follow the links in the file when required.
-
-If you need to learn more about particular Effect apis and concepts that the
-guide doesn't cover, search through the source code in `node_modules/effect/src`.
+This repository uses the Effect TypeScript library. The installed version's own
+guide is `node_modules/effect/AGENTS.md`; consult it for the APIs the change
+touches, and search `node_modules/effect/src` for anything it does not cover.
 
 ## Sharp Edges
 
@@ -94,6 +90,8 @@ guide doesn't cover, search through the source code in `node_modules/effect/src`
 - CI/release/publishing changes: update workflow docs or release config in the
   same change.
 - `CLAUDE.md` is a symlink to this file; keep it pointing here.
+- Finish edits, `vp run verify`, and fixes without pausing; ask before publishing and before live runs against a Roku someone else may be using.
+- Done means `vp run verify` passed and, for device-facing changes, `live:smoke` or `live:probe` ran or the gap is reported.
 
 ## Worktrees
 
