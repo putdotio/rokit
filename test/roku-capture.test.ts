@@ -11,6 +11,8 @@ import {
   type RokuContext,
 } from "../src/roku.js";
 
+import { jpegImage, pngImage } from "./fixtures/images.js";
+
 const context: RokuContext = {
   target: "192.0.2.1",
   timeoutMs: 100,
@@ -45,43 +47,84 @@ describe("Roku retry helpers", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("captures screenshots through a temp path and copies the requested output", async () => {
-    const root = await mkdtemp(join(tmpdir(), "rokit-capture-test-"));
+  it.each([
+    ["jpg", jpegImage],
+    ["png", pngImage],
+  ] as const)(
+    "captures %s screenshots through a temp path and copies the requested output",
+    async (extension, image) => {
+      const root = await mkdtemp(join(tmpdir(), "rokit-capture-test-"));
 
-    try {
-      const fetchMock = vi
-        .fn<typeof fetch>()
-        .mockResolvedValueOnce(
-          new Response("", {
-            headers: {
-              "WWW-Authenticate": 'Digest qop="auth", realm="rokudev", nonce="nonce"',
-            },
-            status: 401,
+      try {
+        const fetchMock = vi
+          .fn<typeof fetch>()
+          .mockResolvedValueOnce(
+            new Response("", {
+              headers: {
+                "WWW-Authenticate": 'Digest qop="auth", realm="rokudev", nonce="nonce"',
+              },
+              status: 401,
+            }),
+          )
+          .mockResolvedValueOnce(
+            new Response(
+              `<html><a href="pkgs/dev.${extension}?cache=1&amp;size=1280">screenshot</a></html>`,
+            ),
+          )
+          .mockResolvedValueOnce(new Response(Uint8Array.from(image)));
+        vi.stubGlobal("fetch", fetchMock);
+
+        const outputPath = join(root, "shots", "story.jpg");
+        await expect(
+          captureScreenshot({ ...context, password: "pass" }, outputPath, {
+            attempts: 1,
+            tempDirPrefix: "test capture",
           }),
-        )
-        .mockResolvedValueOnce(
-          new Response('<html><a href="pkgs/dev.jpg?cache=1&amp;size=1280">screenshot</a></html>'),
-        )
-        .mockResolvedValueOnce(new Response("image"));
-      vi.stubGlobal("fetch", fetchMock);
+        ).resolves.toBe(resolve(outputPath));
+        await expect(access(outputPath)).resolves.toBeUndefined();
+        await expect(readFile(outputPath)).resolves.toEqual(image);
 
-      const outputPath = join(root, "shots", "story.jpg");
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+        expect(String(fetchMock.mock.calls[0]?.[0])).toBe("http://192.0.2.1/plugin_inspect");
+        expect(String(fetchMock.mock.calls[2]?.[0])).toBe(
+          `http://192.0.2.1/pkgs/dev.${extension}?cache=1&size=1280`,
+        );
+      } finally {
+        await rm(root, { force: true, recursive: true });
+      }
+    },
+  );
+
+  it("rejects an HTML screenshot response without writing an artifact after bounded retries", async () => {
+    const root = await mkdtemp(join(tmpdir(), "rokit-invalid-capture-"));
+    let calls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () => {
+        calls += 1;
+        if (calls % 3 === 1)
+          return new Response("", {
+            status: 401,
+            headers: { "WWW-Authenticate": 'Digest qop="auth", realm="rokudev", nonce="nonce"' },
+          });
+        if (calls % 3 === 2) return new Response('<a href="pkgs/dev.jpg?cache=1">screenshot</a>');
+        return new Response("<html>error page</html>", {
+          headers: { "Content-Type": "image/jpeg" },
+        });
+      }),
+    );
+    try {
+      const outputPath = join(root, "shot.jpg");
       await expect(
         captureScreenshot({ ...context, password: "pass" }, outputPath, {
-          attempts: 1,
-          tempDirPrefix: "test capture",
+          attempts: 2,
+          retryDelayMs: 1,
         }),
-      ).resolves.toBe(resolve(outputPath));
-      await expect(access(outputPath)).resolves.toBeUndefined();
-      await expect(readFile(outputPath, "utf8")).resolves.toBe("image");
-
-      expect(fetchMock).toHaveBeenCalledTimes(3);
-      expect(String(fetchMock.mock.calls[0]?.[0])).toBe("http://192.0.2.1/plugin_inspect");
-      expect(String(fetchMock.mock.calls[2]?.[0])).toBe(
-        "http://192.0.2.1/pkgs/dev.jpg?cache=1&size=1280",
-      );
+      ).rejects.toThrow("invalid screenshot image");
+      expect(calls).toBe(6);
+      await expect(access(outputPath)).rejects.toThrow();
     } finally {
-      await rm(root, { force: true, recursive: true });
+      await rm(root, { recursive: true, force: true });
     }
   });
 

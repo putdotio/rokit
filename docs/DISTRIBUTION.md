@@ -48,6 +48,15 @@ The published dependencies pin Effect, platform-node, and platform-node-shared t
 the same prerelease. Keep those pins aligned: a consumer does not inherit this
 repository’s pnpm overrides, and a newer shared runtime can be incompatible.
 
+The build bundles pinned `jpeg-js` with the patch maintained under `patches/`
+so ordinary npm consumers receive the same decoder. The patch
+caps single-component decoding at the remaining MCU count so valid final partial
+restart intervals decode, and makes strict decoding reject scans that end before
+the declared MCUs are complete. Keep the decoder bundled: ordinary npm consumers do
+not inherit pnpm patches. Remove the patch only when a pinned upstream release
+passes the partial-interval and early-end-marker regressions and installed-package
+proof. Bundled third-party notices are in [Third-Party Notices](THIRD-PARTY-NOTICES.md).
+
 ## Release Smoke
 
 After a release, confirm the tag and package are visible:

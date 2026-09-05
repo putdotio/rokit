@@ -1,6 +1,10 @@
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  pack: {
+    // npm consumers do not apply our pnpm decoder patch; ship the patched code.
+    deps: { alwaysBundle: ["jpeg-js"], onlyBundle: ["jpeg-js"] },
+  },
   test: {
     coverage: {
       // Coverage blind spot: the boot test spawns the packaged dist/rokit.mjs

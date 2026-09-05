@@ -35,3 +35,5 @@ peerDependencyRules:
   allowedVersions:
     vite: "*"
     vitest: "*"
+patchedDependencies:
+  jpeg-js@0.4.4: patches/jpeg-js@0.4.4.patch
