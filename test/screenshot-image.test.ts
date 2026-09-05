@@ -30,6 +30,16 @@ function smallPng(rawPixels: Buffer, interlaced = false): Buffer {
   ]);
 }
 
+function pixelFormatPng(colorType: number, depth: number, channels: number): Buffer {
+  return Buffer.concat([
+    pngImage.subarray(0, 8),
+    pngChunk("IHDR", Buffer.from([0, 0, 0, 1, 0, 0, 0, 1, depth, colorType, 0, 0, 0])),
+    ...(colorType === 3 ? [pngChunk("PLTE", Buffer.from([0, 0, 0]))] : []),
+    pngChunk("IDAT", deflateSync(Buffer.alloc(1 + Math.ceil((depth * channels) / 8)))),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
 const badCrc = Buffer.from(pngImage);
 badCrc[badCrc.length - 1] ^= 1;
 const largePng = Buffer.from(pngImage);
@@ -98,6 +108,41 @@ const missingZlibChecksumPng = Buffer.concat([
 
 describe("screenshot image integrity", () => {
   it.each([
+    [0, 1, 1],
+    [0, 2, 1],
+    [0, 4, 1],
+    [0, 8, 1],
+    [0, 16, 1],
+    [2, 8, 3],
+    [2, 16, 3],
+    [3, 1, 1],
+    [3, 2, 1],
+    [3, 4, 1],
+    [3, 8, 1],
+    [4, 8, 2],
+    [4, 16, 2],
+    [6, 8, 4],
+    [6, 16, 4],
+  ])("accepts PNG color type %s at depth %s", (colorType, depth, channels) => {
+    expect(() => validateScreenshotImage(pixelFormatPng(colorType, depth, channels))).not.toThrow();
+  });
+
+  it.each([
+    [2, 1, 3],
+    [2, 2, 3],
+    [2, 4, 3],
+    [3, 16, 1],
+    [4, 1, 2],
+    [4, 2, 2],
+    [4, 4, 2],
+    [6, 1, 4],
+    [6, 2, 4],
+    [6, 4, 4],
+  ])("rejects PNG color type %s at depth %s", (colorType, depth, channels) => {
+    expect(() => validateScreenshotImage(pixelFormatPng(colorType, depth, channels))).toThrow();
+  });
+
+  it.each([
     jpegImage,
     pngImage,
     interlacedPng,
@@ -133,6 +178,10 @@ describe("screenshot image integrity", () => {
     ["truncated PNG header", pngImage.subarray(0, 24)],
     ["truncated PNG chunk", pngImage.subarray(0, pngImage.length - 5)],
     ["PNG checksum", badCrc],
+    [
+      "PNG nonempty end chunk",
+      Buffer.concat([pngImage.subarray(0, -12), pngChunk("IEND", Buffer.from([0]))]),
+    ],
     ["oversized PNG", largePng],
     ["short PNG pixels", smallPng(Buffer.from([0, 255]))],
     ["PNG expansion beyond dimensions", smallPng(Buffer.alloc(1_000_000))],

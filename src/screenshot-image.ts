@@ -49,6 +49,7 @@ function validatePng(image: Buffer): void {
       throw new Error("invalid PNG chunk checksum");
     }
     if (kind === "IHDR" && offset !== 8) throw new Error("duplicate PNG header");
+    if (kind === "IEND" && length !== 0) throw new Error("invalid PNG end chunk");
     if (kind === "IDAT") {
       image.copy(compressed, compressedLength, offset + 8, end - 4);
       compressedLength += length;
@@ -57,18 +58,21 @@ function validatePng(image: Buffer): void {
   }
   // pngjs's interlaced sync decoder has no inflate limit. Bound and verify the
   // complete zlib stream first, including its checksum, before decoding pixels.
-  const channelCounts: Readonly<Record<number, number | undefined>> = {
-    0: 1,
-    2: 3,
-    3: 1,
-    4: 2,
-    6: 4,
+  const pixelFormats: Readonly<
+    Record<number, { channels: number; depths: readonly number[] } | undefined>
+  > = {
+    0: { channels: 1, depths: [1, 2, 4, 8, 16] },
+    2: { channels: 3, depths: [8, 16] },
+    3: { channels: 1, depths: [1, 2, 4, 8] },
+    4: { channels: 2, depths: [8, 16] },
+    6: { channels: 4, depths: [8, 16] },
   };
-  const channels = channelCounts[image[25] ?? -1];
+  const format = pixelFormats[image[25] ?? -1];
   const depth = image[24];
-  if (channels === undefined || depth === undefined || ![1, 2, 4, 8, 16].includes(depth)) {
+  if (format === undefined || depth === undefined || !format.depths.includes(depth)) {
     throw new Error("invalid PNG pixel format");
   }
+  const channels = format.channels;
   const passes =
     image[28] === 1
       ? ([
