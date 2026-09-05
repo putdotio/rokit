@@ -96,16 +96,26 @@ function validatePng(image: Buffer): void {
 
 function validateJpegSegments(image: Buffer): void {
   let entropy = false;
+  let hasScanData = false;
   for (let offset = 2; offset < image.length;) {
     if (image[offset++] !== 0xff) {
-      if (entropy) continue;
+      if (entropy) {
+        hasScanData = true;
+        continue;
+      }
       throw new Error("invalid JPEG marker");
     }
     while (image[offset] === 0xff) offset += 1;
     const marker = image[offset++];
-    if (entropy && (marker === 0 || (marker !== undefined && marker >= 0xd0 && marker <= 0xd7)))
+    if (entropy && marker === 0) {
+      hasScanData = true;
       continue;
-    if (marker === 0xd9) return;
+    }
+    if (entropy && marker !== undefined && marker >= 0xd0 && marker <= 0xd7) continue;
+    if (marker === 0xd9) {
+      if (!hasScanData) throw new Error("JPEG has no image scan data");
+      return;
+    }
     if (offset + 2 > image.length) throw new Error("truncated JPEG segment");
     const length = image.readUInt16BE(offset);
     if (length < 2 || offset + length > image.length)
