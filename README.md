@@ -99,6 +99,11 @@ Common commands:
 
 Node waits use positional node conditions, for example
 `wait-ready dev videoPlayerScreen visible` and `wait-node title text "Ready"`.
+Wait timeouts cover the entire polling operation, including in-flight requests
+and sleeps. Expiry interrupts that work and reports the last completed observation;
+late success is not accepted. A zero or negative library wait budget times out
+without making an initial request.
+
 Remote navigation keeps the keys as positional arguments and uses options for
 the bounded loop: `press Down --until-node videoPlayerScreen --until-state visible --max 8`.
 Use `--input-json` for literal values that look like flags.

@@ -34,21 +34,33 @@ export const pollPending = <S>(state: S): PollDecision<never, S> => ({
 export const pollUntilEffect = Effect.fn("pollUntil")(function* <A, E, S, R>(
   options: PollOptions<A, E, S, R>,
 ): Effect.fn.Return<A, E, R> {
-  const start = yield* Clock.currentTimeMillis;
+  const deadline = (yield* Clock.currentTimeMillis) + options.timeoutMs;
   let state = options.initialState;
-
-  while (true) {
-    const decision = yield* options.poll(state);
-    if (decision.status === "done") {
-      return decision.value;
-    }
-
-    state = decision.state;
-    const now = yield* Clock.currentTimeMillis;
-    if (now - start >= options.timeoutMs) {
-      return yield* options.timeout(state);
-    }
-
-    yield* Effect.sleep(options.intervalMs);
+  if (options.timeoutMs <= 0) {
+    return yield* options.timeout(state);
   }
+
+  return yield* Effect.gen(function* () {
+    while (true) {
+      if ((yield* Clock.currentTimeMillis) >= deadline) {
+        return yield* options.timeout(state);
+      }
+      const decision = yield* options.poll(state);
+      const now = yield* Clock.currentTimeMillis;
+      if (now >= deadline) {
+        return yield* options.timeout(state);
+      }
+      if (decision.status === "done") {
+        return decision.value;
+      }
+
+      state = decision.state;
+      yield* Effect.sleep(Math.min(options.intervalMs, deadline - now));
+    }
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: options.timeoutMs,
+      orElse: () => options.timeout(state),
+    }),
+  );
 });
