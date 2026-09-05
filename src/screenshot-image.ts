@@ -33,6 +33,7 @@ function validatePng(image: Buffer): void {
   }
   const width = image.readUInt32BE(16);
   const height = image.readUInt32BE(20);
+  // pngjs retains a Buffer per scanline; pixel count alone does not bound row-object overhead.
   if (width === 0 || height === 0 || width > 8192 || height > 8192 || width * height > maxPixels) {
     throw new Error("PNG screenshot exceeds supported dimensions");
   }

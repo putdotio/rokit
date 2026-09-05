@@ -118,7 +118,8 @@ Captures reject non-JPEG/PNG responses and detected framing or decoding errors.
 JPEG scan completion and restart order are checked before saving.
 Captures accept up to 64 MiB of compressed data and 8,847,360 pixels (including
 3840×2160 UHD and 4096×2160 DCI 4K); JPEG decoding has a 256 MiB memory limit.
-PNG decompression is bounded by its declared pixel dimensions. Original image
+PNG width and height are each limited to 8192 to bound decoder row allocations;
+decompression is bounded by the declared pixel dimensions. Original image
 bytes are preserved. Detected image errors use the normal capture retry path.
 
 ## Library Use

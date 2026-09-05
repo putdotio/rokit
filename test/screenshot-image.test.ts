@@ -20,8 +20,10 @@ function pngChunk(kind: string, data: Buffer): Buffer {
   return chunk;
 }
 
-function smallPng(rawPixels: Buffer, interlaced = false): Buffer {
+function smallPng(rawPixels: Buffer, interlaced = false, width = 1, height = 1): Buffer {
   const header = Buffer.from([0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, Number(interlaced)]);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
   return Buffer.concat([
     pngImage.subarray(0, 8),
     pngChunk("IHDR", header),
@@ -146,6 +148,8 @@ describe("screenshot image integrity", () => {
     jpegImage,
     pngImage,
     interlacedPng,
+    smallPng(Buffer.alloc(8192 * 4 + 1), false, 8192, 1),
+    smallPng(Buffer.alloc(8192 * 5), false, 1, 8192),
     restartJpeg(2, 2),
     restartJpeg(10, 10),
     baselineRestartJpeg,
@@ -178,6 +182,9 @@ describe("screenshot image integrity", () => {
     ["truncated PNG header", pngImage.subarray(0, 24)],
     ["truncated PNG chunk", pngImage.subarray(0, pngImage.length - 5)],
     ["PNG checksum", badCrc],
+    ["PNG duplicate end chunk", Buffer.concat([pngImage, pngChunk("IEND", Buffer.alloc(0))])],
+    ["PNG over width limit", smallPng(Buffer.alloc(8193 * 4 + 1), false, 8193, 1)],
+    ["PNG over height limit", smallPng(Buffer.alloc(8193 * 5), false, 1, 8193)],
     [
       "PNG nonempty end chunk",
       Buffer.concat([pngImage.subarray(0, -12), pngChunk("IEND", Buffer.from([0]))]),
