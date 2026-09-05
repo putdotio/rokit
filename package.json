@@ -62,7 +62,6 @@
     "@effect/platform-node": "4.0.0-beta.107",
     "@effect/platform-node-shared": "4.0.0-beta.107",
     "effect": "4.0.0-beta.107",
-    "jpeg-js": "0.4.4",
     "jszip": "^3.10.1",
     "pngjs": "7.0.0",
     "roku-deploy": "3.18.2"
@@ -73,6 +72,7 @@
     "@types/pngjs": "6.0.5",
     "@uinaf/skillcheck": "0.4.0",
     "@vitest/coverage-v8": "catalog:",
+    "jpeg-js": "0.4.4",
     "typescript": "^7.0.2",
     "vite": "catalog:",
     "vite-plus": "catalog:",

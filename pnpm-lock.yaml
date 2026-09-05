@@ -119,6 +119,9 @@ overrides:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.9
   vitest: 4.1.10
 
+patchedDependencies:
+  jpeg-js@0.4.4: 912afc7ca433991bc4fdb62ba2569b5c73dfb29454942b95efe8961b279474e6
+
 importers:
 
   .:
@@ -132,9 +135,6 @@ importers:
       effect:
         specifier: 4.0.0-beta.107
         version: 4.0.0-beta.107
-      jpeg-js:
-        specifier: 0.4.4
-        version: 0.4.4
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -160,6 +160,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10)
+      jpeg-js:
+        specifier: 0.4.4
+        version: 0.4.4(patch_hash=912afc7ca433991bc4fdb62ba2569b5c73dfb29454942b95efe8961b279474e6)
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -8654,7 +8657,7 @@ snapshots:
 
   jose@6.2.9: {}
 
-  jpeg-js@0.4.4: {}
+  jpeg-js@0.4.4(patch_hash=912afc7ca433991bc4fdb62ba2569b5c73dfb29454942b95efe8961b279474e6): {}
 
   js-base64@3.9.3: {}
 

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vite-plus/test";
 import { validateScreenshotImage } from "../src/screenshot-image.js";
 import {
   baselineRestartJpeg,
+  progressivePartialRestartJpeg,
+  grayscalePartialRestartJpeg,
   progressiveRestartJpeg,
   grayscaleRestartJpeg,
   jpegImage,
@@ -104,6 +106,8 @@ describe("screenshot image integrity", () => {
     baselineRestartJpeg,
     progressiveRestartJpeg,
     grayscaleRestartJpeg,
+    progressivePartialRestartJpeg,
+    grayscalePartialRestartJpeg,
   ])("decodes a genuine image without changing its bytes", (image) => {
     const original = Buffer.from(image);
     expect(() => validateScreenshotImage(image)).not.toThrow();
