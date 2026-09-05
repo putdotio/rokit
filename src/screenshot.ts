@@ -4,6 +4,7 @@ import type { PlatformError } from "effect/PlatformError";
 import { digestAuthHeaderEffect, parseDigestChallenge } from "./digest-auth.js";
 import { readResponseBytesEffect, readResponseTextEffect } from "./response-body.js";
 import type { RokuContext } from "./roku-context.js";
+import { maxScreenshotBytes, validateScreenshotImage } from "./screenshot-image.js";
 import { abortSignalWithTimeout } from "./timing.js";
 
 export type ScreenshotCaptureOptions = {
@@ -138,14 +139,24 @@ const fetchScreenshotImageEffect = Effect.fn("fetchScreenshotImage")(function* (
     );
   }
 
-  return yield* readResponseBytesEffect(
+  const image = yield* readResponseBytesEffect(
     response,
     (error) =>
       new ScreenshotCaptureError({
         detail: formatErrorMessage(error),
         outputPath: url.pathname,
       }),
+    maxScreenshotBytes,
   );
+  yield* Effect.try({
+    try: () => validateScreenshotImage(image),
+    catch: (error) =>
+      new ScreenshotCaptureError({
+        detail: `invalid screenshot image: ${formatErrorMessage(error)}`,
+        outputPath: url.pathname,
+      }),
+  });
+  return image;
 });
 
 const fetchAuthorizedScreenshotImageEffect = Effect.fn("fetchAuthorizedScreenshotImage")(function* (

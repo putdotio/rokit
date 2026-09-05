@@ -22,7 +22,8 @@ repo.
 4. Use `--fields` to keep observations small when only a few values are needed.
 5. Screenshot commands append a timestamp to the requested filename. Use the
    returned JSON `data.path` as the artifact path instead of assuming the input
-   path was written.
+   path was written. Screenshot responses must decode as JPEG or PNG; invalid
+   bytes fail capture rather than producing a successful artifact.
 6. For live proof, use `rokit snapshot` for a quick state read,
    `rokit proof <output-dir>` for review artifacts, or `pnpm live:probe` in the
    rokit repo for the full generic package/install/launch/input/proof probe.
