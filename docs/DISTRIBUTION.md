@@ -44,6 +44,10 @@ generic live probe are included so agents consuming the package can inspect
 distribution, security, and generic Roku proof mechanics without cloning extra
 private context.
 
+The published dependencies pin Effect, platform-node, and platform-node-shared to
+the same prerelease. Keep those pins aligned: a consumer does not inherit this
+repository’s pnpm overrides, and a newer shared runtime can be incompatible.
+
 ## Release Smoke
 
 After a release, confirm the tag and package are visible:
