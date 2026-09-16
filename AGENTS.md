@@ -5,12 +5,12 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 ## Start Here
 
-- [README.md](README.md) — install, command surface, env contract, quick start.
-- [docs/DEBUGGING.md](docs/DEBUGGING.md) — Roku debug surfaces, console
+- [README.md](README.md): install, command surface, env contract, quick start.
+- [docs/DEBUGGING.md](docs/DEBUGGING.md): Roku debug surfaces, console
   capture, crash-proof workflow.
-- [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md) — release path, semantic-release
+- [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md): release path, semantic-release
   wiring, credentials.
-- [skills/rokit/](skills/rokit/) — consumer skill and its command references.
+- [skills/rokit/](skills/rokit/): consumer skill and its command references.
 
 ## Generic Tool Boundary
 
