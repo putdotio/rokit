@@ -5,10 +5,8 @@ description: Use when testing, sideloading, deploying, or debugging Roku apps wi
 
 # rokit
 
-Use this skill when a repo consumes `@putdotio/rokit` for Roku device harness
-work. Keep `rokit` generic and put app journeys, product selectors, fixture
-names, content IDs, account state, and product assertions in the consumer app
-repo.
+Keep `rokit` generic; app journeys, product selectors, fixture names, content
+IDs, account state, and product assertions live in the consumer app repo.
 
 ## Workflow
 

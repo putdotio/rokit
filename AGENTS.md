@@ -58,8 +58,6 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 - Keep SceneGraph helpers generic: node state, text, attributes, focus/state
   waits, and raw tree output are okay; product-specific screen contracts stay in
   app repos.
-- Keep app journeys, content IDs, account data, and product assertions out of
-  the generic harness.
 
 ## Effect
 
@@ -74,15 +72,10 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
   or the command effects) so V8 coverage attributes them. Spawn
   `dist/rokit.mjs` only when the process boundary itself is under test; those
   runs are invisible to coverage on vitest 4 (see `vite.config.ts`).
-- `ROKIT_PASSWORD` is required only for developer-installer operations such as
-  install and screenshot.
 - `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are optional fallback aliases, not
-  the primary public contract.
+  the primary public contract; the env contract is in [README.md](README.md#quick-start).
 - Avoid sleeps in generic commands. App repos can add meaningful wait/assert
   loops around `rokit` primitives.
-- Release details live in `docs/DISTRIBUTION.md`; debugging details live in
-  `docs/DEBUGGING.md`; consumer skill guidance lives in
-  `skills/rokit/SKILL.md`.
 
 ## When Contracts Change
 
@@ -95,9 +88,9 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 
 ## Worktrees
 
-`.worktreeinclude` carries local env files into managed worktrees. Run
-`vp install`, `vp run hooks:install`, and `vp run verify`. If device config is
-missing, copy `.env.example` to `.env` or `.rokit/.env`.
+`.worktreeinclude` carries local env files into managed worktrees. Run the
+[Checks](#checks) setup commands. If device config is missing, copy
+`.env.example` to `.env` or `.rokit/.env`.
 
 ## Checks
 

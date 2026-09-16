@@ -2,16 +2,6 @@
 
 `rokit` is a public npm package published as `@putdotio/rokit`.
 
-## Local Contract
-
-The release path starts with the repo-local verification command:
-
-```bash
-pnpm verify
-```
-
-`verify` runs formatting/lint checks, skill lint, TypeScript, package bundling, tests with a coverage floor, and an npm pack dry run. GitHub Actions calls this same command before release.
-
 ## Continuous Release
 
 Merges to `main` are considered publishable. The CI workflow runs:

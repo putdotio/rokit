@@ -23,8 +23,9 @@ For live Roku checks, set local environment variables in your shell or
 vp run verify
 ```
 
-`verify` runs static checks, TypeScript, packaging, tests, and an npm pack dry
-run.
+`verify` runs formatting/lint checks, skill lint, TypeScript, package bundling,
+tests with a coverage floor, and an npm pack dry run; CI runs the same command
+before release.
 
 ## Live Checks
 

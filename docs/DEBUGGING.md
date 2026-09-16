@@ -25,10 +25,8 @@ commands include:
 | `r2d2_bitmaps`      | `8080` | Bitmap diagnostics                          |
 
 The BrightScript debug protocol is a separate binary protocol for interactive
-debugger clients. It can inspect variables, stack traces, breakpoints, and
-stepping state after a launch request enables remote debugging. It is not the
-first `rokit` target because crash capture needs append-only text artifacts more
-than an IDE-style session.
+debugger clients; `rokit` does not wrap it, because crash capture needs
+append-only text artifacts more than an IDE-style session.
 
 Sources:
 
@@ -38,8 +36,7 @@ Sources:
 
 ## `rokit` Shape
 
-The implemented first slice covers text telnet capture and allowlisted
-debug-server commands:
+`rokit` covers text telnet capture and allowlisted debug-server commands:
 
 - `rokit console <output-path> [--duration-ms <ms>]` captures port `8085`
   output to a timestamped local log.
@@ -51,13 +48,8 @@ allowlisted Roku commands can affect profiling/debugger state.
 
 Roku's `chanperf -r <seconds>` command writes repeated samples to the
 BrightScript console on `8085`, not the `8080` socket that receives the command.
-`rokit debug-command` intentionally rejects that form until a coordinated
-capture command can open the console, start sampling, stop sampling, and write
-one proof bundle.
-
-The natural next command is `rokit crash-watch <app-id> <output-dir>`, which
-would connect to the console, launch an app, capture logs, and write normal
-proof artifacts after the capture window.
+`rokit debug-command` rejects that form; capture the console with
+`rokit console` while sampling runs instead.
 
 Use Node's `node:net` module directly instead of shelling out to a local telnet
 binary. This keeps the CLI cross-platform, typed, and easier to test.
