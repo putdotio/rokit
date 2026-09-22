@@ -11,6 +11,8 @@ Merges to `main` are considered publishable. The CI workflow runs:
 
 semantic-release analyzes conventional commits, publishes to npm, creates GitHub Releases, and writes release metadata when needed.
 
+The release job calls the shared [`frontend-release-npm.yml`](https://github.com/putdotio/.github/blob/main/frontend/README.md) workflow from `putdotio/.github`, pinned to a tagged commit; the semantic-release action and plugin pins live there.
+
 ## Release Credentials
 
 The release job uses the `release` GitHub Environment with `deployment: false`.
@@ -24,7 +26,7 @@ The npm package uses Trusted Publishing from GitHub Actions. On npm, configure o
 
 During the `@semantic-release/npm` publish step, npm detects the GitHub OIDC identity, mints short-lived publish credentials, and publishes provenance for the release job.
 
-Release writes use the `putio-releaser` installation token. The default `GITHUB_TOKEN` remains read-only, and the release-bot remote is configured only after dependencies are installed.
+Release writes use the `putio-releaser` installation token. The default `GITHUB_TOKEN` remains read-only, and the release bot token is minted only after dependencies are installed.
 
 ## Package Contents
 
