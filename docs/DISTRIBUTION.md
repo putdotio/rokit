@@ -11,7 +11,7 @@ Merges to `main` are considered publishable. The CI workflow runs:
 
 semantic-release analyzes conventional commits, publishes to npm, creates GitHub Releases, and writes release metadata when needed.
 
-The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github/blob/main/frontend/README.md) from `putdotio/.github`, pinned to a tagged commit; the semantic-release action and plugin pins live there. [`scan.yml`](../.github/workflows/scan.yml) calls the shared frontend scan workflow from the same repository: Gitleaks, TruffleHog, Actionlint, and Zizmor on pull requests, weekly, and on manual dispatch.
+The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a tagged commit; the semantic-release action and plugin pins live there. [`scan.yml`](../.github/workflows/scan.yml) calls the shared frontend scan workflow from the same repository: Gitleaks, TruffleHog, Actionlint, and Zizmor on pull requests, weekly, and on manual dispatch.
 
 ## Release Credentials
 
