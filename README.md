@@ -17,7 +17,7 @@
 
 ## Install
 
-Requires Node `>=24.19.0`; install it in a consumer repo with:
+Requires the Node version in `engines.node` of [`package.json`](./package.json); install it in a consumer repo with:
 
 ```bash
 pnpm add -D @putdotio/rokit
