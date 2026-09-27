@@ -13,8 +13,8 @@ rokit describe proof
 ```
 
 Use `README.md` for the public command overview. Use the one-command form to
-keep context small when you already know the command family. Use `src/cli.ts`
-when command behavior and docs disagree.
+keep context small when you already know the command family. When the docs and
+`rokit describe` disagree, trust `describe`.
 
 ## Quick Reads
 
