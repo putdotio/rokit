@@ -30,7 +30,7 @@ Release writes use the `putio-releaser` installation token. The default `GITHUB_
 
 ## Package Contents
 
-`files` in [`package.json`](https://github.com/putdotio/rokit/blob/main/package.json)
+`files` in [`package.json`](../package.json)
 lists what the npm package ships. It carries the docs, consumer skill, and
 generic live probe so agents consuming the package can inspect distribution,
 security, and Roku proof mechanics without cloning the repository. Packaged docs
