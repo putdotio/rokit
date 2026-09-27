@@ -115,10 +115,10 @@ Generated output paths must stay within the current working directory.
 Screenshots append a timestamp to the requested filename and report the actual
 path written, so repeated captures do not reuse cache-prone filenames.
 Captures are decoded and checked before saving, then written as the original
-bytes. Non-JPEG/PNG responses, framing or decoding errors, and images beyond the
-size limits in [`src/screenshot-image.ts`](https://github.com/putdotio/rokit/blob/main/src/screenshot-image.ts)
-(4096×2160 DCI 4K fits) go through the normal capture retry path and fail if
-they persist.
+bytes. Limits: 64 MiB compressed, 8,847,360 pixels (4096×2160 DCI 4K fits),
+8192 px per PNG side, and 256 MiB of JPEG decoder memory. Non-JPEG/PNG
+responses, framing or decoding errors, and images over a limit go through the
+normal capture retry path and fail if they persist.
 
 ## Library Use
 
