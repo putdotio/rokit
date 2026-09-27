@@ -9,9 +9,9 @@ Merges to `main` are considered publishable. The CI workflow runs:
 1. `verify` on pull requests and `main` pushes.
 2. semantic-release on `main` after `verify` passes.
 
-semantic-release analyzes conventional commits, publishes to npm, creates GitHub Releases, and writes release metadata when needed.
+semantic-release analyzes Conventional Commits; a releasable commit publishes to npm, creates a GitHub Release, and commits the released `package.json` version back to `main` with `[skip ci]`.
 
-The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a tagged commit; the semantic-release action and plugin pins live there. [`scan.yml`](../.github/workflows/scan.yml) calls the shared frontend scan workflow from the same repository: Gitleaks, TruffleHog, Actionlint, and Zizmor on pull requests, weekly, and on manual dispatch.
+The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a tagged commit; the semantic-release action and plugin pins live there. [`scan.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/scan.yml) calls the shared frontend scan workflow from the same repository: Gitleaks, TruffleHog, Actionlint, and Zizmor on pull requests, weekly, and on manual dispatch.
 
 ## Release Credentials
 
@@ -30,11 +30,11 @@ Release writes use the `putio-releaser` installation token. The default `GITHUB_
 
 ## Package Contents
 
-The npm package includes `dist`, `README.md`, `docs`, `examples`, `skills`,
-`AGENTS.md`, `CONTRIBUTING.md`, and `SECURITY.md`. The docs, consumer skill, and
-generic live probe are included so agents consuming the package can inspect
-distribution, security, and generic Roku proof mechanics without cloning extra
-private context.
+`files` in [`package.json`](../package.json)
+lists what the npm package ships. It carries the docs, consumer skill, and
+generic live probe so agents consuming the package can inspect distribution,
+security, and Roku proof mechanics without cloning the repository. Packaged docs
+link files outside the tarball by absolute GitHub URL.
 
 The published dependencies pin Effect, platform-node, and platform-node-shared to
 the same prerelease. Keep those pins aligned: a consumer does not inherit this
@@ -58,7 +58,7 @@ gh release list --repo putdotio/rokit --limit 5
 npm view @putdotio/rokit version
 ```
 
-Live Roku behavior is not required for npm release. Real-device checks are local/manual because they require a developer-enabled Roku:
+Releases do not need a Roku. Real-device checks stay local because they require a developer-enabled device:
 
 ```bash
 ROKIT_TARGET=<roku-ip> pnpm live:smoke

@@ -114,13 +114,11 @@ traversal, backslashes, control characters, and percent-encoded path segments.
 Generated output paths must stay within the current working directory.
 Screenshots append a timestamp to the requested filename and report the actual
 path written, so repeated captures do not reuse cache-prone filenames.
-Captures reject non-JPEG/PNG responses and detected framing or decoding errors.
-JPEG scan completion and restart order are checked before saving.
-Captures accept up to 64 MiB of compressed data and 8,847,360 pixels (including
-3840×2160 UHD and 4096×2160 DCI 4K); JPEG decoding has a 256 MiB memory limit.
-PNG width and height are each limited to 8192 to bound decoder row allocations;
-decompression is bounded by the declared pixel dimensions. Original image
-bytes are preserved. Detected image errors use the normal capture retry path.
+Captures are decoded and checked before saving, then written as the original
+bytes. Limits: 64 MiB compressed, 8,847,360 pixels (4096×2160 DCI 4K fits),
+8192 px per PNG side, and 256 MiB of JPEG decoder memory. Non-JPEG/PNG
+responses, framing or decoding errors, and images over a limit go through the
+normal capture retry path and fail if they persist.
 
 ## Library Use
 
