@@ -64,7 +64,7 @@
     "effect": "4.0.0-rc.118",
     "jszip": "^3.10.1",
     "pngjs": "7.0.0",
-    "roku-deploy": "3.18.2"
+    "roku-deploy": "3.18.4"
   },
   "devDependencies": {
     "@effect/vitest": "4.0.0-rc.118",
