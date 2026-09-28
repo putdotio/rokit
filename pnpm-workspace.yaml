@@ -34,9 +34,9 @@ minimumReleaseAgeExclude:
   - "@voidzero-dev/vite-plus-win32-x64-msvc@1.0.0"
   - vite-plus@1.0.0
 catalog:
-  "@vitest/coverage-v8": 5.0.1
+  "@vitest/coverage-v8": 5.0.2
   vite: npm:@voidzero-dev/vite-plus-core@1.0.0
-  vitest: 5.0.1
+  vitest: 5.0.2
   vite-plus: 1.0.0
 peerDependencyRules:
   allowAny:
