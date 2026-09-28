@@ -2,7 +2,7 @@ packages:
   - "."
 
 overrides:
-  "@effect/platform-node-shared": 4.0.0-beta.107
+  "@effect/platform-node-shared": 4.0.0-rc.118
   vite: "catalog:"
   vitest: "catalog:"
 
@@ -18,16 +18,26 @@ allowBuilds:
   sharp: false
 minimumReleaseAgeExclude:
   # Exact versions or `pkg@v1 || v2` unions only; `pkg@^range` is rejected by design.
-  - "@effect/platform-node-shared@4.0.0-beta.107"
-  - "@effect/platform-node@4.0.0-beta.107"
-  - "@effect/vitest@4.0.0-beta.107"
-  - "effect@4.0.0-beta.107"
+  - "@effect/platform-node-shared@4.0.0-rc.118"
+  - "@effect/platform-node@4.0.0-rc.118"
+  - "@effect/vitest@4.0.0-rc.118"
+  - "effect@4.0.0-rc.118"
   - "@uinaf/skillcheck@0.4.0"
+  - "@voidzero-dev/vite-plus-core@1.0.0"
+  - "@voidzero-dev/vite-plus-darwin-arm64@1.0.0"
+  - "@voidzero-dev/vite-plus-darwin-x64@1.0.0"
+  - "@voidzero-dev/vite-plus-linux-arm64-gnu@1.0.0"
+  - "@voidzero-dev/vite-plus-linux-arm64-musl@1.0.0"
+  - "@voidzero-dev/vite-plus-linux-x64-gnu@1.0.0"
+  - "@voidzero-dev/vite-plus-linux-x64-musl@1.0.0"
+  - "@voidzero-dev/vite-plus-win32-arm64-msvc@1.0.0"
+  - "@voidzero-dev/vite-plus-win32-x64-msvc@1.0.0"
+  - vite-plus@1.0.0
 catalog:
-  "@vitest/coverage-v8": 4.1.10
-  vite: npm:@voidzero-dev/vite-plus-core@0.2.9
-  vitest: 4.1.10
-  vite-plus: 0.2.9
+  "@vitest/coverage-v8": 5.0.1
+  vite: npm:@voidzero-dev/vite-plus-core@1.0.0
+  vitest: 5.0.1
+  vite-plus: 1.0.0
 peerDependencyRules:
   allowAny:
     - vite

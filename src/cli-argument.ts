@@ -1,16 +1,16 @@
 import { Option } from "effect";
-import { Argument, Flag } from "effect/unstable/cli";
+import { Argument, Flag } from "effect/cli";
 import type { DescribedField } from "./cli-types.js";
 import { validateRemoteKey } from "./ecp.js";
 
 export const stringArgument = (name: string, description: string) =>
-  Argument.string(name).pipe(Argument.withDescription(description));
+  Argument.String(name).pipe(Argument.withDescription(description));
 
 export const stringArgumentField = (field: DescribedField) =>
   stringArgument(field.name, field.description);
 
 export const pathArgument = (name: string, description: string) =>
-  Argument.path(name).pipe(Argument.withDescription(description));
+  Argument.Path(name).pipe(Argument.withDescription(description));
 
 export const pathArgumentField = (field: DescribedField) =>
   pathArgument(field.name, field.description);
@@ -18,19 +18,19 @@ export const pathArgumentField = (field: DescribedField) =>
 export const fileArgument = (
   name: string,
   description: string,
-  options: Parameters<typeof Argument.file>[1],
-) => Argument.file(name, options).pipe(Argument.withDescription(description));
+  options: Parameters<typeof Argument.File>[1],
+) => Argument.File(name, options).pipe(Argument.withDescription(description));
 
 export const fileArgumentField = (
   field: DescribedField,
-  options: Parameters<typeof Argument.file>[1],
+  options: Parameters<typeof Argument.File>[1],
 ) => fileArgument(field.name, field.description, options);
 
 export const choiceArgument = <const Choices extends readonly [string, ...string[]]>(
   name: string,
   choices: Choices,
   description: string,
-) => Argument.choice(name, choices).pipe(Argument.withDescription(description));
+) => Argument.Literals(name, choices).pipe(Argument.withDescription(description));
 
 export const choiceArgumentField = <const Choices extends readonly [string, ...string[]]>(
   field: DescribedField,
@@ -38,7 +38,7 @@ export const choiceArgumentField = <const Choices extends readonly [string, ...s
 ) => choiceArgument(field.name, choices, field.description);
 
 export const positiveIntegerFlag = (name: string, label: string, description: string) =>
-  Flag.integer(name).pipe(
+  Flag.Int(name).pipe(
     Flag.filter(
       (value) => value > 0,
       (value) => `Invalid ${label}: ${value}`,
@@ -50,7 +50,7 @@ export const positiveIntegerFlagField = (field: DescribedField, label = field.na
   positiveIntegerFlag(field.name, label, field.description);
 
 export const nonNegativeIntegerFlag = (name: string, label: string, description: string) =>
-  Flag.integer(name).pipe(
+  Flag.Int(name).pipe(
     Flag.filter(
       (value) => value >= 0,
       (value) => `Invalid ${label}: ${value}`,
@@ -62,7 +62,7 @@ export const nonNegativeIntegerFlagField = (field: DescribedField, label = field
   nonNegativeIntegerFlag(field.name, label, field.description);
 
 export const stringFlagField = (field: DescribedField) =>
-  Flag.string(field.name).pipe(Flag.withDescription(field.description));
+  Flag.String(field.name).pipe(Flag.withDescription(field.description));
 
 export const remoteKeyArgument = (field: DescribedField) =>
   stringArgumentField(field).pipe(
@@ -72,7 +72,7 @@ export const remoteKeyArgument = (field: DescribedField) =>
 export const launchParamsFlag = (field: DescribedField) =>
   // Roku query params can contain "=" in the value; Effect's keyValuePair primitive
   // rejects that, so this parser splits only on the first separator.
-  Flag.string(field.name).pipe(
+  Flag.String(field.name).pipe(
     Flag.withMetavar("key=value"),
     Flag.withDescription(field.description),
     Flag.atMost(Number.MAX_SAFE_INTEGER),

@@ -1,45 +1,45 @@
 import { Effect, Option } from "effect";
-import { Flag, GlobalFlag } from "effect/unstable/cli";
+import { Flag, GlobalFlag } from "effect/cli";
 import { globalOption } from "./cli-command-metadata.js";
 import type { CliOptions, OutputMode } from "./cli-types.js";
 
 export type RokitGlobalFlagContext =
-  | "effect/unstable/cli/GlobalFlag/dry-run"
-  | "effect/unstable/cli/GlobalFlag/fields"
-  | "effect/unstable/cli/GlobalFlag/input-json"
-  | "effect/unstable/cli/GlobalFlag/json"
-  | "effect/unstable/cli/GlobalFlag/output";
+  | "effect/cli/GlobalFlag/dry-run"
+  | "effect/cli/GlobalFlag/fields"
+  | "effect/cli/GlobalFlag/input-json"
+  | "effect/cli/GlobalFlag/json"
+  | "effect/cli/GlobalFlag/output";
 
-export const DryRunGlobal = GlobalFlag.setting("dry-run")({
-  flag: Flag.boolean("dry-run").pipe(
+export const DryRunGlobal = GlobalFlag.Setting("dry-run")({
+  flag: Flag.Boolean("dry-run").pipe(
     Flag.withDefault(false),
     Flag.withDescription(globalOption("dry-run").description),
   ),
 });
 
-export const FieldsGlobal = GlobalFlag.setting("fields")({
-  flag: Flag.string("fields").pipe(
+export const FieldsGlobal = GlobalFlag.Setting("fields")({
+  flag: Flag.String("fields").pipe(
     Flag.optional,
     Flag.withDescription(globalOption("fields").description),
   ),
 });
 
-export const InputJsonGlobal = GlobalFlag.setting("input-json")({
-  flag: Flag.string("input-json").pipe(
+export const InputJsonGlobal = GlobalFlag.Setting("input-json")({
+  flag: Flag.String("input-json").pipe(
     Flag.optional,
     Flag.withDescription(globalOption("input-json").description),
   ),
 });
 
-export const JsonGlobal = GlobalFlag.setting("json")({
-  flag: Flag.boolean("json").pipe(
+export const JsonGlobal = GlobalFlag.Setting("json")({
+  flag: Flag.Boolean("json").pipe(
     Flag.withDefault(false),
     Flag.withDescription(globalOption("json").description),
   ),
 });
 
-export const OutputGlobal = GlobalFlag.setting("output")({
-  flag: Flag.choice("output", ["json", "text"]).pipe(
+export const OutputGlobal = GlobalFlag.Setting("output")({
+  flag: Flag.Literals("output", ["json", "text"]).pipe(
     Flag.optional,
     Flag.withDescription(globalOption("output").description),
   ),

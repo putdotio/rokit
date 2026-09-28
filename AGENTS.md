@@ -29,7 +29,7 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 - Use Effect at the runtime boundary and for reusable effectful operations. Keep
   errors schema-backed and render them without stack traces in CLI output.
-- Use `effect/unstable/cli` `Argument` and `Flag` primitives for command
+- Use `effect/cli` `Argument` and `Flag` primitives for command
   grammar before adding custom argv parsing.
 - Keep CLI wiring thin: parse/dispatch commands, then call named Roku helpers.
 - Keep `src/roku.ts` as a public compatibility barrel. Put implementation in
@@ -71,7 +71,7 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 - CLI tests default to in-process entry points (`mainEffect` from `src/cli.ts`
   or the command effects) so V8 coverage attributes them. Spawn
   `dist/rokit.mjs` only when the process boundary itself is under test; those
-  runs are invisible to coverage on vitest 4 (see `vite.config.ts`).
+  runs are not attributed to coverage (see `vite.config.ts`).
 - `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are optional fallback aliases, not
   the primary public contract; the env contract is in [README.md](README.md#quick-start).
 - Avoid sleeps in generic commands. App repos can add meaningful wait/assert
