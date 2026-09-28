@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { Argument, Command as EffectCommand } from "effect/unstable/cli";
+import { Argument, Command as EffectCommand } from "effect/cli";
 import type { Command } from "./cli-types.js";
 import type { RokitGlobalFlagContext } from "./cli-options.js";
 
@@ -18,7 +18,7 @@ export const strictCommand = <
     ...config,
     // Effect CLI leaves surplus positional arguments unconsumed by default.
     // Keep command definitions idiomatic while making rokit reject typos.
-    extra: Argument.string("extra").pipe(
+    extra: Argument.String("extra").pipe(
       Argument.variadic(),
       Argument.filter(
         (extra) => extra.length === 0,

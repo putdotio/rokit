@@ -1,4 +1,4 @@
-import { Argument, Command as EffectCommand } from "effect/unstable/cli";
+import { Argument, Command as EffectCommand } from "effect/cli";
 import { optionToUndefined, stringArgumentField } from "./cli-argument.js";
 import { commandDescription, commandParameter } from "./cli-command-metadata.js";
 import type { CommandCapture } from "./cli-command-shared.js";

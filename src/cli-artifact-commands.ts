@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { Argument, Command as EffectCommand, Flag } from "effect/unstable/cli";
+import { Argument, Command as EffectCommand, Flag } from "effect/cli";
 import {
   fileArgumentField,
   optionToUndefined,
@@ -20,7 +20,7 @@ export const artifactCommands = (capture: CommandCapture) => [
   ),
   strictCommand("proof", {
     outputDir: pathArgumentField(commandParameter("proof", "output-dir")),
-    screenshot: Flag.boolean("screenshot").pipe(
+    screenshot: Flag.Boolean("screenshot").pipe(
       Flag.withDescription(commandParameter("proof", "screenshot").description),
     ),
   }).pipe(
@@ -37,7 +37,7 @@ export const artifactCommands = (capture: CommandCapture) => [
     outputPath: stringArgumentField(commandParameter("package", "zip-path")).pipe(
       Argument.optional,
     ),
-    out: Flag.string("out").pipe(
+    out: Flag.String("out").pipe(
       Flag.withMetavar("zip-path"),
       Flag.withDescription(commandParameter("package", "zip-path").description),
       Flag.optional,

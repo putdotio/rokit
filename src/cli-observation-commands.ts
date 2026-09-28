@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { Argument, Command as EffectCommand, Flag } from "effect/unstable/cli";
+import { Argument, Command as EffectCommand, Flag } from "effect/cli";
 import type { Command } from "./cli-types.js";
 import {
   choiceArgumentField,

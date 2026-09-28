@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { Console, Effect } from "effect";
-import { CliError, CliOutput, Command as EffectCommand } from "effect/unstable/cli";
+import { CliError, CliOutput, Command as EffectCommand } from "effect/cli";
 import PackageJson from "../package.json" with { type: "json" };
 import type { Command, ParsedCli } from "./cli-types.js";
 import { artifactCommands } from "./cli-artifact-commands.js";

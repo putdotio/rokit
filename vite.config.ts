@@ -8,11 +8,10 @@ export default defineConfig({
   test: {
     coverage: {
       // Coverage blind spot: the boot test spawns the packaged dist/rokit.mjs
-      // to prove the real binary starts; V8 coverage cannot attribute
-      // subprocess execution on vitest 4, so the bin shim src/rokit.ts is
-      // excluded by design. All other CLI tests run the same entry in-process
-      // (mainEffect and the command effects). When vite-plus ships vitest 5,
-      // coverage.autoAttachSubprocess can close the remaining gap.
+      // to prove the real binary starts; that subprocess is not attributed to
+      // coverage, so the bin shim src/rokit.ts is excluded by design. All other
+      // CLI tests run the same entry in-process (mainEffect and the command
+      // effects). Vitest 5 coverage.autoAttachSubprocess can close the gap.
       exclude: ["src/**/*.d.ts", "src/rokit.ts"],
       include: ["src/**/*.ts"],
       provider: "v8",

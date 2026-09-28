@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { Argument, Command as EffectCommand, Flag } from "effect/unstable/cli";
+import { Argument, Command as EffectCommand, Flag } from "effect/cli";
 import {
   launchParamsFlag,
   nonNegativeIntegerFlagField,
@@ -40,7 +40,7 @@ export const controlCommands = (capture: CommandCapture) => [
       Flag.optional,
     ),
     untilNodeName: stringFlagField(commandParameter("press", "until-node")).pipe(Flag.optional),
-    untilNodeState: Flag.choice("until-state", nodeConditionStates).pipe(
+    untilNodeState: Flag.Literals("until-state", nodeConditionStates).pipe(
       Flag.withDescription(commandParameter("press", "until-state").description),
       Flag.optional,
     ),
