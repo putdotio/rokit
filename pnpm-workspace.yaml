@@ -2,7 +2,7 @@ packages:
   - "."
 
 overrides:
-  "@effect/platform-node-shared": 4.0.0-rc.118
+  "@effect/platform-node-shared": 4.0.0
   vite: "catalog:"
   vitest: "catalog:"
 
@@ -18,10 +18,10 @@ allowBuilds:
   sharp: false
 minimumReleaseAgeExclude:
   # Exact versions or `pkg@v1 || v2` unions only; `pkg@^range` is rejected by design.
-  - "@effect/platform-node-shared@4.0.0-rc.118"
-  - "@effect/platform-node@4.0.0-rc.118"
-  - "@effect/vitest@4.0.0-rc.118"
-  - "effect@4.0.0-rc.118"
+  - "@effect/platform-node-shared@4.0.0"
+  - "@effect/platform-node@4.0.0"
+  - "@effect/vitest@4.0.0"
+  - "effect@4.0.0"
   - "@uinaf/skillcheck@0.4.0"
   - "@voidzero-dev/vite-plus-core@1.0.0"
   - "@voidzero-dev/vite-plus-darwin-arm64@1.0.0"
