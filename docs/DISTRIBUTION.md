@@ -37,8 +37,9 @@ security, and Roku proof mechanics without cloning the repository. Packaged docs
 link files outside the tarball by absolute GitHub URL.
 
 The published dependencies pin Effect, platform-node, and platform-node-shared to
-the same prerelease. Keep those pins aligned: a consumer does not inherit this
-repository’s pnpm overrides, and a newer shared runtime can be incompatible.
+the same exact version. Keep those pins aligned: platform-node accepts any
+compatible platform-node-shared, and a newer shared runtime can be incompatible
+with the pinned Effect.
 
 The build bundles pinned `jpeg-js` with the patch maintained under `patches/`
 so ordinary npm consumers receive the same decoder. The patch
