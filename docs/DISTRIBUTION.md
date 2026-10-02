@@ -32,8 +32,8 @@ Release writes use the `putio-releaser` installation token. The default `GITHUB_
 
 `files` in [`package.json`](../package.json)
 lists what the npm package ships. It carries the docs, consumer skill, and
-generic live probe so agents consuming the package can inspect distribution,
-security, and Roku proof mechanics without cloning the repository. Packaged docs
+generic live probe so agents consuming the package can inspect distribution
+and Roku proof mechanics without cloning the repository. Packaged docs
 link files outside the tarball by absolute GitHub URL.
 
 The published dependencies pin Effect, platform-node, and platform-node-shared to

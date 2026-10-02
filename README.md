@@ -23,6 +23,8 @@ Requires the Node version in `engines.node` of [`package.json`](./package.json);
 pnpm add -D @putdotio/rokit
 ```
 
+Only the latest published version receives routine fixes.
+
 ## Quick Start
 
 Set the target Roku in the app repo that consumes `rokit`:
@@ -192,7 +194,7 @@ artifacts.
 - [Roku debugging](./docs/DEBUGGING.md)
 - [Distribution](./docs/DISTRIBUTION.md)
 - [rokit skill](./skills/rokit/SKILL.md)
-- [Security](./SECURITY.md)
+- [Security](https://github.com/putdotio/.github/blob/main/SECURITY.md)
 
 ## Repo Internals
 

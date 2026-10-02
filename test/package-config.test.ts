@@ -25,7 +25,7 @@ describe("package config", () => {
     const packageConfig = readPackageConfig();
 
     expect(packageConfig.files).toEqual(
-      expect.arrayContaining(["AGENTS.md", "docs", "examples", "README.md", "SECURITY.md"]),
+      expect.arrayContaining(["AGENTS.md", "docs", "examples", "README.md"]),
     );
   });
 });
