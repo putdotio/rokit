@@ -12,6 +12,17 @@ Keep it platform-focused, typed, and useful for both humans and agents.
   wiring, credentials.
 - [skills/rokit/](skills/rokit/): consumer skill and its command references.
 
+## Ways To Hurt Yourself
+
+- **Merging publishes.** A `feat`, `fix`, `perf` or breaking commit on `main`
+  publishes `@putdotio/rokit` to npm, and a published version number can never
+  be reused, so the commit type is the release decision.
+- **Taking over someone's Roku.** A Roku holds one sideloaded developer app,
+  and the target may be a TV someone is watching. `install` and `live:probe`
+  replace that app; `launch` and `press` change what is on screen. `check`,
+  `device-info`, `active-app` and the other reads leave it alone, and
+  `--dry-run` validates a mutating command without side effects.
+
 ## Generic Tool Boundary
 
 - Keep `rokit` free of put.io product behavior. Do not add put.io app IDs,
@@ -83,8 +94,6 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 - CI/release/publishing changes: update workflow docs or release config in the
   same change.
 - `CLAUDE.md` is a symlink to this file; keep it pointing here.
-- Finish edits, `vp run verify`, and fixes without pausing; ask before publishing and before live runs against a Roku someone else may be using.
-- Done means `vp run verify` passed and, for device-facing changes, `live:smoke` or `live:probe` ran or the gap is reported.
 
 ## Worktrees
 
@@ -118,3 +127,17 @@ ROKIT_TARGET=<roku-ip> vp exec rokit check
 ROKIT_TARGET=<roku-ip> vp exec rokit launch dev
 ROKIT_TARGET=<roku-ip> vp exec rokit press Info Back
 ```
+
+Which proof a change needs:
+
+- Docs only: `vp run check`, plus `vp run skills:lint` for `skills/`; no
+  device run.
+- Source, command, env, output or export changes: `vp run verify`.
+- Device-facing behavior: `verify`, then `live:smoke` (read-only) or
+  `live:probe` (installs the generic probe channel).
+
+## Delivery
+
+Open a pull request; CI runs `vp run verify` on pull requests and on `main`.
+On `main`, semantic-release publishes releasable commits to npm and GitHub
+Releases. Credentials and release smoke: [Distribution](docs/DISTRIBUTION.md).
