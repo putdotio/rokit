@@ -103,36 +103,40 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 
 ## Checks
 
+Vite+ is the pinned `vite-plus` devDependency, so run it as `pnpm exec vp`; no
+global install is needed.
+
 ```bash
-vp install
-vp run hooks:install
-vp run verify
+pnpm install
+pnpm exec vp run hooks:install
+pnpm exec vp run verify
 ```
 
 Fast loops:
 
 ```bash
-vp run check
-vp run typecheck
-vp run smoke
-vp run test
+pnpm exec vp run check
+pnpm exec vp run typecheck
+pnpm exec vp run smoke
+pnpm exec vp run test
 ```
 
-Live Roku checks when a developer-enabled device exists:
+Live Roku checks when a developer-enabled device exists; `node dist/rokit.mjs`
+is the CLI that `live:smoke` builds:
 
 ```bash
-ROKIT_TARGET=<roku-ip> vp run live:smoke
-ROKIT_TARGET=<roku-ip> ROKIT_PASSWORD=<password> vp run live:probe
-ROKIT_TARGET=<roku-ip> vp exec rokit check
-ROKIT_TARGET=<roku-ip> vp exec rokit launch dev
-ROKIT_TARGET=<roku-ip> vp exec rokit press Info Back
+ROKIT_TARGET=<roku-ip> pnpm exec vp run live:smoke
+ROKIT_TARGET=<roku-ip> ROKIT_PASSWORD=<password> pnpm exec vp run live:probe
+ROKIT_TARGET=<roku-ip> node dist/rokit.mjs check
+ROKIT_TARGET=<roku-ip> node dist/rokit.mjs launch dev
+ROKIT_TARGET=<roku-ip> node dist/rokit.mjs press Info Back
 ```
 
 Which proof a change needs:
 
-- Docs only: `vp run check`, plus `vp run skills:lint` for `skills/`; no
-  device run.
-- Source, command, env, output or export changes: `vp run verify`.
+- Docs only: `pnpm exec vp run check`, plus `pnpm exec vp run skills:lint` for
+  `skills/`; no device run.
+- Source, command, env, output or export changes: `pnpm exec vp run verify`.
 - Device-facing behavior: `verify`, then `live:smoke` (read-only) or
   `live:probe` (installs the generic probe channel).
 

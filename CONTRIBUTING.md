@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-vp install
+pnpm install
 ```
 
 ## Run Locally
@@ -11,7 +11,7 @@ vp install
 Use the built CLI through the package scripts while developing:
 
 ```bash
-vp run smoke
+pnpm exec vp run smoke
 ```
 
 For live Roku checks, set local environment variables in your shell or
@@ -20,7 +20,7 @@ For live Roku checks, set local environment variables in your shell or
 ## Validation
 
 ```bash
-vp run verify
+pnpm exec vp run verify
 ```
 
 `verify` runs formatting/lint checks, skill lint, TypeScript, package bundling,
@@ -32,8 +32,8 @@ before release.
 Live checks require a developer-enabled Roku on the same network:
 
 ```bash
-ROKIT_TARGET=<roku-ip> vp run live:smoke
-ROKIT_TARGET=<roku-ip> vp exec rokit press Info Back
+ROKIT_TARGET=<roku-ip> pnpm exec vp run live:smoke
+ROKIT_TARGET=<roku-ip> node dist/rokit.mjs press Info Back
 ```
 
 Screenshots and installs require `ROKIT_PASSWORD`.
