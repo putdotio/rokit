@@ -11,7 +11,7 @@ Merges to `main` are considered publishable. The CI workflow runs:
 
 semantic-release analyzes Conventional Commits; a releasable commit publishes to npm, creates a GitHub Release, and commits the released `package.json` version back to `main` with `[skip ci]`.
 
-The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a tagged commit; the semantic-release action and plugin pins live there. [`scan.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/scan.yml) calls the shared frontend scan workflow from the same repository: Gitleaks, TruffleHog, Actionlint, and Zizmor on pull requests, weekly, and on manual dispatch.
+The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a reviewed commit SHA; the semantic-release action and plugin pins live there. [`scan.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/scan.yml) calls the shared frontend scan workflow from the same repository: Gitleaks, TruffleHog, Actionlint, and Zizmor on pull requests, weekly, and on manual dispatch.
 
 ## Release Credentials
 
@@ -19,14 +19,14 @@ The release job uses the `release` GitHub Environment with `deployment: false`.
 
 Required protected inputs:
 
-- `PUTIO_RELEASE_BOT_CLIENT_ID` as a repository or Environment variable
-- `PUTIO_RELEASE_BOT_PRIVATE_KEY` as an Environment secret
+- `PUTIO_CI_APP_CLIENT_ID` as a repository or Environment variable
+- `PUTIO_CI_APP_PRIVATE_KEY` as an Environment secret
 
 The npm package uses Trusted Publishing from GitHub Actions. On npm, configure owner `putdotio`, repository `rokit`, workflow `ci.yml`, and Environment named `release` for the package.
 
 During the `@semantic-release/npm` publish step, npm detects the GitHub OIDC identity, mints short-lived publish credentials, and publishes provenance for the release job.
 
-Release writes use the `putio-releaser` installation token. The default `GITHUB_TOKEN` remains read-only, and the release bot token is minted only after dependencies are installed.
+Release writes use the `putio-ci` installation token. The default `GITHUB_TOKEN` remains read-only, and the release bot token is minted only after dependencies are installed.
 
 ## Package Contents
 
