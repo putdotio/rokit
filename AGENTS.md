@@ -14,9 +14,9 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 ## Ways To Hurt Yourself
 
-- **Merging publishes.** A `feat`, `fix`, `perf` or breaking commit on `main`
-  publishes `@putdotio/rokit` to npm, and a published version number can never
-  be reused, so the commit type is the release decision.
+- **Merging publishes.** A `feat`, `fix`, `perf`, revert or breaking commit on
+  `main` publishes `@putdotio/rokit` to npm, and a published version number can
+  never be reused, so the commit type is the release decision.
 - **Taking over someone's Roku.** A Roku holds one sideloaded developer app,
   and the target may be a TV someone is watching. `install` and `live:probe`
   replace that app; `launch` and `press` change what is on screen. `check`,
