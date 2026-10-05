@@ -11,7 +11,7 @@ Merges to `main` are considered publishable. The CI workflow runs:
 
 semantic-release analyzes Conventional Commits; a releasable commit publishes to npm, creates a GitHub Release, and commits the released `package.json` version back to `main` with `[skip ci]`.
 
-The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a reviewed commit SHA; the semantic-release action and plugin pins live there. [`scan.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/scan.yml) calls the shared frontend scan workflow from the same repository: Gitleaks, TruffleHog, Actionlint, and Zizmor on pull requests, weekly, and on manual dispatch. [`links.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/links.yml) calls its offline Markdown link and anchor check on pull requests and `main`.
+The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a reviewed commit SHA; the semantic-release action and plugin pins live there. The `verify` job ends with the shared [links](https://github.com/putdotio/.github#actionslinks) and [scan](https://github.com/putdotio/.github#actionsscan) actions from the same repository: an offline Markdown link and anchor check on every run, and an Actionlint and Zizmor audit when a `main` push changes workflows, or of the full history on manual dispatch.
 
 ## Release Credentials
 
