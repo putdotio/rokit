@@ -17,10 +17,6 @@ allowBuilds:
   sharp: false
 minimumReleaseAgeExclude:
   # Exact versions or `pkg@v1 || v2` unions only; `pkg@^range` is rejected by design.
-  - "@effect/platform-node-shared@4.0.0"
-  - "@effect/platform-node@4.0.0"
-  - "@effect/vitest@4.0.0"
-  - "effect@4.0.0"
   - "@uinaf/skillcheck@0.4.0"
 catalog:
   "@vitest/coverage-v8": 5.0.1
