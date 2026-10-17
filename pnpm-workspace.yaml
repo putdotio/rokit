@@ -20,9 +20,9 @@ minimumReleaseAgeExclude:
   - "@uinaf/skillcheck@0.4.0"
 catalog:
   "@vitest/coverage-v8": 5.0.4
-  vite: npm:@voidzero-dev/vite-plus-core@1.1.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.2.0
   vitest: 5.0.4
-  vite-plus: 1.1.0
+  vite-plus: 1.2.0
 peerDependencyRules:
   allowAny:
     - vite
