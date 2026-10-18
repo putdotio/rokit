@@ -93,7 +93,7 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 - Command, env, or output changes: update `README.md` and CLI tests.
 - CI/release/publishing changes: update workflow docs or release config in the
   same change.
-- `CLAUDE.md` is a symlink to this file; keep it pointing here.
+- `CLAUDE.md` is a one-line `@AGENTS.md` import of this file; keep it that way.
 
 ## Worktrees
 
