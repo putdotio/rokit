@@ -48,7 +48,7 @@ restart intervals decode, and makes strict decoding reject scans that end before
 the declared MCUs are complete. Keep the decoder bundled: ordinary npm consumers do
 not inherit pnpm patches. Remove the patch only when a pinned upstream release
 passes the partial-interval and early-end-marker regressions and installed-package
-proof. Bundled third-party notices are in [Third-Party Notices](THIRD-PARTY-NOTICES.md).
+proof. Bundled third-party notices are in [Third-Party Notices](third-party-notices.md).
 
 ## Release Smoke
 

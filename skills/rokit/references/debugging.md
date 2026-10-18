@@ -1,7 +1,7 @@
 # rokit Debugging
 
 Use this reference for BrightScript console capture and debug-server commands.
-The repo-level details live in `docs/DEBUGGING.md`.
+The repo-level details live in `docs/debugging.md`.
 
 ## Console Capture
 

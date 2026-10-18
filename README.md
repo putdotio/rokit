@@ -191,8 +191,8 @@ artifacts.
 ## Docs
 
 - [Contributing](./CONTRIBUTING.md)
-- [Roku debugging](./docs/DEBUGGING.md)
-- [Distribution](./docs/DISTRIBUTION.md)
+- [Roku debugging](./docs/debugging.md)
+- [Distribution](./docs/distribution.md)
 - [rokit skill](./skills/rokit/SKILL.md)
 - [Security](https://github.com/putdotio/.github/blob/main/SECURITY.md)
 

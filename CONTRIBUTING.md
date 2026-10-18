@@ -50,4 +50,4 @@ IPs, passwords, signing keys, tokens, or account-specific app data.
 
 ## Distribution
 
-Release and publishing details live in [Distribution](./docs/DISTRIBUTION.md).
+Release and publishing details live in [Distribution](./docs/distribution.md).

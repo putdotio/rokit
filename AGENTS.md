@@ -6,9 +6,9 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 ## Start Here
 
 - [README.md](README.md): install, command surface, env contract, quick start.
-- [docs/DEBUGGING.md](docs/DEBUGGING.md): Roku debug surfaces, console
+- [docs/debugging.md](docs/debugging.md): Roku debug surfaces, console
   capture, crash-proof workflow.
-- [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md): release path, semantic-release
+- [docs/distribution.md](docs/distribution.md): release path, semantic-release
   wiring, credentials.
 - [skills/rokit/](skills/rokit/): consumer skill and its command references.
 
@@ -144,4 +144,4 @@ Which proof a change needs:
 
 Open a pull request; CI runs `vp run verify` on pull requests and on `main`.
 On `main`, semantic-release publishes releasable commits to npm and GitHub
-Releases. Credentials and release smoke: [Distribution](docs/DISTRIBUTION.md).
+Releases. Credentials and release smoke: [Distribution](docs/distribution.md).
