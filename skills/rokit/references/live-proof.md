@@ -12,9 +12,8 @@ rokit describe
 rokit describe proof
 ```
 
-Use `README.md` for the public command overview. Use the one-command form to
-keep context small when you already know the command family. When the docs and
-`rokit describe` disagree, trust `describe`.
+Use the one-command form when you already know the command family. When the
+docs and `rokit describe` disagree, trust `describe`.
 
 ## Quick Reads
 
@@ -27,8 +26,7 @@ rokit --fields status,data.state media-player
 rokit sgnodes
 ```
 
-`--fields` trims JSON for context control. Prefer it when only active app,
-media-player, or proof paths matter.
+`--fields` trims JSON to the values you need.
 
 ## Mutating And Artifact Commands
 
@@ -48,12 +46,9 @@ paths rather than assuming filenames:
 rokit --json proof artifacts/live/proof --screenshot
 ```
 
-Screenshot commands append timestamps to requested names. Use returned
-`data.path` values as the artifact source of truth.
-
 ## Readiness And Navigation
 
-Avoid arbitrary sleeps. Use bounded waits:
+Use bounded waits instead of sleeps:
 
 ```bash
 rokit wait-active dev --timeout-ms 10000
@@ -61,6 +56,3 @@ rokit wait-media-player play --timeout-ms 10000
 rokit wait-ready dev videoPlayerScreen visible --media-state play --timeout-ms 15000
 rokit press Down Select --until-node videoPlayerScreen --until-state visible --max 8
 ```
-
-Rokit can assert generic ECP, media-player, and SceneGraph state. Consumer repos
-own product routes, screen contracts, content expectations, and review text.

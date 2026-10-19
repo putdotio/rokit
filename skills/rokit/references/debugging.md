@@ -33,6 +33,3 @@ Prefer first-class rokit commands when they exist:
 - `rokit media-player` and `rokit wait-media-player` for playback state.
 - `rokit proof` for bundled active-app, device-info, media-player, screenshot,
   and summary artifacts.
-
-Do not use generic debug commands to encode product-specific UI contracts.
-Product selectors and scenario assertions belong in the consumer app repo.

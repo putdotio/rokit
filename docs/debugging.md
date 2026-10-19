@@ -51,14 +51,13 @@ BrightScript console on `8085`, not the `8080` socket that receives the command.
 `rokit debug-command` rejects that form; capture the console with
 `rokit console` while sampling runs instead.
 
-Use Node's `node:net` module directly instead of shelling out to a local telnet
-binary. This keeps the CLI cross-platform, typed, and easier to test.
+Both commands use `node:net` sockets rather than a local telnet binary, which
+keeps the CLI cross-platform and testable with fake TCP servers.
 
 ## Limits
 
 - Live verification requires a developer-enabled Roku with reachable debug
-  ports. Unit tests can cover parsing, command validation, output paths, and
-  socket behavior with fake TCP servers.
+  ports.
 - The console should be connected before the repro. It cannot recover log lines
   emitted before the socket was open.
 - Another tool, such as an IDE or Roku plugin, may already own the console

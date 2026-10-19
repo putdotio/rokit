@@ -4,14 +4,14 @@
 
 ## Continuous Release
 
-Merges to `main` are considered publishable. The CI workflow runs:
+Every push to `main` can publish. The CI workflow runs:
 
 1. `verify` on pull requests, `main` pushes, and manual dispatch.
 2. semantic-release on `main` after `verify` passes.
 
 semantic-release analyzes Conventional Commits; a releasable commit publishes to npm, creates a GitHub Release, and commits the released `package.json` version back to `main` with `[skip ci]`.
 
-The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github) from `putdotio/.github`, pinned to a reviewed commit SHA; the semantic-release action and plugin pins live there. The `verify` job ends with the shared [links](https://github.com/putdotio/.github#actionslinks) and [scan](https://github.com/putdotio/.github#actionsscan) actions from the same repository: an offline Markdown link and anchor check on every run, and an Actionlint and Zizmor audit when a `main` push changes workflows and on manual dispatch. GitHub secret scanning and push protection cover secrets in this public repository.
+The release job calls the [shared frontend release workflow](https://github.com/putdotio/.github), pinned to a reviewed commit SHA; the semantic-release pins live there. The `verify` job ends with the shared [links](https://github.com/putdotio/.github#actionslinks) and [scan](https://github.com/putdotio/.github#actionsscan) actions, which check Markdown links and audit secrets and workflows.
 
 ## Release Credentials
 
@@ -26,7 +26,7 @@ The npm package uses Trusted Publishing from GitHub Actions. On npm, configure o
 
 During the `@semantic-release/npm` publish step, npm detects the GitHub OIDC identity, mints short-lived publish credentials, and publishes provenance for the release job.
 
-Release writes use the `putio-ci` installation token. The default `GITHUB_TOKEN` remains read-only, and the release bot token is minted only after dependencies are installed.
+Release writes use the `putio-ci` installation token; the default `GITHUB_TOKEN` stays read-only.
 
 ## Package Contents
 
@@ -41,12 +41,11 @@ the same exact version. Keep those pins aligned: platform-node accepts any
 compatible platform-node-shared, and a newer shared runtime can be incompatible
 with the pinned Effect.
 
-The build bundles pinned `jpeg-js` with the patch maintained under `patches/`
-so ordinary npm consumers receive the same decoder. The patch
-caps single-component decoding at the remaining MCU count so valid final partial
-restart intervals decode, and makes strict decoding reject scans that end before
-the declared MCUs are complete. Keep the decoder bundled: ordinary npm consumers do
-not inherit pnpm patches. Remove the patch only when a pinned upstream release
+The build bundles pinned `jpeg-js` with the patch under `patches/`, because npm
+consumers do not inherit pnpm patches. The patch caps single-component decoding
+at the remaining MCU count so valid final partial restart intervals decode, and
+makes strict decoding reject scans that end before the declared MCUs are
+complete. Remove the patch only when a pinned upstream release
 passes the partial-interval and early-end-marker regressions and installed-package
 proof. Bundled third-party notices are in [Third-Party Notices](third-party-notices.md).
 
@@ -59,8 +58,8 @@ gh release list --repo putdotio/rokit --limit 5
 npm view @putdotio/rokit version
 ```
 
-Releases do not need a Roku. Real-device checks stay local because they require a developer-enabled device:
+Releases do not need a Roku. Real-device checks run locally against a developer-enabled device:
 
 ```bash
-ROKIT_TARGET=<roku-ip> pnpm live:smoke
+ROKIT_TARGET=<roku-ip> pnpm exec vp run live:smoke
 ```

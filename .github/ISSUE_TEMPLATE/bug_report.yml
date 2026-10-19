@@ -27,14 +27,14 @@ body:
     id: rokit-version
     attributes:
       label: rokit version
-      placeholder: "2.4.3"
+      placeholder: Output of rokit --version
     validations:
       required: true
   - type: input
     id: node-version
     attributes:
       label: Node version
-      placeholder: "24.21.0"
+      placeholder: Output of node --version
     validations:
       required: true
   - type: input
@@ -53,5 +53,5 @@ body:
       label: Evidence
       description: >-
         Add logs, command output, screenshots, or generated artifacts when
-        useful. Do not include device passwords, account tokens, signing keys,
-        private content IDs, or local device identifiers.
+        useful. Redact device passwords, account tokens, signing keys, private
+        content IDs, and local device identifiers.
