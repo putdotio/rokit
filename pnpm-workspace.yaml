@@ -19,10 +19,10 @@ minimumReleaseAgeExclude:
   # Exact versions or `pkg@v1 || v2` unions only; `pkg@^range` is rejected by design.
   - "@uinaf/skillcheck@0.4.0"
 catalog:
-  "@vitest/coverage-v8": 5.0.4
-  vite: npm:@voidzero-dev/vite-plus-core@1.2.0
-  vitest: 5.0.4
-  vite-plus: 1.2.0
+  "@vitest/coverage-v8": 5.0.5
+  vite: npm:@voidzero-dev/vite-plus-core@1.3.0
+  vitest: 5.0.5
+  vite-plus: 1.3.0
 peerDependencyRules:
   allowAny:
     - vite
