@@ -40,5 +40,3 @@ file. The CLI reads `.rokit/.env`; `live:probe` also reads `.env` and
 - Keep changes focused.
 - Add or update tests when command behavior, parsing, output, or public exports change.
 - Keep app-specific journeys out of `rokit`; they belong in the consuming app repo.
-
-Release and publishing: [Distribution](./docs/distribution.md).

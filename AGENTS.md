@@ -65,8 +65,6 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 
 - Command, env, or output: update [README.md](README.md), CLI tests, and
   [skills/rokit/](skills/rokit/SKILL.md) agent guardrails.
-- CI, release, or publishing: update [docs/distribution.md](docs/distribution.md)
-  in the same change.
 
 ## Checks
 
@@ -102,5 +100,16 @@ Which proof a change needs:
 
 ## Delivery
 
-Open a pull request. Release credentials and smoke checks:
-[docs/distribution.md](docs/distribution.md).
+Open a pull request. Release rules no file enforces:
+
+- npm Trusted Publishing for `@putdotio/rokit` must trust owner `putdotio`, repository `rokit`,
+  workflow [`ci.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/ci.yml), and Environment `release`.
+  Renaming any of them breaks publishing until the npm setting matches.
+- Keep `effect`, `@effect/platform-node`, and `@effect/platform-node-shared` in
+  [`package.json`](package.json) on one exact version. A newer shared runtime
+  can break the pinned Effect.
+- The build bundles `jpeg-js` with the patch in [`patches/`](https://github.com/putdotio/rokit/blob/main/patches),
+  because npm consumers do not inherit pnpm patches. Drop it only when a pinned
+  upstream release passes the partial-interval and early-end-marker
+  regressions and installed-package proof. Keep
+  [docs/third-party-notices.md](docs/third-party-notices.md) in step.
