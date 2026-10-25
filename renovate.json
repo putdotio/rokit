@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>putdotio/.github:renovate-config"]
+  "extends": ["github>putdotio/.github:renovate-config"],
+  "packageRules": [
+    {
+      "description": "Effect packages ship together and peer on the same effect version, so they move as one PR. Each member keeps its own release-age clock, and strict filtering would merge the members that aged first. Filtering none takes the latest of every member and holds automerge until all of them age",
+      "matchPackageNames": ["effect", "@effect/*"],
+      "matchUpdateTypes": ["patch", "minor", "major"],
+      "groupName": "effect",
+      "internalChecksFilter": "none"
+    }
+  ]
 }

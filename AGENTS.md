@@ -105,9 +105,9 @@ Open a pull request. Release rules no file enforces:
 - npm Trusted Publishing for `@putdotio/rokit` must trust owner `putdotio`, repository `rokit`,
   workflow [`ci.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/ci.yml), and Environment `release`.
   Renaming any of them breaks publishing until the npm setting matches.
-- Keep `effect`, `@effect/platform-node`, and `@effect/platform-node-shared` in
-  [`package.json`](package.json) on one exact version. A newer shared runtime
-  can break the pinned Effect.
+- Keep `effect` and every `@effect/*` package in [`package.json`](package.json)
+  on one exact version. A newer shared runtime can break the pinned Effect. The
+  `effect` group in [`renovate.json`](renovate.json) moves them together.
 - The build bundles `jpeg-js` with the patch in [`patches/`](https://github.com/putdotio/rokit/blob/main/patches),
   because npm consumers do not inherit pnpm patches. Drop it only when a pinned
   upstream release passes the partial-interval and early-end-marker
