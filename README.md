@@ -17,7 +17,7 @@
 
 ## Install
 
-Requires the Node version in `engines.node` of [`package.json`](./package.json); install it in a consumer repo with:
+Needs the Node version in `engines.node` of [`package.json`](./package.json). In the consumer repo:
 
 ```bash
 pnpm add -D @putdotio/rokit
@@ -27,14 +27,16 @@ Only the latest published version receives routine fixes.
 
 ## Quick Start
 
-Set the target Roku in the app repo that consumes `rokit`:
+Set the target Roku in the consumer app repo, in your shell or a gitignored
+`.rokit/.env`:
 
 ```bash
 export ROKIT_TARGET=<roku-ip>
 export ROKIT_PASSWORD=<developer-mode-password>
 ```
 
-Then run the generic device checks and actions you need:
+`install` and `screenshot` need `ROKIT_PASSWORD`. `ROKU_DEV_TARGET` and
+`ROKU_DEV_PASSWORD` work as fallbacks when the `ROKIT_*` names are unset.
 
 ```bash
 pnpm exec rokit check
@@ -46,17 +48,12 @@ pnpm exec rokit console artifacts/live/console.log --duration-ms 30000
 pnpm exec rokit proof artifacts/live/proof --screenshot
 ```
 
-`ROKIT_PASSWORD` is required for developer-installer operations such as
-`install` and `screenshot`. `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are
-accepted as optional aliases when the `ROKIT_*` names are unset.
+`rokit describe` prints every command, parameter, and JSON payload field;
+`rokit describe <command>` prints one.
 
 ## Automation
 
-Prefer JSON when `rokit` feeds another tool:
-
 ```bash
-pnpm exec rokit describe
-pnpm exec rokit describe proof
 pnpm exec rokit --json active-app
 pnpm exec rokit --dry-run launch dev
 pnpm exec rokit --fields status,data.state media-player
@@ -65,113 +62,36 @@ pnpm exec rokit --input-json @artifacts/rokit-payload.json
 printf '{"command":"press","keys":["Back"]}' | pnpm exec rokit --input-json -
 ```
 
-`describe` prints the machine-readable command surface, including command
-names, parameters, JSON payload fields, global options, and automation feature
-flags. Pass a command name, such as `rokit describe proof`, to return a
-one-command schema when you only need a small payload. When stdout is not a TTY,
-command output defaults to JSON unless `--output text` is explicit.
-Use inline `--input-json` for small payloads, `--input-json @file` for larger
-payloads, and `--input-json -` to read the payload from stdin.
-
-## Command Surface
-
-Common commands:
-
-| Command                                            | Purpose                                            |
-| -------------------------------------------------- | -------------------------------------------------- |
-| `describe [command]`                               | Print command schemas for all commands or one      |
-| `check`                                            | Confirm ECP and developer-installer reachability   |
-| `discover`                                         | Find Roku ECP devices with SSDP                    |
-| `device-info`                                      | Read Roku device metadata                          |
-| `active-app`                                       | Read the foreground app                            |
-| `console <output-path>`                            | Capture BrightScript console output from `8085`    |
-| `debug-command <command> [args...]`                | Run an allowlisted Roku debug command              |
-| `media-player`                                     | Read parsed `/query/media-player` state            |
-| `snapshot`                                         | Read a compact state snapshot                      |
-| `proof <output-dir>`                               | Write reviewable local proof artifacts             |
-| `package <zip-path>`                               | Create a sideload ZIP from the current app root    |
-| `install <zip-path>`                               | Publish an existing ZIP to the Roku developer slot |
-| `launch <app-id>`                                  | Launch an app by id with optional params           |
-| `press <key...>`                                   | Send Roku remote keys                              |
-| `query <ecp-path>`                                 | Print a raw ECP response                           |
-| `sgnodes`                                          | Print the raw SceneGraph tree                      |
-| `assert-node` / `wait-node`                        | Check generic SceneGraph node state                |
-| `wait-active` / `wait-media-player` / `wait-ready` | Poll generic runtime readiness                     |
-| `screenshot <output-path>`                         | Save a timestamped developer screenshot            |
-
-Node waits use positional node conditions, for example
-`wait-ready dev videoPlayerScreen visible` and `wait-node title text "Ready"`.
-Wait timeouts cover the entire polling operation, including in-flight requests
-and sleeps. Expiry interrupts that work and reports the last completed observation;
-late success is not accepted. A zero or negative library wait budget times out
-without making an initial request.
-
-Remote navigation keeps the keys as positional arguments and uses options for
-the bounded loop: `press Down --until-node videoPlayerScreen --until-state visible --max 8`.
-Use `--input-json` for literal values that look like flags.
-
-Mutating commands support `--dry-run` where the platform can validate without
-changing device or filesystem state. ECP paths reject query strings, fragments,
-traversal, backslashes, control characters, and percent-encoded path segments.
-Generated output paths must stay within the current working directory.
-Screenshots append a timestamp to the requested filename and report the actual
-path written, so repeated captures do not reuse cache-prone filenames.
-Captures are decoded and checked before saving, then written as the original
-bytes. Limits: 64 MiB compressed, 8,847,360 pixels (4096×2160 DCI 4K fits),
-8192 px per PNG side, and 256 MiB of JPEG decoder memory. Non-JPEG/PNG
-responses, framing or decoding errors, and images over a limit go through the
-normal capture retry path and fail if they persist.
+- Output is JSON when stdout is not a TTY, unless you pass `--output text`.
+- `--input-json` also carries literal values that look like flags.
+- Waits poll inside one timeout budget. On expiry they report the last
+  completed observation and reject late success.
+- Bounded navigation: `press Down --until-node videoPlayerScreen --until-state visible --max 8`.
+- `--dry-run` validates a mutating command without touching the device or files.
+- ECP paths reject query strings, fragments, traversal, backslashes, control
+  characters, and percent-encoded segments.
+- Output paths must stay inside the current directory.
+- Screenshots append a timestamp to the filename; read the written path from
+  the result. Captures that fail decoding or exceed the limits in
+  [`src/screenshot-image.ts`](https://github.com/putdotio/rokit/blob/main/src/screenshot-image.ts) retry, then fail.
 
 ## Library Use
 
-App-specific scenario scripts can import the generic helpers:
+App scenario scripts import the generic helpers that
+[`src/index.ts`](https://github.com/putdotio/rokit/blob/main/src/index.ts) exports:
 
 ```ts
-import {
-  assertMediaPlayerContainer,
-  assertSceneGraphNode,
-  captureScreenshot,
-  createPackageZip,
-  deleteInstalledChannel,
-  pressKey,
-  querySceneGraph,
-  waitForSceneGraphAssertion,
-  type RokuContext,
-} from "@putdotio/rokit";
+import { assertSceneGraphNode, pressKey, type RokuContext } from "@putdotio/rokit";
 
 const target = process.env.ROKIT_TARGET;
 if (!target) {
   throw new Error("ROKIT_TARGET is not set");
 }
 
-const context: RokuContext = {
-  target,
-  timeoutMs: 10_000,
-  username: "rokudev",
-};
+const context: RokuContext = { target, timeoutMs: 10_000, username: "rokudev" };
 
 await pressKey(context, "Info");
-await querySceneGraph(context, { attempts: 3, requireAppNode: true, requireComplete: true });
 await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
-await assertMediaPlayerContainer(context, "mp4");
-await captureScreenshot(
-  { ...context, password: process.env.ROKIT_PASSWORD ?? "" },
-  "artifacts/player.jpg",
-  { attempts: 3 },
-);
-await waitForSceneGraphAssertion(context, "player ready", (xml) => {
-  if (!xml.includes("videoPlayerScreen")) {
-    throw new Error("expected player screen");
-  }
-});
-
-await createPackageZip({
-  rootDir: process.cwd(),
-  outFile: "artifacts/channel.zip",
-  exclude: (path) => path.startsWith("components/lab/"),
-  overrides: [{ path: "manifest", contents: "title=Example Channel\n" }],
-});
-await deleteInstalledChannel({ ...context, password: process.env.ROKIT_PASSWORD ?? "" });
 ```
 
 ## Boundaries
@@ -184,21 +104,17 @@ await deleteInstalledChannel({ ...context, password: process.env.ROKIT_PASSWORD 
 - SceneGraph state queries and named-node assertions
 - timestamped screenshots, snapshots, and proof artifacts
 
-Consumer app repos own product behavior: opening specific routes, asserting
-playback for real content, checking app-specific UI nodes, and generating review
-artifacts.
+Consumer app repos own product behavior: specific routes, playback of real
+content, app-specific UI nodes, and review artifacts.
 
 ## Docs
 
 - [Contributing](./CONTRIBUTING.md)
-- [Roku debugging](./docs/debugging.md)
+- [Agent guide](./AGENTS.md)
 - [Distribution](./docs/distribution.md)
 - [rokit skill](./skills/rokit/SKILL.md)
+- [Roku debugging](./skills/rokit/references/debugging.md)
 - [Security](https://github.com/putdotio/.github/blob/main/SECURITY.md)
-
-## Repo Internals
-
-- [Agent guide](./AGENTS.md)
 
 ## License
 
