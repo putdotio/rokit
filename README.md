@@ -68,8 +68,6 @@ printf '{"command":"press","keys":["Back"]}' | pnpm exec rokit --input-json -
   completed observation and reject late success.
 - Bounded navigation: `press Down --until-node videoPlayerScreen --until-state visible --max 8`.
 - `--dry-run` validates a mutating command without touching the device or files.
-- ECP paths reject query strings, fragments, traversal, backslashes, control
-  characters, and percent-encoded segments.
 - Output paths must stay inside the current directory.
 - Screenshots append a timestamp to the filename; read the written path from
   the result. Captures that fail decoding or exceed the limits in
@@ -93,19 +91,6 @@ const context: RokuContext = { target, timeoutMs: 10_000, username: "rokudev" };
 await pressKey(context, "Info");
 await assertSceneGraphNode(context, "videoPlayerScreen", { state: "visible" });
 ```
-
-## Boundaries
-
-`rokit` owns generic Roku mechanics:
-
-- package, install, launch, deeplink params, and remote keypresses
-- raw ECP queries and parsed media-player state
-- BrightScript console capture and allowlisted debug-server commands
-- SceneGraph state queries and named-node assertions
-- timestamped screenshots, snapshots, and proof artifacts
-
-Consumer app repos own product behavior: specific routes, playback of real
-content, app-specific UI nodes, and review artifacts.
 
 ## Docs
 

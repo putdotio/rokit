@@ -19,8 +19,6 @@ pnpm exec vp run smoke
 pnpm exec vp run verify
 ```
 
-CI runs the same command on pull requests and on `main`.
-
 ## Live Checks
 
 Live checks need a developer-enabled Roku on the same network. Screenshots and
@@ -37,6 +35,4 @@ file. The CLI reads `.rokit/.env`; `live:probe` also reads `.env` and
 
 ## Pull Requests
 
-- Keep changes focused.
-- Add or update tests when command behavior, parsing, output, or public exports change.
-- Keep app-specific journeys out of `rokit`; they belong in the consuming app repo.
+Add or update tests when command behavior, parsing, output, or public exports change.
