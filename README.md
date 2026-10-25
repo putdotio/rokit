@@ -111,7 +111,6 @@ content, app-specific UI nodes, and review artifacts.
 
 - [Contributing](./CONTRIBUTING.md)
 - [Agent guide](./AGENTS.md)
-- [Distribution](./docs/distribution.md)
 - [rokit skill](./skills/rokit/SKILL.md)
 - [Roku debugging](./skills/rokit/references/debugging.md)
 - [Security](https://github.com/putdotio/.github/blob/main/SECURITY.md)
