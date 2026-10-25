@@ -39,10 +39,9 @@ for humans and agents.
   error in a deterministic object.
 - `process.cwd()` is the consumer app root; `.rokit/` there holds its env file,
   artifacts, and transient device state.
-- Native code owns the developer installer, screenshots, device-info, and
-  package ZIPs. `roku-deploy` stays only for `rokudeploy.json` file-rule
+- Native code owns the developer installer, screenshots, and package ZIPs.
+  `roku-deploy` stays for `device-info` and for `rokudeploy.json` file-rule
   compatibility in `package` until native glob parity replaces it.
-- ECP drives launch, keypresses, active-app, and raw runtime state.
 - Media-player and SceneGraph helpers stay generic: state, text, attributes,
   focus waits, raw trees. Content, playback, and screen contracts stay in app
   repos.
@@ -77,9 +76,6 @@ pnpm install
 pnpm exec vp run hooks:install
 pnpm exec vp run verify
 ```
-
-Fast loops: `check`, `typecheck`, `smoke`, and `test`, each as
-`pnpm exec vp run <name>`.
 
 Live checks need a developer-enabled Roku. The CLI reads `.rokit/.env`;
 `live:probe` also reads `.env` and `.env.local`. See `.env.example`.

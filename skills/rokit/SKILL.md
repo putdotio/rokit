@@ -12,13 +12,11 @@ description: Drive Roku devices with rokit when testing, sideloading, or debuggi
    disagree, trust `describe`.
 2. Dry-run mutating commands such as `package`, `install`, `launch`, `press`,
    `screenshot`, or `proof` before touching a device.
-3. Use structured output: the non-TTY JSON default or `--json`. Trim it with
-   `--fields`.
+3. Trim JSON output with `--fields`.
 4. Read artifact paths from the returned JSON. Screenshots append a timestamp
    to the requested filename.
 5. For state, use `rokit snapshot`; for review artifacts, `rokit proof
-   <output-dir>`. In the rokit repo, `pnpm exec vp run live:probe` runs the full
-   generic package, install, launch, input, and proof probe.
+   <output-dir>`.
 6. After launch, use `wait-ready` when the app can race ECP or SceneGraph
    readiness. Navigate with `press --until-node`, never arbitrary sleeps.
 7. For crashes, start `rokit console` before you reproduce. See
@@ -42,10 +40,5 @@ printf '{"command":"press","keys":["Back"]}' | rokit --input-json -
 
 ## Boundaries
 
-- Device IPs, developer passwords, screenshots, packages, and proof bundles stay
-  local or ignored.
-- `rokit` asserts generic Roku and SceneGraph state. Consumer repos own product
-  routes, fixtures, account state, screen names, playback expectations, and
-  review narratives.
-- ECP query paths are plain paths: no query strings, fragments, traversal,
-  backslashes, or encoded segments.
+Device IPs, developer passwords, screenshots, packages, and proof bundles stay
+local or ignored.
