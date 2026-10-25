@@ -1,16 +1,7 @@
 # Agent Guide
 
-`rokit` is a small Node CLI that wraps generic Roku device harness primitives.
-Keep it platform-focused, typed, and useful for both humans and agents.
-
-## Start Here
-
-- [README.md](README.md): install, command surface, env contract, quick start.
-- [docs/debugging.md](docs/debugging.md): Roku debug surfaces, console
-  capture, crash-proof workflow.
-- [docs/distribution.md](docs/distribution.md): release path, semantic-release
-  wiring, credentials.
-- [skills/rokit/](skills/rokit/): consumer skill and its command references.
+`rokit` is a Node CLI and library of generic Roku device harness primitives,
+for humans and agents.
 
 ## Ways To Hurt Yourself
 
@@ -25,50 +16,44 @@ Keep it platform-focused, typed, and useful for both humans and agents.
 
 ## Generic Tool Boundary
 
-- Keep `rokit` free of put.io product behavior. Do not add put.io app IDs,
-  deep links, content IDs, account data, credentials, journeys, UI node names,
-  or product assertions.
-- `@putdotio/rokit`, `putdotio/rokit`, release-bot wiring, copyright, and
-  security contacts are ownership/publishing metadata only; do not treat them
-  as permission to add product-specific fixtures.
-- Use neutral examples such as `dev`, `Example Channel`, `videoPlayerScreen`,
-  and synthetic SceneGraph/XML data when docs or tests need sample app data.
-- Consumer app repos own product scenario scripts, app-specific selectors,
-  playback/content assertions, and review artifacts.
+- Keep put.io product behavior out: no put.io app IDs, deep links, content IDs,
+  account data, credentials, journeys, UI node names, or product assertions.
+  Consumer app repos own those.
+- The `@putdotio` scope, release wiring, copyright, and security contacts are
+  ownership metadata, not permission to add product fixtures.
+- Sample data uses neutral names such as `dev`, `Example Channel`,
+  `videoPlayerScreen`, and synthetic SceneGraph XML.
+- `examples/live-probe-channel` stays generic. It only proves package, install,
+  launch, input, SceneGraph, screenshot, and proof mechanics.
 
 ## Patterns
 
-- Use Effect at the runtime boundary and for reusable effectful operations. Keep
-  errors schema-backed and render them without stack traces in CLI output.
-- Use `effect/cli` `Argument` and `Flag` primitives for command
-  grammar before adding custom argv parsing.
-- Keep CLI wiring thin: parse/dispatch commands, then call named Roku helpers.
-- Keep `src/roku.ts` as a public compatibility barrel. Put implementation in
-  focused modules such as `app-control`, `device`, `media-player-query`,
-  `scenegraph-query`, and `roku-context`.
-- Keep human output stable; `--json` / `--output json` should wrap every
-  command result and error in a deterministic object for agents.
-- Keep `src/index.ts` as the public library surface for app-specific scenario
-  scripts. Export generic Roku/SceneGraph primitives only.
-- Treat `process.cwd()` as the consumer app root.
-- Keep `.rokit/` consumer-local; it can hold env, generated artifacts, and
-  transient device state.
-- Keep `skills/rokit/SKILL.md` aligned with agent-facing command and safety
-  guardrails.
-- Keep `examples/live-probe-channel` generic. It exists only to prove package,
-  install, launch, input, SceneGraph, screenshot, and proof mechanics.
-- Use native developer-installer, screenshot, device-info, and package-ZIP
-  helpers where rokit owns the platform mechanics. Keep `roku-deploy` only for
-  package-command compatibility with existing `rokudeploy.json` file rules until
-  native glob parity replaces that adapter.
-- Use Roku ECP for launch, keypresses, active-app queries, and raw runtime
-  state.
-- Media-player helpers can parse and wait on Roku `/query/media-player` state,
-  but app repos own expectations about specific content, playback URLs, and
-  containers.
-- Keep SceneGraph helpers generic: node state, text, attributes, focus/state
-  waits, and raw tree output are okay; product-specific screen contracts stay in
-  app repos.
+- Effect at the runtime boundary and for reusable effectful operations. Errors
+  are schema-backed and render without stack traces.
+- `effect/cli` `Argument` and `Flag` for command grammar before custom argv
+  parsing. CLI wiring only parses and dispatches to named Roku helpers.
+- `src/roku.ts` is a compatibility barrel; implementation goes in focused
+  modules. `src/index.ts` is the public library surface and exports generic
+  primitives only.
+- Human output stays stable. `--json` / `--output json` wraps every result and
+  error in a deterministic object.
+- `process.cwd()` is the consumer app root; `.rokit/` there holds its env file,
+  artifacts, and transient device state.
+- Native code owns the developer installer, screenshots, device-info, and
+  package ZIPs. `roku-deploy` stays only for `rokudeploy.json` file-rule
+  compatibility in `package` until native glob parity replaces it.
+- ECP drives launch, keypresses, active-app, and raw runtime state.
+- Media-player and SceneGraph helpers stay generic: state, text, attributes,
+  focus waits, raw trees. Content, playback, and screen contracts stay in app
+  repos.
+- Debug commands use `node:net` sockets, not a telnet binary, so they run
+  cross-platform and test against fake TCP servers. The binary BrightScript
+  debug protocol is out of scope; crash capture needs append-only text.
+- No sleeps in generic commands; app repos add wait loops around primitives.
+- CLI tests call in-process entry points (`mainEffect` from `src/cli.ts` or the
+  command effects) so V8 coverage counts them. Spawn `dist/rokit.mjs` only to
+  test the process boundary; `vite.config.ts` does not count
+  those runs.
 
 ## Effect
 
@@ -76,35 +61,18 @@ This repository uses the Effect TypeScript library. The installed version's own
 guide is `node_modules/effect/AGENTS.md`; consult it for the APIs the change
 touches, and search `node_modules/effect/src` for anything it does not cover.
 
-## Sharp Edges
-
-- Missing config/env and child-command failures should not print stack traces.
-- CLI tests default to in-process entry points (`mainEffect` from `src/cli.ts`
-  or the command effects) so V8 coverage attributes them. Spawn
-  `dist/rokit.mjs` only when the process boundary itself is under test; those
-  runs are not attributed to coverage (see `vite.config.ts`).
-- `ROKU_DEV_TARGET` and `ROKU_DEV_PASSWORD` are optional fallback aliases, not
-  the primary public contract; the env contract is in [README.md](README.md#quick-start).
-- Avoid sleeps in generic commands. App repos can add meaningful wait/assert
-  loops around `rokit` primitives.
-
 ## When Contracts Change
 
-- Command, env, or output changes: update `README.md` and CLI tests.
-- CI/release/publishing changes: update workflow docs or release config in the
-  same change.
-- `CLAUDE.md` is a one-line `@AGENTS.md` import of this file; keep it that way.
-
-## Worktrees
-
-`.worktreeinclude` carries local env files into managed worktrees. Run the
-[Checks](#checks) setup commands. If device config is missing, copy
-`.env.example` to `.env` or `.rokit/.env`.
+- Command, env, or output: update [README.md](README.md), CLI tests, and
+  [skills/rokit/](skills/rokit/SKILL.md) agent guardrails.
+- CI, release, or publishing: update [docs/distribution.md](docs/distribution.md)
+  in the same change.
 
 ## Checks
 
-Vite+ is the pinned `vite-plus` devDependency, so run it as `pnpm exec vp`; no
-global install is needed.
+Vite+ is the pinned `vite-plus` devDependency, so run it as `pnpm exec vp`.
+In a new worktree, run the setup commands; `.worktreeinclude` copies local env
+files in.
 
 ```bash
 pnpm install
@@ -112,23 +80,15 @@ pnpm exec vp run hooks:install
 pnpm exec vp run verify
 ```
 
-Fast loops:
+Fast loops: `check`, `typecheck`, `smoke`, and `test`, each as
+`pnpm exec vp run <name>`.
 
-```bash
-pnpm exec vp run check
-pnpm exec vp run typecheck
-pnpm exec vp run smoke
-pnpm exec vp run test
-```
-
-Live Roku checks when a developer-enabled device exists; `node dist/rokit.mjs`
-is the CLI that `live:smoke` builds:
+Live checks need a developer-enabled Roku. The CLI reads `.rokit/.env`;
+`live:probe` also reads `.env` and `.env.local`. See `.env.example`.
 
 ```bash
 ROKIT_TARGET=<roku-ip> pnpm exec vp run live:smoke
 ROKIT_TARGET=<roku-ip> ROKIT_PASSWORD=<password> pnpm exec vp run live:probe
-ROKIT_TARGET=<roku-ip> node dist/rokit.mjs check
-ROKIT_TARGET=<roku-ip> node dist/rokit.mjs launch dev
 ROKIT_TARGET=<roku-ip> node dist/rokit.mjs press Info Back
 ```
 
@@ -142,6 +102,5 @@ Which proof a change needs:
 
 ## Delivery
 
-Open a pull request; CI runs `vp run verify` on pull requests and on `main`.
-On `main`, semantic-release publishes releasable commits to npm and GitHub
-Releases. Credentials and release smoke: [Distribution](docs/distribution.md).
+Open a pull request. Release credentials and smoke checks:
+[docs/distribution.md](docs/distribution.md).
