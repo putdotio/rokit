@@ -49,10 +49,6 @@ for humans and agents.
   cross-platform and test against fake TCP servers. The binary BrightScript
   debug protocol is out of scope; crash capture needs append-only text.
 - No sleeps in generic commands; app repos add wait loops around primitives.
-- CLI tests call in-process entry points (`mainEffect` from `src/cli.ts` or the
-  command effects) so V8 coverage counts them. Spawn `dist/rokit.mjs` only to
-  test the process boundary; `vite.config.ts` does not count
-  those runs.
 
 ## Effect
 
@@ -68,23 +64,7 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 ## Checks
 
 Vite+ is the pinned `vite-plus` devDependency, so run it as `pnpm exec vp`.
-In a new worktree, run the setup commands; `.worktreeinclude` copies local env
-files in.
-
-```bash
-pnpm install
-pnpm exec vp run hooks:install
-pnpm exec vp run verify
-```
-
-Live checks need a developer-enabled Roku. The CLI reads `.rokit/.env`;
-`live:probe` also reads `.env` and `.env.local`. See `.env.example`.
-
-```bash
-ROKIT_TARGET=<roku-ip> pnpm exec vp run live:smoke
-ROKIT_TARGET=<roku-ip> ROKIT_PASSWORD=<password> pnpm exec vp run live:probe
-ROKIT_TARGET=<roku-ip> node dist/rokit.mjs press Info Back
-```
+Setup, validation, and live checks: [CONTRIBUTING](CONTRIBUTING.md).
 
 Which proof a change needs:
 
