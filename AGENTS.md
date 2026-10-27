@@ -73,6 +73,8 @@ Which proof a change needs:
 - Source, command, env, output or export changes: `pnpm exec vp run verify`.
 - Device-facing behavior: `verify`, then `live:smoke` (read-only) or
   `live:probe` (installs the generic probe channel).
+  Both need `ROKIT_TARGET`; `live:probe` also needs `ROKIT_PASSWORD`. Names
+  in `.env.example`; values may come from `.env` or `.env.local`.
 
 ## Delivery
 
