@@ -49,10 +49,6 @@ for humans and agents.
   cross-platform and test against fake TCP servers. The binary BrightScript
   debug protocol is out of scope; crash capture needs append-only text.
 - No sleeps in generic commands; app repos add wait loops around primitives.
-- CLI tests call in-process entry points (`mainEffect` from `src/cli.ts` or the
-  command effects) so V8 coverage counts them. Spawn `dist/rokit.mjs` only to
-  test the process boundary; `vite.config.ts` does not count
-  those runs.
 
 ## Effect
 
@@ -68,23 +64,7 @@ touches, and search `node_modules/effect/src` for anything it does not cover.
 ## Checks
 
 Vite+ is the pinned `vite-plus` devDependency, so run it as `pnpm exec vp`.
-In a new worktree, run the setup commands; `.worktreeinclude` copies local env
-files in.
-
-```bash
-pnpm install
-pnpm exec vp run hooks:install
-pnpm exec vp run verify
-```
-
-Live checks need a developer-enabled Roku. The CLI reads `.rokit/.env`;
-`live:probe` also reads `.env` and `.env.local`. See `.env.example`.
-
-```bash
-ROKIT_TARGET=<roku-ip> pnpm exec vp run live:smoke
-ROKIT_TARGET=<roku-ip> ROKIT_PASSWORD=<password> pnpm exec vp run live:probe
-ROKIT_TARGET=<roku-ip> node dist/rokit.mjs press Info Back
-```
+Setup, validation, and live checks: [CONTRIBUTING](CONTRIBUTING.md).
 
 Which proof a change needs:
 
@@ -93,6 +73,8 @@ Which proof a change needs:
 - Source, command, env, output or export changes: `pnpm exec vp run verify`.
 - Device-facing behavior: `verify`, then `live:smoke` (read-only) or
   `live:probe` (installs the generic probe channel).
+  Both need `ROKIT_TARGET`; `live:probe` also needs `ROKIT_PASSWORD`. Names
+  in `.env.example`; values may come from `.env` or `.env.local`.
 
 ## Delivery
 
@@ -102,8 +84,7 @@ Open a pull request. Release rules no file enforces:
   workflow [`ci.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/ci.yml), and Environment `release`.
   Renaming any of them breaks publishing until the npm setting matches.
 - Keep `effect` and every `@effect/*` package in [`package.json`](package.json)
-  on one exact version. A newer shared runtime can break the pinned Effect. The
-  shared preset inherited by [`renovate.json`](renovate.json) moves them together.
+  on one exact version. A newer shared runtime can break the pinned Effect.
 - The build bundles `jpeg-js` with the patch in [`patches/`](https://github.com/putdotio/rokit/blob/main/patches),
   because npm consumers do not inherit pnpm patches. Drop it only when a pinned
   upstream release passes the partial-interval and early-end-marker
