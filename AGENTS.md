@@ -56,6 +56,9 @@ This repository uses the Effect TypeScript library. The installed version's own
 guide is `node_modules/effect/AGENTS.md`; consult it for the APIs the change
 touches, and search `node_modules/effect/src` for anything it does not cover.
 
+- Effect setup: `effect-ts` skill. Skip its `effect@latest` install; keep the
+  pinned version.
+
 ## When Contracts Change
 
 - Command, env, or output: update [README.md](README.md), CLI tests, and
