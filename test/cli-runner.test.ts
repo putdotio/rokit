@@ -26,7 +26,7 @@ describe("CLI runner", () => {
         return new Response("");
       }
 
-      if (url === "http://192.0.2.1:8060/query/sgnodes/all") {
+      if (url === "http://192.0.2.1:8060/query/sgnodes/nodes?node-id=readyNode") {
         sceneGraphCalls += 1;
         return new Response(sceneGraphCalls === 1 ? missingNodeXml : readyNodeXml);
       }
@@ -62,6 +62,7 @@ describe("CLI runner", () => {
   });
 });
 
-const missingNodeXml = "<sgnodes><All_Nodes><App /></All_Nodes><status>OK</status></sgnodes>";
+const missingNodeXml =
+  '<sgnodes><Nodes_Nodes node-id="readyNode"><Default name="" /></Nodes_Nodes><status>OK</status></sgnodes>';
 const readyNodeXml =
-  '<sgnodes><All_Nodes><App /><Label name="readyNode" /></All_Nodes><status>OK</status></sgnodes>';
+  '<sgnodes><Nodes_Nodes node-id="readyNode"><Default name="" /><Label name="readyNode" /></Nodes_Nodes><status>OK</status></sgnodes>';

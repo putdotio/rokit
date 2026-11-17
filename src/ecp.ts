@@ -74,7 +74,14 @@ export const fetchEcpTextEffect = Effect.fn("fetchEcpText")(function* (
   path: string,
 ) {
   const safePath = yield* safeDeviceRelativePath(path);
-  const url = ecpUrl(context, safePath);
+  return yield* fetchEcpUrlTextEffect(context, ecpUrl(context, safePath), safePath);
+});
+
+export const fetchEcpUrlTextEffect = Effect.fn("fetchEcpUrlText")(function* (
+  context: RokuContext,
+  url: URL,
+  safePath: string,
+) {
   const response = yield* Effect.tryPromise({
     try: (signal) => fetch(url, { signal: abortSignalWithTimeout(signal, context.timeoutMs) }),
     catch: (error) =>

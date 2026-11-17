@@ -120,10 +120,19 @@ export const isNamedNodeVisible = (xml: string, nodeName: string): boolean => {
   return attributes !== undefined && !attributes.includes('visible="false"');
 };
 
-export const isCompleteSceneGraph = (xml: string): boolean =>
-  !xml.includes("<All_Nodes>") ||
-  (xml.includes("</sgnodes>") &&
-    (readSceneGraphStatus(xml).status !== undefined || readSceneGraphFailure(xml) !== undefined));
+export const isCompleteSceneGraph = (xml: string): boolean => {
+  const closingTag = xml.includes("<app-ui>")
+    ? "</app-ui>"
+    : xml.includes("<All_Nodes>") || xml.includes("<Nodes_Nodes")
+      ? "</sgnodes>"
+      : undefined;
+
+  return (
+    closingTag === undefined ||
+    (xml.includes(closingTag) &&
+      (readSceneGraphStatus(xml).status !== undefined || readSceneGraphFailure(xml) !== undefined))
+  );
+};
 
 export const escapeXmlAttribute = (value: string): string =>
   value

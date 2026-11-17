@@ -104,6 +104,9 @@ describe("SceneGraph helpers", () => {
       ),
     ).toBe(true);
     expect(isCompleteSceneGraph("<All_Nodes><Label /></All_Nodes>")).toBe(false);
+    expect(isCompleteSceneGraph("<app-ui><status>OK</status><topscreen><App />")).toBe(false);
+    expect(isCompleteSceneGraph("<app-ui><status>OK</status><topscreen /></app-ui>")).toBe(true);
+    expect(isCompleteSceneGraph('<sgnodes><Nodes_Nodes node-id="title"><Label />')).toBe(false);
     expect(isCompleteSceneGraph("<status>FAILED</status>")).toBe(true);
     expect(escapeXmlAttribute('Oops & "nope"')).toBe("Oops &amp; &quot;nope&quot;");
     expect(
