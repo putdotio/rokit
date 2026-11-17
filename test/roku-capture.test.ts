@@ -47,6 +47,34 @@ describe("Roku retry helpers", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("reads the app-ui tree when asked, waiting for the App node", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response("<app-ui><status>OK</status><topscreen></topscreen></app-ui>"),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          '<app-ui><status>OK</status><topscreen><screen><App bounds="{0, 0, 1920, 1080}"><Label name="title" /></App></screen></topscreen></app-ui>',
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      querySceneGraph(context, {
+        attempts: 2,
+        requireAppNode: true,
+        requireComplete: true,
+        retryDelayMs: 1,
+        source: "app-ui",
+      }),
+    ).resolves.toContain('name="title"');
+    expect(fetchMock.mock.calls.map(([input]) => String(input))).toEqual([
+      "http://192.0.2.1:8060/query/app-ui",
+      "http://192.0.2.1:8060/query/app-ui",
+    ]);
+  });
+
   it.each([
     ["jpg", jpegImage],
     ["png", pngImage],

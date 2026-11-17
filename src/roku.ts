@@ -70,6 +70,8 @@ export {
   assertSceneGraphNodeEffect,
   querySceneGraph,
   querySceneGraphEffect,
+  querySceneGraphNode,
+  querySceneGraphNodeEffect,
   waitForSceneGraphAssertion,
   waitForSceneGraphAssertionEffect,
   waitForSceneGraphNode,
@@ -78,5 +80,6 @@ export {
 export type {
   RetryOptions,
   SceneGraphAssertion,
+  SceneGraphSource,
   WaitForSceneGraphAssertionOptions,
 } from "./scenegraph-query.js";

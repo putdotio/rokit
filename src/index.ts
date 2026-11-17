@@ -61,6 +61,8 @@ export {
   queryMediaPlayerXmlSafeEffect,
   querySceneGraph,
   querySceneGraphEffect,
+  querySceneGraphNode,
+  querySceneGraphNodeEffect,
   readMediaPlayerContainer,
   readMediaPlayerInfo,
   readMediaPlayerPositionMs,
@@ -92,6 +94,7 @@ export type {
   RetryOptions,
   RokuContext,
   SceneGraphAssertion,
+  SceneGraphSource,
   ScreenshotCaptureOptions,
   WaitForSceneGraphAssertionOptions,
 } from "./roku.js";
