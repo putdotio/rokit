@@ -8,8 +8,8 @@ description: Drive Roku devices with rokit when testing, sideloading, or debuggi
 ## Workflow
 
 1. Run `rokit describe` (or `rokit describe <command>`) for flags and
-   `--input-json` fields instead of guessing. When docs and `describe`
-   disagree, trust `describe`.
+   `--input-json` fields. When docs and `describe` disagree, trust
+   `describe`.
 2. Dry-run mutating commands such as `package`, `install`, `launch`, `press`,
    `screenshot`, or `proof` before touching a device.
 3. Trim JSON output with `--fields`.
@@ -18,7 +18,7 @@ description: Drive Roku devices with rokit when testing, sideloading, or debuggi
 5. For state, use `rokit snapshot`; for review artifacts, `rokit proof
    <output-dir>`.
 6. After launch, use `wait-ready` when the app can race ECP or SceneGraph
-   readiness. Navigate with `press --until-node`, never arbitrary sleeps.
+   readiness. Navigate with `press --until-node`.
 7. For crashes, start `rokit console` before you reproduce. See
    [`references/debugging.md`](references/debugging.md) for console capture
    and debug-server commands.
