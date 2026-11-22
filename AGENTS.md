@@ -19,8 +19,8 @@ for humans and agents.
 - Keep put.io product behavior out: no put.io app IDs, deep links, content IDs,
   account data, credentials, journeys, UI node names, or product assertions.
   Consumer app repos own those.
-- The `@putdotio` scope, release wiring, copyright, and security contacts are
-  ownership metadata, not permission to add product fixtures.
+- The only put.io names here are ownership metadata: the `@putdotio` scope,
+  release wiring, copyright, and security contacts.
 - Sample data uses neutral names such as `dev`, `Example Channel`,
   `videoPlayerScreen`, and synthetic SceneGraph XML.
 - `examples/live-probe-channel` stays generic. It only proves package, install,
@@ -45,16 +45,15 @@ for humans and agents.
 - Media-player and SceneGraph helpers stay generic: state, text, attributes,
   focus waits, raw trees. Content, playback, and screen contracts stay in app
   repos.
-- Debug commands use `node:net` sockets, not a telnet binary, so they run
-  cross-platform and test against fake TCP servers. The binary BrightScript
-  debug protocol is out of scope; crash capture needs append-only text.
+- Debug commands use `node:net` sockets, so they run cross-platform and test
+  against fake TCP servers. Crash capture reads append-only text; the binary
+  BrightScript debug protocol is out of scope.
 - No sleeps in generic commands; app repos add wait loops around primitives.
 
 ## Effect
 
-This repository uses the Effect TypeScript library. The installed version's own
-guide is `node_modules/effect/AGENTS.md`; consult it for the APIs the change
-touches, and search `node_modules/effect/src` for anything it does not cover.
+The installed version's guide is `node_modules/effect/AGENTS.md`. Read it for
+the APIs the change touches; search `node_modules/effect/src` for the rest.
 
 - Effect setup: `effect-ts` skill. Skip its `effect@latest` install; keep the
   pinned version.
@@ -81,7 +80,7 @@ Which proof a change needs:
 
 ## Delivery
 
-Open a pull request. Release rules no file enforces:
+Release rules no file enforces:
 
 - npm Trusted Publishing for `@putdotio/rokit` must trust owner `putdotio`, repository `rokit`,
   workflow [`ci.yml`](https://github.com/putdotio/rokit/blob/main/.github/workflows/ci.yml), and Environment `release`.
