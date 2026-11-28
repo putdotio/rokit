@@ -12,18 +12,33 @@ export default defineConfig({
       "anti-slop-effect/no-service-constructor-imports": "off",
       "anti-slop/no-runtime-typeof": "off",
       "anti-slop/no-unknown-parameters": "off",
-      "import/no-namespace": "off",
-      "no-console": "off",
       "quality/no-known-value-widening": "off",
       "quality/no-unknown-returns": "off",
       "quality/no-unsafe-dictionary-type": "off",
-      "typescript/no-misused-spread": "off",
-      "typescript/no-non-null-assertion": "off",
       "typescript/no-unsafe-argument": "off",
       "typescript/no-unsafe-assignment": "off",
       "uinaf/no-comments": "off",
-      "unicorn/consistent-function-scoping": "off",
     },
+    overrides: [
+      {
+        files: ["src/cli.ts", "src/cli-output.ts"],
+        rules: {
+          "no-console": "off",
+        },
+      },
+      {
+        files: ["src/device.ts", "src/package-zip.ts", "test/roku.test.ts"],
+        rules: {
+          "import/no-namespace": "off",
+        },
+      },
+      {
+        files: ["src/cli-command.ts"],
+        rules: {
+          "typescript/no-misused-spread": "off",
+        },
+      },
+    ],
   },
   pack: {
     // npm consumers do not apply our pnpm decoder patch; ship the patched code.
