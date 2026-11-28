@@ -39,12 +39,15 @@ const runRokit = (args: ReadonlyArray<string>) =>
     env: childCliEnv(),
   });
 
+const format = (parts: ReadonlyArray<unknown>) => parts.map(String).join(" ");
+
+const joinLines = (lines: ReadonlyArray<string>) => lines.map((line) => `${line}\n`).join("");
+
 const runRokitInProcess = async (
   args: ReadonlyArray<string>,
 ): Promise<{ readonly status: number; readonly stderr: string; readonly stdout: string }> => {
   const stdout: Array<string> = [];
   const stderr: Array<string> = [];
-  const format = (parts: ReadonlyArray<unknown>) => parts.map(String).join(" ");
 
   const logSpy = vi.spyOn(console, "log").mockImplementation((...parts: Array<unknown>) => {
     stdout.push(format(parts));
@@ -59,7 +62,6 @@ const runRokitInProcess = async (
 
   try {
     await Effect.runPromise(mainEffect(args).pipe(Effect.provide(NodeServices.layer)));
-    const joinLines = (lines: ReadonlyArray<string>) => lines.map((line) => `${line}\n`).join("");
 
     return {
       status: process.exitCode === 0 ? 0 : 1,

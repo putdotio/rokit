@@ -51,10 +51,11 @@ const rokitCliFormatter: CliOutput.Formatter = {
   formatHelpDoc: (doc) => defaultCliFormatter.formatHelpDoc(withoutNoExtraArg(doc)),
 };
 
+const capture = () => Effect.succeed(undefined);
+
 export const runEffectCliActionEffect = Effect.fn("runEffectCliAction")(function* (
   argv: ReadonlyArray<string>,
 ) {
-  const capture = () => Effect.succeed(undefined);
   yield* runRokitCli(argv, capture).pipe(Effect.mapError(normalizeCliError));
 });
 
