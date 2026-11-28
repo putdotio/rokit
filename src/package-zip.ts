@@ -371,7 +371,7 @@ const normalizePackagePath = Effect.fn("normalizePackagePath")(function* (packag
 
 const rejectUnsafeInput = Effect.fn("rejectUnsafeInput")(function* (value: string, label: string) {
   if (
-    [...value].some((character) => {
+    Array.from(value).some((character) => {
       const code = character.charCodeAt(0);
 
       return code < 32 || code === 127;

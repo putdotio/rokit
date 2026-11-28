@@ -72,7 +72,7 @@ export const resolveFileOutputPath = (path: string, label: string): string => {
 
 export const rejectUnsafeInput = (value: string, label: string): void => {
   if (
-    [...value].some((character) => {
+    Array.from(value).some((character) => {
       const code = character.charCodeAt(0);
 
       return code < 32 || code === 127;
