@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vite-plus/test";
 
 type PackageConfig = {
-  files: readonly string[];
+  files: ReadonlyArray<string>;
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

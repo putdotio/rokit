@@ -14,7 +14,7 @@ import { loadEnv, loadLocalEnv, requireTarget } from "./runtime.js";
 
 export const mainEffect = Effect.fn("mainEffect")(function* (argv = process.argv.slice(2)) {
   let outputMode = inferErrorOutputMode(argv);
-  let fields: readonly string[] = [];
+  let fields: ReadonlyArray<string> = [];
 
   yield* runMainEffect(
     argv,
@@ -35,9 +35,9 @@ export const mainEffect = Effect.fn("mainEffect")(function* (argv = process.argv
 });
 
 const runMainEffect: (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
   setOutputMode: (outputMode: OutputMode) => void,
-  setFields: (fields: readonly string[]) => void,
+  setFields: (fields: ReadonlyArray<string>) => void,
 ) => Effect.Effect<void, RokitError, FileSystem.FileSystem | Path.Path | Stdio.Stdio> = Effect.fn(
   "runMain",
 )(function* (argv, setOutputMode, setFields) {
@@ -136,20 +136,20 @@ const isHelpFlag = (arg: string | undefined): boolean => arg === "--help" || arg
 
 const isVersionFlag = (arg: string | undefined): boolean => arg === "--version" || arg === "-v";
 
-const isVersionActionRequest = (args: readonly string[]): boolean =>
+const isVersionActionRequest = (args: ReadonlyArray<string>): boolean =>
   hasPreTerminatorArg(args, isVersionFlag);
 
-const isEffectCliActionRequest = (args: readonly string[]): boolean =>
+const isEffectCliActionRequest = (args: ReadonlyArray<string>): boolean =>
   hasPreTerminatorArg(
     args,
     (arg) => isHelpFlag(arg) || isVersionFlag(arg) || arg === "--completions",
   );
 
-const normalizeEffectCliActionArgs = (args: readonly string[]): readonly string[] =>
+const normalizeEffectCliActionArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   args.map((arg) => (arg === "-v" ? "--version" : arg));
 
 const hasPreTerminatorArg = (
-  args: readonly string[],
+  args: ReadonlyArray<string>,
   predicate: (arg: string) => boolean,
 ): boolean => {
   for (const arg of args) {

@@ -25,16 +25,16 @@ export type PackageFileOverride = {
 
 export type PackageZipOptions = {
   readonly exclude?: (path: string) => boolean;
-  readonly overrides?: readonly PackageFileOverride[];
+  readonly overrides?: ReadonlyArray<PackageFileOverride>;
   readonly outFile: string;
   readonly rootDir: string;
-  readonly roots?: readonly string[];
+  readonly roots?: ReadonlyArray<string>;
   readonly skipMissingRoots?: boolean;
 };
 
 export type PackageZipResult = {
   readonly fileCount: number;
-  readonly files: readonly string[];
+  readonly files: ReadonlyArray<string>;
   readonly path: string;
 };
 
@@ -104,7 +104,7 @@ export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
   const overrides = new Map<string, PackageFileContent>();
   const files = new Set<string>();
   const roots = options.roots ?? defaultPackageRoots;
-  const packageRoots: string[] = [];
+  const packageRoots: Array<string> = [];
 
   for (const root of roots) {
     packageRoots.push(yield* normalizePackagePath(root));
@@ -233,7 +233,7 @@ const collectPackageZipFiles: (
   exclude: ((path: string) => boolean) | undefined,
   skipMissingRoot?: boolean,
 ) => Effect.Effect<
-  readonly string[],
+  ReadonlyArray<string>,
   PackageZipError | PlatformError,
   FileSystem.FileSystem | Path.Path
 > = Effect.fn("collectPackageZipFiles")(function* (
@@ -268,7 +268,7 @@ const collectPackageZipFiles: (
     return [];
   }
 
-  const files: string[] = [];
+  const files: Array<string> = [];
 
   for (const entry of yield* fs.readDirectory(absolutePath)) {
     const childPath = yield* normalizePackagePath(`${relativePath}/${entry}`);
@@ -391,7 +391,7 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
   rootRealPath: string,
   outputPath: string,
   packageRoots: PackageRootSpec,
-  allowedExtensions: readonly string[],
+  allowedExtensions: ReadonlyArray<string>,
   sandboxRealPath = rootRealPath,
 ) {
   yield* rejectUnsafeInput(outputPath, "package output path");
@@ -466,8 +466,8 @@ const resolvePackageChannelOutputPath = Effect.fn("resolvePackageChannelOutputPa
   const sandboxRealPath = yield* fs.realPath(path.resolve(fallbackRootDir));
   const outputZipPath = yield* getRokuDeployOutputZipFilePathEffect(options, rootDir);
   const packageRootSpec = packageRootSpecFromRokuDeployFiles(options.files);
-  const includedPackageRoots: string[] = [];
-  const excludedPackageRoots: string[] = [];
+  const includedPackageRoots: Array<string> = [];
+  const excludedPackageRoots: Array<string> = [];
 
   for (const root of packageRootSpec.included) {
     includedPackageRoots.push(root === "" ? root : yield* normalizePackagePath(root));
@@ -491,7 +491,7 @@ const resolvePackageChannelOutputPath = Effect.fn("resolvePackageChannelOutputPa
   );
 });
 
-const formatAllowedExtensions = (extensions: readonly string[]): string =>
+const formatAllowedExtensions = (extensions: ReadonlyArray<string>): string =>
   extensions.length === 1
     ? extensions[0]!
     : `${extensions.slice(0, -1).join(", ")} or ${extensions[extensions.length - 1]}`;
@@ -642,7 +642,7 @@ const nativePackageOptionsFromRokuDeploy = (
   };
 };
 
-const usesOnlyStringFileEntries = (files: readonly unknown[] | undefined): boolean =>
+const usesOnlyStringFileEntries = (files: ReadonlyArray<unknown> | undefined): boolean =>
   files === undefined || files.every((entry) => typeof entry === "string");
 
 const hasRokuDeployConfigEffect = Effect.fn("hasRokuDeployConfig")(function* (rootDir: string) {

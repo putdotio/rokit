@@ -45,8 +45,8 @@ const isRecognizedInstallerMessage = (message: string): boolean =>
   message !== "Empty Roku installer response" &&
   !message.startsWith("Unrecognized Roku installer response:");
 
-const readRedFontMessages = (body: string): readonly string[] => {
-  const messages: string[] = [];
+const readRedFontMessages = (body: string): ReadonlyArray<string> => {
+  const messages: Array<string> = [];
   const pattern = /<font\b(?=[^>]*\bcolor\s*=\s*(?:"red"|'red'|red))[^>]*>(.*?)<\/font>/gis;
   let match: RegExpExecArray | null;
 
@@ -87,11 +87,11 @@ const readRokuInstallerMessage = (body: string): string | undefined => {
 const readRokuJsMessages = (
   body: string,
 ): {
-  readonly errors: readonly string[];
-  readonly successes: readonly string[];
+  readonly errors: ReadonlyArray<string>;
+  readonly successes: ReadonlyArray<string>;
 } => {
-  const errors: string[] = [];
-  const successes: string[] = [];
+  const errors: Array<string> = [];
+  const successes: Array<string> = [];
 
   const messagePattern =
     /Shell\.create\('Roku\.Message'\)\.trigger\('[\w\s]+',\s+'(\w+)'\)\.trigger\('[\w\s]+',\s+'(.*?)'\)/gims;
@@ -198,15 +198,15 @@ const parseSingleQuotedJsString = (literal: string): string => {
 const readRokuJsonMessages = (
   payload: unknown,
 ): {
-  readonly errors: readonly string[];
-  readonly successes: readonly string[];
+  readonly errors: ReadonlyArray<string>;
+  readonly successes: ReadonlyArray<string>;
 } => {
   if (!isRecord(payload) || !Array.isArray(payload.messages)) {
     return { errors: [], successes: [] };
   }
 
-  const errors: string[] = [];
-  const successes: string[] = [];
+  const errors: Array<string> = [];
+  const successes: Array<string> = [];
 
   for (const message of payload.messages) {
     if (!isRecord(message)) {

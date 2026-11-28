@@ -19,7 +19,7 @@ export const discoverRokuDevicesEffect = Effect.fn("discoverRokuDevices")(functi
 
 export const discoverRokuDevices = async (
   timeoutMs = 3_000,
-): Promise<readonly DiscoveredRokuDevice[]> =>
+): Promise<ReadonlyArray<DiscoveredRokuDevice>> =>
   await Effect.runPromise(discoverRokuDevicesEffect(timeoutMs));
 
 const ssdpSearchRequest = [
@@ -45,12 +45,12 @@ const validateDiscoveryTimeoutEffect = Effect.fn("validateDiscoveryTimeout")(fun
 });
 
 const discoverWithSsdpEffect = Effect.fn("discoverWithSsdp")(function* (timeoutMs: number) {
-  return yield* Effect.callback<readonly DiscoveredRokuDevice[], RokitError>((resume) => {
+  return yield* Effect.callback<ReadonlyArray<DiscoveredRokuDevice>, RokitError>((resume) => {
     const socket = createSocket("udp4");
     const devices = new Map<string, DiscoveredRokuDevice>();
     let finished = false;
 
-    const complete = (effect: Effect.Effect<readonly DiscoveredRokuDevice[], RokitError>) => {
+    const complete = (effect: Effect.Effect<ReadonlyArray<DiscoveredRokuDevice>, RokitError>) => {
       if (finished) {
         return;
       }

@@ -38,7 +38,7 @@ export type ProofArtifact = {
 };
 
 export type ProofBundle = {
-  readonly artifacts: readonly ProofArtifact[];
+  readonly artifacts: ReadonlyArray<ProofArtifact>;
   readonly outputDir: string;
   readonly snapshot: RokitSnapshot;
 };
@@ -73,7 +73,7 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const artifacts: ProofArtifact[] = [];
+  const artifacts: Array<ProofArtifact> = [];
 
   yield* fs.makeDirectory(outputDir, { recursive: true });
 
@@ -142,8 +142,8 @@ export const partialObservationMetadata = (snapshot: RokitSnapshot) => {
       };
 };
 
-const failedSnapshotObservations = (snapshot: RokitSnapshot): readonly string[] => {
-  const failures: string[] = [];
+const failedSnapshotObservations = (snapshot: RokitSnapshot): ReadonlyArray<string> => {
+  const failures: Array<string> = [];
 
   if (snapshot.activeApp.status === "failed") {
     failures.push("activeApp");

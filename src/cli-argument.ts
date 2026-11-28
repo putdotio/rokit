@@ -26,13 +26,13 @@ export const fileArgumentField = (
   options: Parameters<typeof Argument.File>[1],
 ) => fileArgument(field.name, field.description, options);
 
-export const choiceArgument = <const Choices extends readonly [string, ...string[]]>(
+export const choiceArgument = <const Choices extends readonly [string, ...Array<string>]>(
   name: string,
   choices: Choices,
   description: string,
 ) => Argument.Literals(name, choices).pipe(Argument.withDescription(description));
 
-export const choiceArgumentField = <const Choices extends readonly [string, ...string[]]>(
+export const choiceArgumentField = <const Choices extends readonly [string, ...Array<string>]>(
   field: DescribedField,
   choices: Choices,
 ) => choiceArgument(field.name, choices, field.description);
@@ -91,7 +91,7 @@ const validateRemoteKeyArgument = (key: string): string => {
   return key;
 };
 
-const parseLaunchParams = (pairs: readonly string[]): ReadonlyMap<string, string> => {
+const parseLaunchParams = (pairs: ReadonlyArray<string>): ReadonlyMap<string, string> => {
   const params = new Map<string, string>();
 
   for (const pair of pairs) {

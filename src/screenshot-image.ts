@@ -81,7 +81,7 @@ function validatePng(image: Buffer): void {
   // pngjs's interlaced sync decoder has no inflate limit. Bound and verify the
   // complete zlib stream first, including its checksum, before decoding pixels.
   const pixelFormats: Readonly<
-    Record<number, { channels: number; depths: readonly number[] } | undefined>
+    Record<number, { channels: number; depths: ReadonlyArray<number> } | undefined>
   > = {
     0: { channels: 1, depths: [1, 2, 4, 8, 16] },
     2: { channels: 3, depths: [8, 16] },

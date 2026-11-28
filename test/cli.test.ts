@@ -33,7 +33,7 @@ afterAll(() => {
 // Kept for the boot test below, which proves the packaged binary itself.
 // Everything else runs the same CLI entry in-process (mainEffect or the
 // command effects) so V8 coverage attributes it.
-const runRokit = (args: readonly string[]) =>
+const runRokit = (args: ReadonlyArray<string>) =>
   spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repoRoot,
     encoding: "utf8",
@@ -41,17 +41,17 @@ const runRokit = (args: readonly string[]) =>
   });
 
 const runRokitInProcess = async (
-  args: readonly string[],
+  args: ReadonlyArray<string>,
 ): Promise<{ readonly status: number; readonly stderr: string; readonly stdout: string }> => {
-  const stdout: string[] = [];
-  const stderr: string[] = [];
-  const format = (parts: readonly unknown[]) => parts.map(String).join(" ");
+  const stdout: Array<string> = [];
+  const stderr: Array<string> = [];
+  const format = (parts: ReadonlyArray<unknown>) => parts.map(String).join(" ");
 
-  const logSpy = vi.spyOn(console, "log").mockImplementation((...parts: unknown[]) => {
+  const logSpy = vi.spyOn(console, "log").mockImplementation((...parts: Array<unknown>) => {
     stdout.push(format(parts));
   });
 
-  const errorSpy = vi.spyOn(console, "error").mockImplementation((...parts: unknown[]) => {
+  const errorSpy = vi.spyOn(console, "error").mockImplementation((...parts: Array<unknown>) => {
     stderr.push(format(parts));
   });
 
@@ -60,7 +60,7 @@ const runRokitInProcess = async (
 
   try {
     await Effect.runPromise(mainEffect(args).pipe(Effect.provide(NodeServices.layer)));
-    const joinLines = (lines: readonly string[]) => lines.map((line) => `${line}\n`).join("");
+    const joinLines = (lines: ReadonlyArray<string>) => lines.map((line) => `${line}\n`).join("");
 
     return {
       status: process.exitCode === 0 ? 0 : 1,
@@ -105,7 +105,7 @@ const runDryCommand = async (command: Command): Promise<CommandResult> =>
 const parseJsonCommand = async (value: string): Promise<Command> =>
   await Effect.runPromise(parseInputJsonEffect(value));
 
-const parseCliCommand = async (args: readonly string[]): Promise<Command> => {
+const parseCliCommand = async (args: ReadonlyArray<string>): Promise<Command> => {
   const parsed = await Effect.runPromise(parseEffectCliEffect(args));
 
   if (parsed.command === undefined) {

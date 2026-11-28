@@ -394,10 +394,10 @@ export const captureScreenshot = async (
   );
 
 const firstExistingPath: (
-  paths: readonly string[],
+  paths: ReadonlyArray<string>,
 ) => Effect.Effect<string | undefined, PlatformError, FileSystem.FileSystem> = Effect.fn(
   "firstExistingPath",
-)(function* (paths: readonly string[]) {
+)(function* (paths: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
 
   for (const path of paths) {

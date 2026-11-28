@@ -3,7 +3,7 @@ import type { CommandResult, OutputMode } from "./cli-types.js";
 export const printResult = (
   outputMode: OutputMode,
   result: CommandResult,
-  fields: readonly string[],
+  fields: ReadonlyArray<string>,
 ): void => {
   if (outputMode === "json") {
     console.log(JSON.stringify(applyFields(result, fields), null, 2));
@@ -23,7 +23,7 @@ export const printResult = (
 export const printError = (
   outputMode: OutputMode,
   message: string,
-  _fields: readonly string[],
+  _fields: ReadonlyArray<string>,
 ): void => {
   if (outputMode === "json") {
     console.error(JSON.stringify({ error: { message }, status: "failed" }, null, 2));
@@ -34,7 +34,7 @@ export const printError = (
   console.error(message);
 };
 
-export const applyFields = (value: unknown, fields: readonly string[]): unknown => {
+export const applyFields = (value: unknown, fields: ReadonlyArray<string>): unknown => {
   if (fields.length === 0) {
     return value;
   }
@@ -67,9 +67,9 @@ const preserveStatusMetadata = (source: unknown, target: Record<string, unknown>
   }
 };
 
-type FieldContainer = Record<string, unknown> | unknown[];
+type FieldContainer = Record<string, unknown> | Array<unknown>;
 
-const pickField = (source: unknown, path: readonly string[]): unknown => {
+const pickField = (source: unknown, path: ReadonlyArray<string>): unknown => {
   const [head, ...tail] = path;
 
   if (!head) {
@@ -91,10 +91,10 @@ const pickField = (source: unknown, path: readonly string[]): unknown => {
   return pickFieldOrValue(source[head], tail);
 };
 
-const pickFieldOrValue = (source: unknown, path: readonly string[]): unknown =>
+const pickFieldOrValue = (source: unknown, path: ReadonlyArray<string>): unknown =>
   path.length === 0 ? source : pickField(source, path);
 
-const mergeField = (target: FieldContainer, path: readonly string[], value: unknown): void => {
+const mergeField = (target: FieldContainer, path: ReadonlyArray<string>, value: unknown): void => {
   const [head, ...tail] = path;
 
   if (head === undefined) {

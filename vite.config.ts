@@ -18,7 +18,6 @@ export default defineConfig({
       "quality/no-known-value-widening": "off",
       "quality/no-unknown-returns": "off",
       "quality/no-unsafe-dictionary-type": "off",
-      "typescript/array-type": "off",
       "typescript/consistent-type-imports": "off",
       "typescript/no-misused-spread": "off",
       "typescript/no-non-null-assertion": "off",

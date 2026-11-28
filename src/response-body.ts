@@ -28,7 +28,7 @@ const readResponseBytes = async (
     return new Uint8Array();
   }
 
-  const chunks: Uint8Array[] = [];
+  const chunks: Array<Uint8Array> = [];
   let receivedBytes = 0;
   await response.body.pipeTo(
     new WritableStream<Uint8Array>({

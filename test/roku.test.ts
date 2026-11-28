@@ -41,7 +41,7 @@ describe("Roku helpers", () => {
   });
 
   it("allows helper-generated encoded literal keypress paths", async () => {
-    const fetchCalls: string[] = [];
+    const fetchCalls: Array<string> = [];
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (input) => {
       fetchCalls.push(String(input));

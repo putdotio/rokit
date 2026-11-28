@@ -51,14 +51,14 @@ const rokitCliFormatter: CliOutput.Formatter = {
 };
 
 export const runEffectCliActionEffect = Effect.fn("runEffectCliAction")(function* (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
 ) {
   const capture = () => Effect.succeed(undefined);
   yield* runRokitCli(argv, capture).pipe(Effect.mapError(normalizeCliError));
 });
 
 export const parseEffectCliEffect: (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
 ) => Effect.Effect<ParsedCli, RokitError> = Effect.fn("parseEffectCli")(function* (argv) {
   let parsedCli: ParsedCli | undefined;
 
@@ -86,16 +86,16 @@ export const parseEffectCliEffect: (
   return parsedCli;
 });
 
-export const parseEffectCli = async (argv: readonly string[]): Promise<ParsedCli> =>
+export const parseEffectCli = async (argv: ReadonlyArray<string>): Promise<ParsedCli> =>
   await Effect.runPromise(parseEffectCliEffect(argv));
 
-export const effectCliCommandNames = (): readonly string[] =>
+export const effectCliCommandNames = (): ReadonlyArray<string> =>
   makeRokitCommand(() => Effect.succeed(undefined)).subcommands.flatMap((group) =>
     group.commands.map((command) => command.name),
   );
 
 const runRokitCli = (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
   capture: (command?: Command) => Effect.Effect<void, never, RokitGlobalFlagContext>,
   consoleService?: Console.Console,
 ) => {

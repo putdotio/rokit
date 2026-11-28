@@ -145,7 +145,7 @@ export const readOptionalNonNegativeNumberEffect: (
 export const readStringArrayEffect: (
   record: InputJsonRecord,
   key: string,
-) => Effect.Effect<readonly string[], InvalidInput> = Effect.fn("readInputJsonStringArray")(
+) => Effect.Effect<ReadonlyArray<string>, InvalidInput> = Effect.fn("readInputJsonStringArray")(
   function* (record, key) {
     return yield* Schema.decodeUnknownEffect(StringArray)(record[key]).pipe(
       Effect.mapError(
@@ -158,7 +158,7 @@ export const readStringArrayEffect: (
 export const readOptionalStringArrayEffect: (
   record: InputJsonRecord,
   key: string,
-) => Effect.Effect<readonly string[] | undefined, InvalidInput> = Effect.fn(
+) => Effect.Effect<ReadonlyArray<string> | undefined, InvalidInput> = Effect.fn(
   "readOptionalInputJsonStringArray",
 )(function* (record, key) {
   const value = record[key];

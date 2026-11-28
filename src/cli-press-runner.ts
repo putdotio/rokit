@@ -14,7 +14,7 @@ export const runPressCommandEffect: (
   command: PressCommand,
 ) => Effect.Effect<CommandResult, RokitError> = Effect.fn("runPressCommand")(
   function* (context, command) {
-    const pressed: string[] = [];
+    const pressed: Array<string> = [];
     let attempts = 0;
 
     while (attempts < command.args.maxAttempts) {
