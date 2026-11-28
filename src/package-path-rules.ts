@@ -145,7 +145,7 @@ const normalizePackageFilePattern = (pattern: string): string | undefined => {
   const trimmed = pattern.trim();
 
   const normalized = (isNegatedPackagePattern(trimmed) ? trimmed.replace(/^!+/, "") : trimmed)
-    .replace(/\\/g, "/")
+    .replaceAll("\\", "/")
     .replace(/^\.\/+/, "");
 
   return normalized === "" ? undefined : normalized;

@@ -27,7 +27,6 @@ export default defineConfig({
       "unicorn/prefer-at": "off",
       "unicorn/prefer-import-meta-properties": "off",
       "unicorn/prefer-string-raw": "off",
-      "unicorn/prefer-string-replace-all": "off",
     },
   },
   pack: {

@@ -63,8 +63,8 @@ const readRedFontMessages = (body: string): ReadonlyArray<string> => {
 
 const normalizeHtmlMessage = (html: string): string =>
   html
-    .replace(/<[^>]*>/g, "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/<[^>]*>/g, "")
+    .replaceAll(/\s+/g, " ")
     .trim();
 
 const isInstallerFailure = (message: string): boolean =>

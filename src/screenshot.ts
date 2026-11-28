@@ -266,7 +266,7 @@ const readScreenshotResponseTextEffect = Effect.fn("readScreenshotResponseText")
 
 const readScreenshotUrl = (inspectUrl: URL, body: string): CreatedScreenshot | undefined => {
   const match = /["'](pkgs\/dev(\.jpg|\.png)\?[^"']+)["']/i.exec(body);
-  const path = match?.[1]?.replace(/&amp;/g, "&");
+  const path = match?.[1]?.replaceAll("&amp;", "&");
   const extension = match?.[2]?.toLowerCase();
 
   if (path === undefined || (extension !== ".jpg" && extension !== ".png")) {
@@ -409,7 +409,7 @@ const firstExistingPath: (
   return undefined;
 });
 
-const safeTempPrefix = (value: string): string => value.replace(/[^a-zA-Z0-9_-]/g, "-");
+const safeTempPrefix = (value: string): string => value.replaceAll(/[^a-zA-Z0-9_-]/g, "-");
 
 const formatErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);

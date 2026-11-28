@@ -258,11 +258,11 @@ const assertNamedNodeAttribute = (
   }
 };
 
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegExp = (value: string) => value.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const parseSceneGraphNumberList = (value: string): Array<number> =>
   value
-    .replace(/[[\]{}]/g, "")
+    .replaceAll(/[[\]{}]/g, "")
     .split(",")
     .map((part) => Number(part.trim()))
     .filter((part) => Number.isFinite(part));

@@ -353,7 +353,7 @@ const assertPackageOutputFile = Effect.fn("assertPackageOutputFile")(function* (
 const normalizePackagePath = Effect.fn("normalizePackagePath")(function* (packagePath: string) {
   yield* rejectUnsafeInput(packagePath, "package path");
 
-  const normalized = packagePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const normalized = packagePath.replaceAll("\\", "/").replace(/^\.\/+/, "");
   const segments = normalized.split("/");
 
   if (
@@ -414,20 +414,20 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
 
   yield* assertPackageOutputFile(resolvedOutput);
 
-  const relativeOutput = path.relative(rootDir, resolvedOutput).replace(/\\/g, "/");
+  const relativeOutput = path.relative(rootDir, resolvedOutput).replaceAll("\\", "/");
 
   const isInsideRoot =
     relativeOutput !== "" && !relativeOutput.startsWith("..") && !path.isAbsolute(relativeOutput);
 
   const realOutput = yield* resolveRealOutputCandidatePath(resolvedOutput);
-  const relativeRealOutput = path.relative(rootRealPath, realOutput).replace(/\\/g, "/");
+  const relativeRealOutput = path.relative(rootRealPath, realOutput).replaceAll("\\", "/");
 
   const realOutputIsInsideRoot =
     relativeRealOutput !== "" &&
     !relativeRealOutput.startsWith("..") &&
     !path.isAbsolute(relativeRealOutput);
 
-  const relativeSandboxOutput = path.relative(sandboxRealPath, realOutput).replace(/\\/g, "/");
+  const relativeSandboxOutput = path.relative(sandboxRealPath, realOutput).replaceAll("\\", "/");
 
   const realOutputIsInsideSandbox =
     relativeSandboxOutput !== "" &&

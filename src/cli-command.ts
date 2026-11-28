@@ -139,7 +139,7 @@ const withoutNoExtraArg = (
 ): Parameters<CliOutput.Formatter["formatHelpDoc"]>[0] => ({
   ...doc,
   args: doc.args?.filter((arg) => arg.name !== "extra"),
-  usage: doc.usage.replace(/ ?<extra\.\.\.>/g, ""),
+  usage: doc.usage.replaceAll(/ ?<extra\.\.\.>/g, ""),
 });
 
 const makeRokitCommand = (
