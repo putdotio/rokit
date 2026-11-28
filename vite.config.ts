@@ -26,7 +26,6 @@ export default defineConfig({
       "unicorn/consistent-function-scoping": "off",
       "unicorn/prefer-at": "off",
       "unicorn/prefer-import-meta-properties": "off",
-      "unicorn/prefer-string-raw": "off",
     },
   },
   pack: {

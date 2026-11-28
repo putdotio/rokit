@@ -21,7 +21,7 @@ describe("Roku helpers", () => {
     await expect(queryEcp(context, "http://example.com/query/device-info")).rejects.toThrow(
       "ECP path must be device-relative",
     );
-    await expect(queryEcp(context, "/\\example.com/query/device-info")).rejects.toThrow(
+    await expect(queryEcp(context, String.raw`/\example.com/query/device-info`)).rejects.toThrow(
       "ECP path must not include backslashes",
     );
   });

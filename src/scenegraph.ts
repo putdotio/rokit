@@ -258,7 +258,7 @@ const assertNamedNodeAttribute = (
   }
 };
 
-const escapeRegExp = (value: string) => value.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegExp = (value: string) => value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 export const parseSceneGraphNumberList = (value: string): Array<number> =>
   value

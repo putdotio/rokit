@@ -98,4 +98,4 @@ const normalizeQop = (value: string | undefined): string | undefined => {
 
 const md5 = (value: string): string => createHash("md5").update(value).digest("hex");
 
-const escapeDigestValue = (value: string): string => value.replaceAll(/(["\\])/g, "\\$1");
+const escapeDigestValue = (value: string): string => value.replaceAll(/(["\\])/g, String.raw`\$1`);
