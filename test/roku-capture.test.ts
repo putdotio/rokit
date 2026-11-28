@@ -130,12 +130,15 @@ describe("Roku retry helpers", () => {
       "fetch",
       vi.fn<typeof fetch>(async () => {
         calls += 1;
-        if (calls % 3 === 1)
+        if (calls % 3 === 1) {
           return new Response("", {
             status: 401,
             headers: { "WWW-Authenticate": 'Digest qop="auth", realm="rokudev", nonce="nonce"' },
           });
-        if (calls % 3 === 2) return new Response('<a href="pkgs/dev.jpg?cache=1">screenshot</a>');
+        }
+        if (calls % 3 === 2) {
+          return new Response('<a href="pkgs/dev.jpg?cache=1">screenshot</a>');
+        }
         return new Response("<html>error page</html>", {
           headers: { "Content-Type": "image/jpeg" },
         });

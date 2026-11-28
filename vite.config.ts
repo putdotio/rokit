@@ -13,7 +13,6 @@ export default defineConfig({
       "anti-slop/no-runtime-typeof": "off",
       "anti-slop/no-unknown-parameters": "off",
       "anti-slop/require-readable-spacing": "off",
-      curly: "off",
       "import/consistent-type-specifier-style": "off",
       "import/no-namespace": "off",
       "no-console": "off",
