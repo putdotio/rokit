@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vite-plus/test";
@@ -13,7 +12,7 @@ import { runCommandEffect } from "../src/cli-runner.js";
 import type { Command, CommandResult } from "../src/cli-types.js";
 import { buildDebugCommand } from "../src/debug.js";
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = resolve(import.meta.dirname, "..");
 const builtDistDir = resolve(repoRoot, "dist");
 const testDistParent = resolve(repoRoot, ".rokit");
 
