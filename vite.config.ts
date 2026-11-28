@@ -24,7 +24,6 @@ export default defineConfig({
       "typescript/no-unsafe-assignment": "off",
       "uinaf/no-comments": "off",
       "unicorn/consistent-function-scoping": "off",
-      "unicorn/prefer-at": "off",
       "unicorn/prefer-import-meta-properties": "off",
     },
   },

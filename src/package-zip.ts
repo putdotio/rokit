@@ -494,7 +494,7 @@ const resolvePackageChannelOutputPath = Effect.fn("resolvePackageChannelOutputPa
 const formatAllowedExtensions = (extensions: ReadonlyArray<string>): string =>
   extensions.length === 1
     ? extensions[0]!
-    : `${extensions.slice(0, -1).join(", ")} or ${extensions[extensions.length - 1]}`;
+    : `${extensions.slice(0, -1).join(", ")} or ${extensions.at(-1)}`;
 
 const canUseNativePackageZip = (outputPath: string): boolean =>
   outputPath.toLowerCase().endsWith(".zip");
