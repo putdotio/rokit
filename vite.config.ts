@@ -19,7 +19,6 @@ export default defineConfig({
       "quality/no-unsafe-dictionary-type": "off",
       "typescript/no-misused-spread": "off",
       "typescript/no-non-null-assertion": "off",
-      "typescript/no-unnecessary-type-assertion": "off",
       "typescript/no-unsafe-argument": "off",
       "typescript/no-unsafe-assignment": "off",
       "uinaf/no-comments": "off",
