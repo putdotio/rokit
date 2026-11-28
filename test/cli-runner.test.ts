@@ -7,7 +7,7 @@ import type { RokuContext } from "../src/roku.js";
 
 const context: RokuContext = {
   target: "192.0.2.1",
-  timeoutMs: 1_000,
+  timeoutMs: 1000,
   username: "rokudev",
 };
 

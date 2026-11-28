@@ -306,7 +306,7 @@ export const captureScreenshotEffect: (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const attempts = options.attempts ?? 3;
-  const retryDelayMs = options.retryDelayMs ?? 1_500;
+  const retryDelayMs = options.retryDelayMs ?? 1500;
   const resolvedOutput = path.resolve(outputPath);
   const outputFileName = path.basename(resolvedOutput);
   yield* fs.makeDirectory(path.dirname(resolvedOutput), { recursive: true });

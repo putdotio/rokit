@@ -44,7 +44,7 @@ const dryRunDataEffect: (
   }
 
   if (command.name === "discover") {
-    return { timeoutMs: command.timeoutMs ?? 3_000 };
+    return { timeoutMs: command.timeoutMs ?? 3000 };
   }
 
   if (command.name === "package") {

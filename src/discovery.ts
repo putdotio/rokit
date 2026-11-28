@@ -12,7 +12,7 @@ export type DiscoveredRokuDevice = {
 };
 
 export const discoverRokuDevicesEffect = Effect.fn("discoverRokuDevices")(function* (
-  timeoutMs = 3_000,
+  timeoutMs = 3000,
 ) {
   const safeTimeoutMs = yield* validateDiscoveryTimeoutEffect(timeoutMs);
 
@@ -20,7 +20,7 @@ export const discoverRokuDevicesEffect = Effect.fn("discoverRokuDevices")(functi
 });
 
 export const discoverRokuDevices = async (
-  timeoutMs = 3_000,
+  timeoutMs = 3000,
 ): Promise<ReadonlyArray<DiscoveredRokuDevice>> =>
   await Effect.runPromise(discoverRokuDevicesEffect(timeoutMs));
 

@@ -28,7 +28,7 @@ describe("media-player helpers", () => {
       },
       captions: "srt",
       container: "mp4",
-      durationMs: 888085,
+      durationMs: 888_085,
       error: false,
       isLive: false,
       positionMs: 7500,

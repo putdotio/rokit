@@ -59,9 +59,9 @@ corruptJpeg[corruptJpeg.indexOf(Buffer.from([0xff, 0xda])) + 2] = 0xff;
 const largeJpeg = Buffer.from(jpegImage);
 const frameOffset = largeJpeg.indexOf(Buffer.from([0xff, 0xc0]));
 
-largeJpeg.writeUInt16BE(10000, frameOffset + 5);
+largeJpeg.writeUInt16BE(10_000, frameOffset + 5);
 
-largeJpeg.writeUInt16BE(10000, frameOffset + 7);
+largeJpeg.writeUInt16BE(10_000, frameOffset + 7);
 
 const interlacedPng = smallPng(Buffer.from([0, 255, 0, 0, 255]), true);
 
