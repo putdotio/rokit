@@ -33,8 +33,6 @@ type SceneGraphPollState = {
 
 const defaultPollIntervalMs = 500;
 
-// Roku OS 11 can freeze and reboot when /query/sgnodes/all dumps the tree while the app
-// builds a screen. app-ui and single-node queries skip that dump.
 const sceneGraphPaths: Record<SceneGraphSource, string> = {
   "app-ui": "/query/app-ui",
   sgnodes: "/query/sgnodes/all",

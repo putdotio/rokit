@@ -9,9 +9,6 @@ png.data = pixels;
 
 export const pngImage = PNG.sync.write(png);
 
-// Synthetic 17×17 RGB gradient (x*15, y*15, (x+y)*7), encoded with cjpeg.
-// Baseline uses 4:2:0 and -restart 3B (a partial final interval); progressive
-// uses 4:2:0 and -restart 1B; grayscale uses -grayscale -restart 1B.
 export const baselineRestartJpeg = Buffer.from(
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIx" +
     "wcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy" +
@@ -52,8 +49,6 @@ export const grayscaleRestartJpeg = Buffer.from(
   "base64",
 );
 
-// Same synthetic gradient, with -restart 2B to exercise partial final intervals
-// in single-component scans (grayscale and progressive AC scans).
 export const progressivePartialRestartJpeg = Buffer.from(
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIx" +
     "wcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy" +

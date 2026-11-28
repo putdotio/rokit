@@ -70,8 +70,6 @@ export const remoteKeyArgument = (field: DescribedField) =>
   );
 
 export const launchParamsFlag = (field: DescribedField) =>
-  // Roku query params can contain "=" in the value; Effect's keyValuePair primitive
-  // rejects that, so this parser splits only on the first separator.
   Flag.String(field.name).pipe(
     Flag.withMetavar("key=value"),
     Flag.withDescription(field.description),

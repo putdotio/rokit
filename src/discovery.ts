@@ -139,7 +139,5 @@ const readLocationTarget = (location: string): string | undefined => {
 const closeSocket = (socket: Socket): void => {
   try {
     socket.close();
-  } catch {
-    // The socket may already be closed after an error or interrupt.
-  }
+  } catch {}
 };

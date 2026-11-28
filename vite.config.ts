@@ -17,7 +17,6 @@ export default defineConfig({
       "quality/no-unsafe-dictionary-type": "off",
       "typescript/no-unsafe-argument": "off",
       "typescript/no-unsafe-assignment": "off",
-      "uinaf/no-comments": "off",
     },
     overrides: [
       {
@@ -41,16 +40,10 @@ export default defineConfig({
     ],
   },
   pack: {
-    // npm consumers do not apply our pnpm decoder patch; ship the patched code.
     deps: { alwaysBundle: ["jpeg-js"], onlyBundle: ["jpeg-js"] },
   },
   test: {
     coverage: {
-      // Coverage blind spot: the boot test spawns the packaged dist/rokit.mjs
-      // to prove the real binary starts; that subprocess is not attributed to
-      // coverage, so the bin shim src/rokit.ts is excluded by design. All other
-      // CLI tests run the same entry in-process (mainEffect and the command
-      // effects). Vitest 5 coverage.autoAttachSubprocess can close the gap.
       exclude: ["src/**/*.d.ts", "src/rokit.ts"],
       include: ["src/**/*.ts"],
       provider: "v8",

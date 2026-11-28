@@ -29,9 +29,6 @@ afterAll(() => {
   rmSync(testDistDir, { force: true, recursive: true });
 });
 
-// Kept for the boot test below, which proves the packaged binary itself.
-// Everything else runs the same CLI entry in-process (mainEffect or the
-// command effects) so V8 coverage attributes it.
 const runRokit = (args: ReadonlyArray<string>) =>
   spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repoRoot,

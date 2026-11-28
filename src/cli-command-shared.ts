@@ -16,8 +16,6 @@ export const strictCommand = <
 ) =>
   EffectCommand.make(name, {
     ...config,
-    // Effect CLI leaves surplus positional arguments unconsumed by default.
-    // Keep command definitions idiomatic while making rokit reject typos.
     extra: Argument.String("extra").pipe(
       Argument.variadic(),
       Argument.filter(

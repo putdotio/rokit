@@ -2,7 +2,6 @@ import { crc32, inflateSync } from "node:zlib";
 import { decode } from "jpeg-js";
 import { PNG } from "pngjs";
 
-// Allow DCI 4K as well as Roku's UHD output without allocating for arbitrary dimensions.
 const maxPixels = 4096 * 2160;
 export const maxScreenshotBytes = 64 * 1024 * 1024;
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -36,7 +35,6 @@ function validatePng(image: Buffer): void {
   const width = image.readUInt32BE(16);
   const height = image.readUInt32BE(20);
 
-  // pngjs retains a Buffer per scanline; pixel count alone does not bound row-object overhead.
   if (width === 0 || height === 0 || width > 8192 || height > 8192 || width * height > maxPixels) {
     throw new Error("PNG screenshot exceeds supported dimensions");
   }
@@ -78,8 +76,6 @@ function validatePng(image: Buffer): void {
     offset = end;
   }
 
-  // pngjs's interlaced sync decoder has no inflate limit. Bound and verify the
-  // complete zlib stream first, including its checksum, before decoding pixels.
   const pixelFormats: Readonly<
     Record<number, { channels: number; depths: ReadonlyArray<number> } | undefined>
   > = {

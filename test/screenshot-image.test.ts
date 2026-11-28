@@ -73,7 +73,6 @@ const emptyScanJpeg = Buffer.concat([
   Buffer.from([0xff, 0xd9]),
 ]);
 
-// Each copy of the genuine fixture's entropy encodes one complete 8×8 MCU.
 function restartJpeg(declaredMcus: number, includedMcus: number): Buffer {
   const prefix = Buffer.from(jpegImage.subarray(0, scanOffset));
   prefix.writeUInt16BE(declaredMcus * 8, frameOffset + 7);

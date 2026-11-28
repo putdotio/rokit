@@ -4,7 +4,6 @@ import { isDeleteSuccess, isEmptyDeveloperSlotMessage } from "../src/installer-m
 describe("installer message classification", () => {
   it("recognizes both empty developer-slot phrasings", () => {
     expect(isEmptyDeveloperSlotMessage("No plugin installed")).toBe(true);
-    // Older devices fail a delete/replace of an empty slot this way.
     expect(isEmptyDeveloperSlotMessage("Delete Failed: No such file or directory")).toBe(true);
     expect(isEmptyDeveloperSlotMessage("Some unrelated installer message")).toBe(false);
   });
