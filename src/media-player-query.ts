@@ -1,10 +1,7 @@
 import { Effect } from "effect";
 import { queryEcpEffect } from "./app-control.js";
-import {
-  readMediaPlayerInfo,
-  type MediaPlayerInfo,
-  type MediaPlayerState,
-} from "./media-player.js";
+import { readMediaPlayerInfo } from "./media-player.js";
+import type { MediaPlayerInfo, MediaPlayerState } from "./media-player.js";
 import { attemptEffect, pollDone, pollPending, pollUntilEffect } from "./polling.js";
 import { failRokit } from "./rokit-effect.js";
 import type { RokuContext } from "./roku-context.js";

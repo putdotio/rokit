@@ -5,7 +5,8 @@ import { normalizeError } from "./errors.js";
 import { attemptEffect, pollDone, pollPending, pollUntilEffect } from "./polling.js";
 import { failRokit, syncRokit } from "./rokit-effect.js";
 import type { RokuContext } from "./roku-context.js";
-import { assertNamedNode, isCompleteSceneGraph, type NodeExpectation } from "./scenegraph.js";
+import { assertNamedNode, isCompleteSceneGraph } from "./scenegraph.js";
+import type { NodeExpectation } from "./scenegraph.js";
 import { sleepEffect } from "./timing.js";
 
 export type SceneGraphSource = "sgnodes" | "app-ui";

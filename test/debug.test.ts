@@ -1,4 +1,5 @@
-import { createServer, type Socket } from "node:net";
+import { createServer } from "node:net";
+import type { Socket } from "node:net";
 import { describe, expect, it } from "vite-plus/test";
 import { buildDebugCommand, captureDebugConsole, runDebugCommand } from "../src/debug.js";
 import type { RokuContext } from "../src/roku.js";

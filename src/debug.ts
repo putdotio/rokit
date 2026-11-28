@@ -1,6 +1,7 @@
 import { createConnection } from "node:net";
 import { Clock, Effect } from "effect";
-import { DebugPortUnavailable, normalizeError, type RokitError } from "./errors.js";
+import { DebugPortUnavailable, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 import { fail, formatErrorMessage, rejectUnsafeInput } from "./runtime.js";
 import type { RokuContext } from "./roku-context.js";
 

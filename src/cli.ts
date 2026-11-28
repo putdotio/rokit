@@ -8,7 +8,8 @@ import { inferErrorOutputMode } from "./cli-options.js";
 import { printError, printResult } from "./cli-output.js";
 import { runCommandEffect } from "./cli-runner.js";
 import type { Command, OutputMode, ParsedCli } from "./cli-types.js";
-import { InvalidInput, normalizeError, renderError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError, renderError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 import type { RokuContext } from "./roku-context.js";
 import { loadEnv, loadLocalEnv, requireTarget } from "./runtime.js";
 

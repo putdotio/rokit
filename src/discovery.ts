@@ -1,6 +1,8 @@
-import { createSocket, type Socket } from "node:dgram";
+import { createSocket } from "node:dgram";
+import type { Socket } from "node:dgram";
 import { Effect } from "effect";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export type DiscoveredRokuDevice = {
   readonly location: string;

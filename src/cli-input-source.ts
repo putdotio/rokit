@@ -1,5 +1,6 @@
 import { Effect, FileSystem, Stdio, Stream } from "effect";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export const resolveInputJsonSource: (
   source: string,

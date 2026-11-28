@@ -1,21 +1,20 @@
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { queryActiveAppEffect } from "./app-control.js";
-import { checkDeviceEffect, getDeviceInfoEffect, type DeviceSummary } from "./device.js";
+import { checkDeviceEffect, getDeviceInfoEffect } from "./device.js";
+import type { DeviceSummary } from "./device.js";
 import { normalizeError } from "./errors.js";
 import { queryMediaPlayerEffect } from "./media-player-query.js";
 import type { MediaPlayerInfo } from "./media-player.js";
-import { observeRokitEffect, type Observation } from "./observation.js";
+import { observeRokitEffect } from "./observation.js";
+import type { Observation } from "./observation.js";
 import { timestampOutputPath } from "./output-path.js";
 import { requirePasswordEffect } from "./roku-context-requirements.js";
 import type { RokuContext } from "./roku-context.js";
 import { querySceneGraphEffect } from "./scenegraph-query.js";
 import { captureScreenshotEffect } from "./screenshot.js";
-import {
-  readSceneGraphFailure,
-  readSceneGraphStatus,
-  type SceneGraphStatus,
-} from "./scenegraph.js";
+import { readSceneGraphFailure, readSceneGraphStatus } from "./scenegraph.js";
+import type { SceneGraphStatus } from "./scenegraph.js";
 import type { ActiveApp } from "./xml.js";
 
 export type { Observation } from "./observation.js";

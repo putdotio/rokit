@@ -1,8 +1,10 @@
 import { Effect, Option } from "effect";
 import { optionToUndefined } from "./cli-argument.js";
 import type { NodeCondition } from "./cli-types.js";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
-import { makeNodeCondition, type NodeConditionState } from "./node-condition.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
+import { makeNodeCondition } from "./node-condition.js";
+import type { NodeConditionState } from "./node-condition.js";
 
 export type NodeConditionCliInput = {
   readonly commandName: string;

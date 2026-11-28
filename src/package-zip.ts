@@ -9,8 +9,8 @@ import {
   isInsidePackageRoots,
   packageRootSpecFromRokuDeployFiles,
   packageRulesIncludePath,
-  type PackageRootSpec,
 } from "./package-path-rules.js";
+import type { PackageRootSpec } from "./package-path-rules.js";
 
 export type PackageResult = {
   readonly path: string;

@@ -14,10 +14,11 @@ import {
   InputJsonGlobal,
   JsonGlobal,
   OutputGlobal,
-  type RokitGlobalFlagContext,
   readCliOptions,
 } from "./cli-options.js";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import type { RokitGlobalFlagContext } from "./cli-options.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 const effectCliVersion = PackageJson.version;
 

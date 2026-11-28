@@ -8,8 +8,8 @@ import {
   deleteInstalledChannel,
   installPackage,
   querySceneGraph,
-  type RokuContext,
 } from "../src/roku.js";
+import type { RokuContext } from "../src/roku.js";
 
 import { jpegImage, pngImage } from "./fixtures/images.js";
 

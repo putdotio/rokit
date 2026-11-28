@@ -36,7 +36,8 @@ import { syncRokit } from "./rokit-effect.js";
 import { captureScreenshotEffect } from "./screenshot.js";
 import type { RokuContext } from "./roku-context.js";
 import { resolveFileOutputPath, resolveOutputPath } from "./runtime.js";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export const runCommandEffect: (
   context: RokuContext | undefined,

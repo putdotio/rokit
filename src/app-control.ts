@@ -10,7 +10,8 @@ import { normalizeError } from "./errors.js";
 import { attemptEffect, pollDone, pollPending, pollUntilEffect } from "./polling.js";
 import { failRokit, syncRokit } from "./rokit-effect.js";
 import type { RokuContext } from "./roku-context.js";
-import { readActiveApp, type ActiveApp } from "./xml.js";
+import { readActiveApp } from "./xml.js";
+import type { ActiveApp } from "./xml.js";
 
 type ActiveAppPollState = {
   readonly lastApp?: ActiveApp;

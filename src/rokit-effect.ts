@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export const syncRokit = <A>(trySync: () => A): Effect.Effect<A, RokitError> =>
   Effect.try({ catch: normalizeError, try: trySync });

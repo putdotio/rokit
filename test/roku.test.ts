@@ -4,13 +4,8 @@ import * as rokuDeploy from "roku-deploy";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { discoverRokuDevicesEffect, readSsdpHeaders } from "../src/discovery.js";
 import { fetchEcpTextEffect, postEcpEffect } from "../src/ecp.js";
-import {
-  getDeviceInfo,
-  pressKey,
-  queryEcp,
-  resolvePackageOutputPath,
-  type RokuContext,
-} from "../src/roku.js";
+import { getDeviceInfo, pressKey, queryEcp, resolvePackageOutputPath } from "../src/roku.js";
+import type { RokuContext } from "../src/roku.js";
 
 const context: RokuContext = {
   target: "192.0.2.1",
