@@ -9,8 +9,8 @@ import {
   isInsidePackageRoots,
   packageRootSpecFromRokuDeployFiles,
   packageRulesIncludePath,
-  type PackageRootSpec,
 } from "./package-path-rules.js";
+import type { PackageRootSpec } from "./package-path-rules.js";
 
 export type PackageResult = {
   readonly path: string;
@@ -25,16 +25,16 @@ export type PackageFileOverride = {
 
 export type PackageZipOptions = {
   readonly exclude?: (path: string) => boolean;
-  readonly overrides?: readonly PackageFileOverride[];
+  readonly overrides?: ReadonlyArray<PackageFileOverride>;
   readonly outFile: string;
   readonly rootDir: string;
-  readonly roots?: readonly string[];
+  readonly roots?: ReadonlyArray<string>;
   readonly skipMissingRoots?: boolean;
 };
 
 export type PackageZipResult = {
   readonly fileCount: number;
-  readonly files: readonly string[];
+  readonly files: ReadonlyArray<string>;
   readonly path: string;
 };
 
@@ -60,6 +60,7 @@ export const packageChannelEffect = Effect.fn("packageChannel")(function* (
   const options = yield* getRokuDeployOptionsEffect(baseOptions, fallbackRootDir);
   const outputZipPath = yield* resolvePackageChannelOutputPath(options, fallbackRootDir);
   const hasRokuDeployConfig = yield* hasRokuDeployConfigEffect(fallbackRootDir);
+
   const nativeOptions =
     hasRokuDeployConfig || !canUseNativePackageZip(outputZipPath)
       ? undefined
@@ -67,6 +68,7 @@ export const packageChannelEffect = Effect.fn("packageChannel")(function* (
 
   if (nativeOptions !== undefined) {
     const result = yield* createPackageZipEffect(nativeOptions);
+
     return { path: result.path };
   }
 
@@ -88,6 +90,7 @@ export const resolvePackageOutputPathEffect = Effect.fn("resolvePackageOutputPat
   const path = yield* Path.Path;
   const fallbackRootDir = path.resolve(rootDir ?? process.cwd());
   const options = yield* packageOptionsEffect(outputPath, rootDir);
+
   return yield* getRokuDeployOutputZipFilePathEffect(options, fallbackRootDir);
 });
 
@@ -101,7 +104,7 @@ export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
   const overrides = new Map<string, PackageFileContent>();
   const files = new Set<string>();
   const roots = options.roots ?? defaultPackageRoots;
-  const packageRoots: string[] = [];
+  const packageRoots: Array<string> = [];
 
   for (const root of roots) {
     packageRoots.push(yield* normalizePackagePath(root));
@@ -127,6 +130,7 @@ export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
     const skipMissingRoot =
       (options.skipMissingRoots === true && !requiredDefaultPackageRoots.has(packagePath)) ||
       (usingDefaultRoots && !requiredDefaultPackageRoots.has(packagePath));
+
     const rootFiles = yield* collectPackageZipFiles(
       rootDir,
       rootRealPath,
@@ -178,6 +182,7 @@ export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
         directory: path.dirname(outFile),
         prefix: `.${path.basename(outFile)}-`,
       });
+
       yield* fs.writeFile(tempFile, output);
       yield* fs.rename(tempFile, outFile);
     }),
@@ -213,6 +218,7 @@ export const resolveSafePackageOutputPathEffect = Effect.fn("resolveSafePackageO
     const fallbackRootDir = path.resolve(rootDir ?? process.cwd());
     const baseOptions = yield* packageOptionsEffect(outputPath, rootDir);
     const options = yield* getRokuDeployOptionsEffect(baseOptions, fallbackRootDir);
+
     return yield* resolvePackageChannelOutputPath(options, fallbackRootDir);
   },
 );
@@ -227,7 +233,7 @@ const collectPackageZipFiles: (
   exclude: ((path: string) => boolean) | undefined,
   skipMissingRoot?: boolean,
 ) => Effect.Effect<
-  readonly string[],
+  ReadonlyArray<string>,
   PackageZipError | PlatformError,
   FileSystem.FileSystem | Path.Path
 > = Effect.fn("collectPackageZipFiles")(function* (
@@ -262,7 +268,8 @@ const collectPackageZipFiles: (
     return [];
   }
 
-  const files: string[] = [];
+  const files: Array<string> = [];
+
   for (const entry of yield* fs.readDirectory(absolutePath)) {
     const childPath = yield* normalizePackagePath(`${relativePath}/${entry}`);
 
@@ -282,11 +289,13 @@ const readPackageFile = Effect.fn("readPackageFile")(function* (
   const absolutePath = path.join(rootDir, relativePath);
   yield* rejectPackageSymlink(absolutePath);
   yield* assertInsidePackageRoot(rootRealPath, absolutePath);
+
   return yield* fs.readFile(absolutePath);
 });
 
 const rejectPackageSymlink = Effect.fn("rejectPackageSymlink")(function* (absolutePath: string) {
   const fs = yield* FileSystem.FileSystem;
+
   const linkTarget = yield* Effect.match(fs.readLink(absolutePath), {
     onFailure: () => undefined,
     onSuccess: (target) => target,
@@ -329,6 +338,7 @@ const assertPackageOutputFile = Effect.fn("assertPackageOutputFile")(function* (
   }
 
   const info = yield* fs.stat(outputPath);
+
   if (info.type === "File") {
     return;
   }
@@ -343,7 +353,7 @@ const assertPackageOutputFile = Effect.fn("assertPackageOutputFile")(function* (
 const normalizePackagePath = Effect.fn("normalizePackagePath")(function* (packagePath: string) {
   yield* rejectUnsafeInput(packagePath, "package path");
 
-  const normalized = packagePath.replace(/\\/g, "/").replace(/^\.\/+/, "");
+  const normalized = packagePath.replaceAll("\\", "/").replace(/^\.\/+/, "");
   const segments = normalized.split("/");
 
   if (
@@ -361,8 +371,9 @@ const normalizePackagePath = Effect.fn("normalizePackagePath")(function* (packag
 
 const rejectUnsafeInput = Effect.fn("rejectUnsafeInput")(function* (value: string, label: string) {
   if (
-    [...value].some((character) => {
+    Array.from(value).some((character) => {
       const code = character.charCodeAt(0);
+
       return code < 32 || code === 127;
     })
   ) {
@@ -380,17 +391,19 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
   rootRealPath: string,
   outputPath: string,
   packageRoots: PackageRootSpec,
-  allowedExtensions: readonly string[],
+  allowedExtensions: ReadonlyArray<string>,
   sandboxRealPath = rootRealPath,
 ) {
   yield* rejectUnsafeInput(outputPath, "package output path");
 
   const path = yield* Path.Path;
+
   const resolvedOutput = path.isAbsolute(outputPath)
     ? path.resolve(outputPath)
     : path.resolve(rootDir, outputPath);
 
   const extension = path.extname(resolvedOutput).toLowerCase();
+
   if (!allowedExtensions.includes(extension)) {
     return yield* Effect.fail(
       new PackageZipError({
@@ -401,17 +414,21 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
 
   yield* assertPackageOutputFile(resolvedOutput);
 
-  const relativeOutput = path.relative(rootDir, resolvedOutput).replace(/\\/g, "/");
+  const relativeOutput = path.relative(rootDir, resolvedOutput).replaceAll("\\", "/");
+
   const isInsideRoot =
     relativeOutput !== "" && !relativeOutput.startsWith("..") && !path.isAbsolute(relativeOutput);
 
   const realOutput = yield* resolveRealOutputCandidatePath(resolvedOutput);
-  const relativeRealOutput = path.relative(rootRealPath, realOutput).replace(/\\/g, "/");
+  const relativeRealOutput = path.relative(rootRealPath, realOutput).replaceAll("\\", "/");
+
   const realOutputIsInsideRoot =
     relativeRealOutput !== "" &&
     !relativeRealOutput.startsWith("..") &&
     !path.isAbsolute(relativeRealOutput);
-  const relativeSandboxOutput = path.relative(sandboxRealPath, realOutput).replace(/\\/g, "/");
+
+  const relativeSandboxOutput = path.relative(sandboxRealPath, realOutput).replaceAll("\\", "/");
+
   const realOutputIsInsideSandbox =
     relativeSandboxOutput !== "" &&
     !relativeSandboxOutput.startsWith("..") &&
@@ -449,8 +466,8 @@ const resolvePackageChannelOutputPath = Effect.fn("resolvePackageChannelOutputPa
   const sandboxRealPath = yield* fs.realPath(path.resolve(fallbackRootDir));
   const outputZipPath = yield* getRokuDeployOutputZipFilePathEffect(options, rootDir);
   const packageRootSpec = packageRootSpecFromRokuDeployFiles(options.files);
-  const includedPackageRoots: string[] = [];
-  const excludedPackageRoots: string[] = [];
+  const includedPackageRoots: Array<string> = [];
+  const excludedPackageRoots: Array<string> = [];
 
   for (const root of packageRootSpec.included) {
     includedPackageRoots.push(root === "" ? root : yield* normalizePackagePath(root));
@@ -474,10 +491,10 @@ const resolvePackageChannelOutputPath = Effect.fn("resolvePackageChannelOutputPa
   );
 });
 
-const formatAllowedExtensions = (extensions: readonly string[]): string =>
+const formatAllowedExtensions = (extensions: ReadonlyArray<string>): string =>
   extensions.length === 1
-    ? extensions[0]!
-    : `${extensions.slice(0, -1).join(", ")} or ${extensions[extensions.length - 1]}`;
+    ? extensions[0]
+    : `${extensions.slice(0, -1).join(", ")} or ${extensions.at(-1)}`;
 
 const canUseNativePackageZip = (outputPath: string): boolean =>
   outputPath.toLowerCase().endsWith(".zip");
@@ -531,6 +548,7 @@ const resolveRealOutputCandidatePath = Effect.fn("resolveRealOutputCandidatePath
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+
   const linkTarget = yield* Effect.match(fs.readLink(outputPath), {
     onFailure: () => undefined,
     onSuccess: (target) => target,
@@ -563,6 +581,7 @@ const resolveRealOutputCandidatePath = Effect.fn("resolveRealOutputCandidatePath
   }
 
   const realAncestor = yield* fs.realPath(ancestor);
+
   return path.join(realAncestor, ...pendingSegments);
 });
 
@@ -576,6 +595,7 @@ const packageOptionsEffect = Effect.fn("packageOptions")(function* (
 ) {
   const path = yield* Path.Path;
   const resolvedRoot = path.resolve(rootDir ?? process.cwd());
+
   const resolvedOutput = path.isAbsolute(outputPath)
     ? path.resolve(outputPath)
     : path.resolve(resolvedRoot, outputPath);
@@ -622,7 +642,7 @@ const nativePackageOptionsFromRokuDeploy = (
   };
 };
 
-const usesOnlyStringFileEntries = (files: readonly unknown[] | undefined): boolean =>
+const usesOnlyStringFileEntries = (files: ReadonlyArray<unknown> | undefined): boolean =>
   files === undefined || files.every((entry) => typeof entry === "string");
 
 const hasRokuDeployConfigEffect = Effect.fn("hasRokuDeployConfig")(function* (rootDir: string) {
@@ -668,6 +688,7 @@ const withCwd = <A>(cwd: string, run: () => A): A => {
 
   const previousCwd = process.cwd();
   process.chdir(cwd);
+
   try {
     return run();
   } finally {

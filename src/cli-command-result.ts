@@ -1,6 +1,7 @@
 import type { CommandResult } from "./cli-types.js";
 import type { MediaPlayerInfo } from "./media-player.js";
-import { partialObservationMetadata, type ProofBundle, type RokitSnapshot } from "./proof.js";
+import { partialObservationMetadata } from "./proof.js";
+import type { ProofBundle, RokitSnapshot } from "./proof.js";
 
 export const observationResult = (command: string, data: RokitSnapshot): CommandResult => ({
   command,

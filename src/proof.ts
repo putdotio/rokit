@@ -1,21 +1,20 @@
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import { queryActiveAppEffect } from "./app-control.js";
-import { checkDeviceEffect, getDeviceInfoEffect, type DeviceSummary } from "./device.js";
+import { checkDeviceEffect, getDeviceInfoEffect } from "./device.js";
+import type { DeviceSummary } from "./device.js";
 import { normalizeError } from "./errors.js";
 import { queryMediaPlayerEffect } from "./media-player-query.js";
 import type { MediaPlayerInfo } from "./media-player.js";
-import { observeRokitEffect, type Observation } from "./observation.js";
+import { observeRokitEffect } from "./observation.js";
+import type { Observation } from "./observation.js";
 import { timestampOutputPath } from "./output-path.js";
 import { requirePasswordEffect } from "./roku-context-requirements.js";
 import type { RokuContext } from "./roku-context.js";
 import { querySceneGraphEffect } from "./scenegraph-query.js";
 import { captureScreenshotEffect } from "./screenshot.js";
-import {
-  readSceneGraphFailure,
-  readSceneGraphStatus,
-  type SceneGraphStatus,
-} from "./scenegraph.js";
+import { readSceneGraphFailure, readSceneGraphStatus } from "./scenegraph.js";
+import type { SceneGraphStatus } from "./scenegraph.js";
 import type { ActiveApp } from "./xml.js";
 
 export type { Observation } from "./observation.js";
@@ -38,7 +37,7 @@ export type ProofArtifact = {
 };
 
 export type ProofBundle = {
-  readonly artifacts: readonly ProofArtifact[];
+  readonly artifacts: ReadonlyArray<ProofArtifact>;
   readonly outputDir: string;
   readonly snapshot: RokitSnapshot;
 };
@@ -73,7 +72,7 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const artifacts: ProofArtifact[] = [];
+  const artifacts: Array<ProofArtifact> = [];
 
   yield* fs.makeDirectory(outputDir, { recursive: true });
 
@@ -81,6 +80,7 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
     const outputPath = path.join(outputDir, `${name}.json`);
     yield* fs.writeFile(outputPath, textEncoder.encode(`${JSON.stringify(value, null, 2)}\n`));
     artifacts.push({ kind: "json", path: outputPath });
+
     return outputPath;
   });
 
@@ -88,6 +88,7 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
   yield* writeJson("summary", snapshot);
 
   const sceneGraph = yield* observeRokitEffect(querySceneGraphEffect(context));
+
   if (sceneGraph.status === "ok") {
     const outputPath = path.join(outputDir, "sgnodes.xml");
     yield* fs.writeFile(outputPath, textEncoder.encode(sceneGraph.data));
@@ -100,10 +101,12 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
 
   if (includeScreenshot) {
     const password = yield* requirePasswordEffect(context);
+
     const screenshotPath = yield* captureScreenshotEffect(
       { ...context, password },
       timestampOutputPath(path.join(outputDir, "screenshot.png")),
     ).pipe(Effect.mapError(normalizeError));
+
     artifacts.push({ kind: "screenshot", path: screenshotPath });
   }
 
@@ -138,8 +141,8 @@ export const partialObservationMetadata = (snapshot: RokitSnapshot) => {
       };
 };
 
-const failedSnapshotObservations = (snapshot: RokitSnapshot): readonly string[] => {
-  const failures: string[] = [];
+const failedSnapshotObservations = (snapshot: RokitSnapshot): ReadonlyArray<string> => {
+  const failures: Array<string> = [];
 
   if (snapshot.activeApp.status === "failed") {
     failures.push("activeApp");

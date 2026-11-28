@@ -74,6 +74,7 @@ export const fetchEcpTextEffect = Effect.fn("fetchEcpText")(function* (
   path: string,
 ) {
   const safePath = yield* safeDeviceRelativePath(path);
+
   return yield* fetchEcpUrlTextEffect(context, ecpUrl(context, safePath), safePath);
 });
 
@@ -187,6 +188,7 @@ const safeDeviceRelativePath = (path: string): Effect.Effect<string, EcpPathErro
   Effect.try({
     try: () => {
       const safePath = validateEcpPath(path);
+
       return safePath.startsWith("/") ? safePath : `/${safePath}`;
     },
     catch: (error) => new EcpPathError({ detail: formatErrorMessage(error), path }),
@@ -196,6 +198,7 @@ const remoteKeyEffect = (key: string): Effect.Effect<string, EcpPathError> =>
   Effect.try({
     try: () => {
       validateRemoteKey(key);
+
       return key;
     },
     catch: (error) =>
@@ -240,8 +243,9 @@ export const validateRemoteKey = (key: string): void => {
 
 const rejectUnsafeInput = (value: string, label: string): void => {
   if (
-    [...value].some((character) => {
+    Array.from(value).some((character) => {
       const code = character.charCodeAt(0);
+
       return code < 32 || code === 127;
     })
   ) {

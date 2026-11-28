@@ -13,6 +13,7 @@ describe("public wait cancellation", () => {
       "fetch",
       vi.fn<typeof fetch>((_input, init) => {
         signal = init?.signal ?? undefined;
+
         return new Promise<Response>(() => {});
       }),
     );

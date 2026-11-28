@@ -26,13 +26,13 @@ export const fileArgumentField = (
   options: Parameters<typeof Argument.File>[1],
 ) => fileArgument(field.name, field.description, options);
 
-export const choiceArgument = <const Choices extends readonly [string, ...string[]]>(
+export const choiceArgument = <const Choices extends readonly [string, ...Array<string>]>(
   name: string,
   choices: Choices,
   description: string,
 ) => Argument.Literals(name, choices).pipe(Argument.withDescription(description));
 
-export const choiceArgumentField = <const Choices extends readonly [string, ...string[]]>(
+export const choiceArgumentField = <const Choices extends readonly [string, ...Array<string>]>(
   field: DescribedField,
   choices: Choices,
 ) => choiceArgument(field.name, choices, field.description);
@@ -70,8 +70,6 @@ export const remoteKeyArgument = (field: DescribedField) =>
   );
 
 export const launchParamsFlag = (field: DescribedField) =>
-  // Roku query params can contain "=" in the value; Effect's keyValuePair primitive
-  // rejects that, so this parser splits only on the first separator.
   Flag.String(field.name).pipe(
     Flag.withMetavar("key=value"),
     Flag.withDescription(field.description),
@@ -87,10 +85,11 @@ export const optionToUndefined = <A>(value: Option.Option<A>): A | undefined =>
 
 const validateRemoteKeyArgument = (key: string): string => {
   validateRemoteKey(key);
+
   return key;
 };
 
-const parseLaunchParams = (pairs: readonly string[]): ReadonlyMap<string, string> => {
+const parseLaunchParams = (pairs: ReadonlyArray<string>): ReadonlyMap<string, string> => {
   const params = new Map<string, string>();
 
   for (const pair of pairs) {

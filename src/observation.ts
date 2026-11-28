@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { renderError, type RokitError } from "./errors.js";
+import { renderError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export type Observation<T> =
   | { readonly data: T; readonly status: "ok" }

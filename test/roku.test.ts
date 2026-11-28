@@ -4,13 +4,8 @@ import * as rokuDeploy from "roku-deploy";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { discoverRokuDevicesEffect, readSsdpHeaders } from "../src/discovery.js";
 import { fetchEcpTextEffect, postEcpEffect } from "../src/ecp.js";
-import {
-  getDeviceInfo,
-  pressKey,
-  queryEcp,
-  resolvePackageOutputPath,
-  type RokuContext,
-} from "../src/roku.js";
+import { getDeviceInfo, pressKey, queryEcp, resolvePackageOutputPath } from "../src/roku.js";
+import type { RokuContext } from "../src/roku.js";
 
 const context: RokuContext = {
   target: "192.0.2.1",
@@ -26,7 +21,7 @@ describe("Roku helpers", () => {
     await expect(queryEcp(context, "http://example.com/query/device-info")).rejects.toThrow(
       "ECP path must be device-relative",
     );
-    await expect(queryEcp(context, "/\\example.com/query/device-info")).rejects.toThrow(
+    await expect(queryEcp(context, String.raw`/\example.com/query/device-info`)).rejects.toThrow(
       "ECP path must not include backslashes",
     );
   });
@@ -41,10 +36,11 @@ describe("Roku helpers", () => {
   });
 
   it("allows helper-generated encoded literal keypress paths", async () => {
-    const fetchCalls: string[] = [];
+    const fetchCalls: Array<string> = [];
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (input) => {
       fetchCalls.push(String(input));
+
       return new Response("");
     };
 
@@ -62,6 +58,7 @@ describe("Roku helpers", () => {
     let requestSignal: AbortSignal | undefined;
     globalThis.fetch = (_input, init) => {
       requestSignal = init?.signal ?? undefined;
+
       return new Promise<Response>(() => {});
     };
 
@@ -83,6 +80,7 @@ describe("Roku helpers", () => {
         new ReadableStream<Uint8Array>({
           pull: () => {
             bodyRead.resolve();
+
             return new Promise<void>(() => {});
           },
           cancel: () => {

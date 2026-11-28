@@ -1,5 +1,6 @@
 import { Effect, FileSystem, Stdio, Stream } from "effect";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export const resolveInputJsonSource: (
   source: string,
@@ -20,6 +21,7 @@ export const resolveInputJsonSource: (
     }
 
     const fileSystem = yield* FileSystem.FileSystem;
+
     return yield* fileSystem.readFileString(path).pipe(Effect.mapError(normalizeError));
   }
 
@@ -30,6 +32,7 @@ const readStdinText: () => Effect.Effect<string, RokitError, Stdio.Stdio> = Effe
   "readInputJsonStdin",
 )(function* () {
   const stdio = yield* Stdio.Stdio;
+
   const chunks = yield* stdio.stdin.pipe(
     Stream.decodeText(),
     Stream.runCollect,

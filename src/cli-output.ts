@@ -3,15 +3,17 @@ import type { CommandResult, OutputMode } from "./cli-types.js";
 export const printResult = (
   outputMode: OutputMode,
   result: CommandResult,
-  fields: readonly string[],
+  fields: ReadonlyArray<string>,
 ): void => {
   if (outputMode === "json") {
     console.log(JSON.stringify(applyFields(result, fields), null, 2));
+
     return;
   }
 
   if (result.message !== undefined) {
     console.log(result.message);
+
     return;
   }
 
@@ -21,17 +23,18 @@ export const printResult = (
 export const printError = (
   outputMode: OutputMode,
   message: string,
-  _fields: readonly string[],
+  _fields: ReadonlyArray<string>,
 ): void => {
   if (outputMode === "json") {
     console.error(JSON.stringify({ error: { message }, status: "failed" }, null, 2));
+
     return;
   }
 
   console.error(message);
 };
 
-export const applyFields = (value: unknown, fields: readonly string[]): unknown => {
+export const applyFields = (value: unknown, fields: ReadonlyArray<string>): unknown => {
   if (fields.length === 0) {
     return value;
   }
@@ -48,6 +51,7 @@ export const applyFields = (value: unknown, fields: readonly string[]): unknown 
   }
 
   preserveStatusMetadata(value, output);
+
   return output;
 };
 
@@ -63,9 +67,9 @@ const preserveStatusMetadata = (source: unknown, target: Record<string, unknown>
   }
 };
 
-type FieldContainer = Record<string, unknown> | unknown[];
+type FieldContainer = Record<string, unknown> | Array<unknown>;
 
-const pickField = (source: unknown, path: readonly string[]): unknown => {
+const pickField = (source: unknown, path: ReadonlyArray<string>): unknown => {
   const [head, ...tail] = path;
 
   if (!head) {
@@ -74,6 +78,7 @@ const pickField = (source: unknown, path: readonly string[]): unknown => {
 
   if (Array.isArray(source)) {
     const index = parseArrayIndex(head);
+
     return index === undefined || index >= source.length
       ? undefined
       : pickFieldOrValue(source[index], tail);
@@ -86,10 +91,10 @@ const pickField = (source: unknown, path: readonly string[]): unknown => {
   return pickFieldOrValue(source[head], tail);
 };
 
-const pickFieldOrValue = (source: unknown, path: readonly string[]): unknown =>
+const pickFieldOrValue = (source: unknown, path: ReadonlyArray<string>): unknown =>
   path.length === 0 ? source : pickField(source, path);
 
-const mergeField = (target: FieldContainer, path: readonly string[], value: unknown): void => {
+const mergeField = (target: FieldContainer, path: ReadonlyArray<string>, value: unknown): void => {
   const [head, ...tail] = path;
 
   if (head === undefined) {
@@ -98,6 +103,7 @@ const mergeField = (target: FieldContainer, path: readonly string[], value: unkn
 
   if (tail.length === 0) {
     setContainerValue(target, head, value);
+
     return;
   }
 
@@ -110,6 +116,7 @@ const mergeField = (target: FieldContainer, path: readonly string[], value: unkn
 const getContainerValue = (target: FieldContainer, key: string): unknown => {
   if (Array.isArray(target)) {
     const index = parseArrayIndex(key);
+
     return index === undefined ? undefined : target[index];
   }
 
@@ -119,9 +126,11 @@ const getContainerValue = (target: FieldContainer, key: string): unknown => {
 const setContainerValue = (target: FieldContainer, key: string, value: unknown): void => {
   if (Array.isArray(target)) {
     const index = parseArrayIndex(key);
+
     if (index !== undefined) {
       target[index] = value;
     }
+
     return;
   }
 

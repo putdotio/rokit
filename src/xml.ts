@@ -7,11 +7,13 @@ export type ActiveApp = {
 
 export const readXmlTag = (xml: string, tag: string): string | undefined => {
   const pattern = new RegExp(`<${tag}>([^<]*)</${tag}>`);
+
   return pattern.exec(xml)?.[1]?.trim();
 };
 
 export const readXmlAttribute = (attributes: string, name: string): string | undefined => {
   const pattern = new RegExp(`${name}="([^"]*)"`);
+
   return pattern.exec(attributes)?.[1];
 };
 

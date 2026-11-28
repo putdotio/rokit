@@ -11,6 +11,7 @@ const NonNegativeInteger = Schema.Number.check(Schema.isInt(), Schema.isGreaterT
 const StringArray = Schema.Array(Schema.String);
 const StringMap = Schema.Record(Schema.String, Schema.String);
 const NodeState = Schema.Literals(["visible", "hidden", "absent"]);
+
 const NodeExpectationSchema = Schema.Union([
   Schema.Struct({
     attribute: Schema.String,
@@ -21,6 +22,7 @@ const NodeExpectationSchema = Schema.Union([
     text: Schema.optionalKey(Schema.String),
   }),
 ]);
+
 const NodeConditionSchema = Schema.Struct({
   expectation: NodeExpectationSchema,
   nodeName: NonEmptyString,
@@ -28,7 +30,9 @@ const NodeConditionSchema = Schema.Struct({
 });
 
 type InputJsonRecord = typeof InputJsonRecord.Type;
+
 type NodeExpectationFromSchema = typeof NodeExpectationSchema.Type;
+
 type NodeConditionFromSchema = typeof NodeConditionSchema.Type;
 
 export const parseJsonRecordEffect: (
@@ -141,7 +145,7 @@ export const readOptionalNonNegativeNumberEffect: (
 export const readStringArrayEffect: (
   record: InputJsonRecord,
   key: string,
-) => Effect.Effect<readonly string[], InvalidInput> = Effect.fn("readInputJsonStringArray")(
+) => Effect.Effect<ReadonlyArray<string>, InvalidInput> = Effect.fn("readInputJsonStringArray")(
   function* (record, key) {
     return yield* Schema.decodeUnknownEffect(StringArray)(record[key]).pipe(
       Effect.mapError(
@@ -154,7 +158,7 @@ export const readStringArrayEffect: (
 export const readOptionalStringArrayEffect: (
   record: InputJsonRecord,
   key: string,
-) => Effect.Effect<readonly string[] | undefined, InvalidInput> = Effect.fn(
+) => Effect.Effect<ReadonlyArray<string> | undefined, InvalidInput> = Effect.fn(
   "readOptionalInputJsonStringArray",
 )(function* (record, key) {
   const value = record[key];
@@ -182,6 +186,7 @@ export const readStringMapEffect: (
     }
 
     const valueRecord = yield* readStringMapRecordEffect(value, key);
+
     return new Map(Object.entries(valueRecord));
   },
 );
@@ -206,6 +211,7 @@ export const readNodeExpectationEffect: (
 ) => Effect.Effect<NodeExpectation, InvalidInput> = Effect.fn("readInputJsonNodeExpectation")(
   function* (record) {
     const expectation = record.expectation;
+
     const decoded = yield* Schema.decodeUnknownEffect(NodeExpectationSchema)(expectation).pipe(
       Effect.matchEffect({
         onFailure: () => Effect.succeed<NodeExpectationFromSchema | undefined>(undefined),
@@ -275,6 +281,7 @@ const readStringMapRecordEffect: (
   }
 
   const valueRecord = yield* readRecordEffect(value, `input JSON field must be an object: ${key}`);
+
   for (const mapValue of Object.values(valueRecord)) {
     if (typeof mapValue !== "string") {
       return yield* failRokit(`input JSON map values must be strings: ${key}`);
@@ -301,6 +308,7 @@ const readNodeConditionEffect: (
     }
 
     const record = yield* readRecordEffect(value, `input JSON field must be an object: ${key}`);
+
     return {
       expectation: yield* readNodeExpectationEffect(record),
       nodeName: yield* readStringEffect(record, "nodeName"),

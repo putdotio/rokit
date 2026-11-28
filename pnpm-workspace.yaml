@@ -18,6 +18,8 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # Exact versions or `pkg@v1 || v2` unions only; `pkg@^range` is rejected by design.
   - "@uinaf/skillcheck@0.4.0"
+  - "@uinaf/oxlint-config"
+  - "@uinaf/oxlint-plugin-no-comments"
 catalog:
   "@vitest/coverage-v8": 5.1.1
   vite: npm:@voidzero-dev/vite-plus-core@8.3.8001

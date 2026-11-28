@@ -1,6 +1,8 @@
-import { createSocket, type Socket } from "node:dgram";
+import { createSocket } from "node:dgram";
+import type { Socket } from "node:dgram";
 import { Effect } from "effect";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export type DiscoveredRokuDevice = {
   readonly location: string;
@@ -10,15 +12,16 @@ export type DiscoveredRokuDevice = {
 };
 
 export const discoverRokuDevicesEffect = Effect.fn("discoverRokuDevices")(function* (
-  timeoutMs = 3_000,
+  timeoutMs = 3000,
 ) {
   const safeTimeoutMs = yield* validateDiscoveryTimeoutEffect(timeoutMs);
+
   return yield* discoverWithSsdpEffect(safeTimeoutMs);
 });
 
 export const discoverRokuDevices = async (
-  timeoutMs = 3_000,
-): Promise<readonly DiscoveredRokuDevice[]> =>
+  timeoutMs = 3000,
+): Promise<ReadonlyArray<DiscoveredRokuDevice>> =>
   await Effect.runPromise(discoverRokuDevicesEffect(timeoutMs));
 
 const ssdpSearchRequest = [
@@ -44,12 +47,12 @@ const validateDiscoveryTimeoutEffect = Effect.fn("validateDiscoveryTimeout")(fun
 });
 
 const discoverWithSsdpEffect = Effect.fn("discoverWithSsdp")(function* (timeoutMs: number) {
-  return yield* Effect.callback<readonly DiscoveredRokuDevice[], RokitError>((resume) => {
+  return yield* Effect.callback<ReadonlyArray<DiscoveredRokuDevice>, RokitError>((resume) => {
     const socket = createSocket("udp4");
     const devices = new Map<string, DiscoveredRokuDevice>();
     let finished = false;
 
-    const complete = (effect: Effect.Effect<readonly DiscoveredRokuDevice[], RokitError>) => {
+    const complete = (effect: Effect.Effect<ReadonlyArray<DiscoveredRokuDevice>, RokitError>) => {
       if (finished) {
         return;
       }
@@ -136,7 +139,5 @@ const readLocationTarget = (location: string): string | undefined => {
 const closeSocket = (socket: Socket): void => {
   try {
     socket.close();
-  } catch {
-    // The socket may already be closed after an error or interrupt.
-  }
+  } catch {}
 };

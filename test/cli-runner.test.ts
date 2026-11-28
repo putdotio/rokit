@@ -7,7 +7,7 @@ import type { RokuContext } from "../src/roku.js";
 
 const context: RokuContext = {
   target: "192.0.2.1",
-  timeoutMs: 1_000,
+  timeoutMs: 1000,
   username: "rokudev",
 };
 
@@ -19,6 +19,7 @@ describe("CLI runner", () => {
 
   it("waits for a press until condition when until-timeout-ms is set", async () => {
     let sceneGraphCalls = 0;
+
     const fetchMock = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
 
@@ -28,11 +29,13 @@ describe("CLI runner", () => {
 
       if (url === "http://192.0.2.1:8060/query/sgnodes/nodes?node-id=readyNode") {
         sceneGraphCalls += 1;
+
         return new Response(sceneGraphCalls === 1 ? missingNodeXml : readyNodeXml);
       }
 
       return new Response("", { status: 404 });
     });
+
     vi.stubGlobal("fetch", fetchMock);
 
     const command: Command = {
@@ -64,5 +67,6 @@ describe("CLI runner", () => {
 
 const missingNodeXml =
   '<sgnodes><Nodes_Nodes node-id="readyNode"><Default name="" /></Nodes_Nodes><status>OK</status></sgnodes>';
+
 const readyNodeXml =
   '<sgnodes><Nodes_Nodes node-id="readyNode"><Default name="" /><Label name="readyNode" /></Nodes_Nodes><status>OK</status></sgnodes>';

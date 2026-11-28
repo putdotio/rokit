@@ -15,7 +15,7 @@ export type NodeCondition = {
 
 export type PressArgs = {
   readonly delayMs: number;
-  readonly keys: readonly string[];
+  readonly keys: ReadonlyArray<string>;
   readonly maxAttempts: number;
   readonly until?: NodeCondition;
 };
@@ -35,7 +35,7 @@ export type OutputMode = "json" | "text";
 
 export type CliOptions = {
   readonly dryRun: boolean;
-  readonly fields: readonly string[];
+  readonly fields: ReadonlyArray<string>;
   readonly inputJson?: string;
   readonly outputMode: OutputMode;
 };
@@ -44,7 +44,7 @@ export type CommandResult = {
   readonly command: string;
   readonly data?: unknown;
   readonly dryRun?: true;
-  readonly failedObservations?: readonly string[];
+  readonly failedObservations?: ReadonlyArray<string>;
   readonly message?: string;
   readonly partial?: true;
   readonly status: "ok";
@@ -56,18 +56,18 @@ export type DescribedField = {
   readonly required: boolean;
   readonly repeatable?: boolean;
   readonly type: string;
-  readonly values?: readonly string[];
+  readonly values?: ReadonlyArray<string>;
 };
 
 export type DescribedCommand = {
   readonly description: string;
   readonly inputJson: {
-    readonly fields: readonly DescribedField[];
-    readonly required: readonly string[];
+    readonly fields: ReadonlyArray<DescribedField>;
+    readonly required: ReadonlyArray<string>;
   };
   readonly mutates: boolean;
   readonly name: CommandName;
-  readonly parameters: readonly DescribedField[];
+  readonly parameters: ReadonlyArray<DescribedField>;
   readonly requiresTarget: boolean;
 };
 
@@ -79,8 +79,8 @@ export type CliDescription = {
     readonly outputFields: boolean;
     readonly schemaIntrospection: boolean;
   };
-  readonly commands: readonly DescribedCommand[];
-  readonly globalOptions: readonly DescribedField[];
+  readonly commands: ReadonlyArray<DescribedCommand>;
+  readonly globalOptions: ReadonlyArray<DescribedField>;
   readonly schemaVersion: number;
 };
 

@@ -1,10 +1,7 @@
 import { Effect } from "effect";
 import { queryEcpEffect } from "./app-control.js";
-import {
-  readMediaPlayerInfo,
-  type MediaPlayerInfo,
-  type MediaPlayerState,
-} from "./media-player.js";
+import { readMediaPlayerInfo } from "./media-player.js";
+import type { MediaPlayerInfo, MediaPlayerState } from "./media-player.js";
 import { attemptEffect, pollDone, pollPending, pollUntilEffect } from "./polling.js";
 import { failRokit } from "./rokit-effect.js";
 import type { RokuContext } from "./roku-context.js";
@@ -29,6 +26,7 @@ export const queryMediaPlayerEffect = Effect.fn("queryMediaPlayer")(function* (
   context: RokuContext,
 ) {
   const xml = yield* queryMediaPlayerXmlEffect(context);
+
   return readMediaPlayerInfo(xml);
 });
 
@@ -51,6 +49,7 @@ export const queryMediaPlayerSafeEffect = Effect.fn("queryMediaPlayerSafe")(func
   context: RokuContext,
 ) {
   const xml = yield* queryMediaPlayerXmlSafeEffect(context);
+
   return xml === undefined ? undefined : readMediaPlayerInfo(xml);
 });
 
@@ -86,6 +85,7 @@ export const waitForMediaPlayerStateEffect = Effect.fn("waitForMediaPlayerState"
   timeoutMs = 10_000,
 ) {
   const initialState: MediaPlayerPollState = {};
+
   return yield* pollUntilEffect({
     initialState,
     intervalMs: defaultPollIntervalMs,
@@ -105,6 +105,7 @@ export const waitForMediaPlayerStateEffect = Effect.fn("waitForMediaPlayerState"
       ),
     timeout: (state) => {
       const suffix = state.lastError ? `; last ECP error: ${state.lastError}` : "";
+
       return failRokit(
         `expected media-player state ${expectedState}, got ${state.lastState ?? "unknown"}${suffix}`,
       );

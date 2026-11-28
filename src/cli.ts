@@ -1,4 +1,5 @@
-import { Effect, FileSystem, Path, Stdio } from "effect";
+import type { FileSystem, Path, Stdio } from "effect";
+import { Effect } from "effect";
 import PackageJson from "../package.json" with { type: "json" };
 import { parseEffectCliEffect, runEffectCliActionEffect } from "./cli-command.js";
 import { commandNeedsTarget } from "./cli-command-traits.js";
@@ -8,13 +9,14 @@ import { inferErrorOutputMode } from "./cli-options.js";
 import { printError, printResult } from "./cli-output.js";
 import { runCommandEffect } from "./cli-runner.js";
 import type { Command, OutputMode, ParsedCli } from "./cli-types.js";
-import { InvalidInput, normalizeError, renderError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError, renderError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 import type { RokuContext } from "./roku-context.js";
 import { loadEnv, loadLocalEnv, requireTarget } from "./runtime.js";
 
 export const mainEffect = Effect.fn("mainEffect")(function* (argv = process.argv.slice(2)) {
   let outputMode = inferErrorOutputMode(argv);
-  let fields: readonly string[] = [];
+  let fields: ReadonlyArray<string> = [];
 
   yield* runMainEffect(
     argv,
@@ -35,14 +37,15 @@ export const mainEffect = Effect.fn("mainEffect")(function* (argv = process.argv
 });
 
 const runMainEffect: (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
   setOutputMode: (outputMode: OutputMode) => void,
-  setFields: (fields: readonly string[]) => void,
+  setFields: (fields: ReadonlyArray<string>) => void,
 ) => Effect.Effect<void, RokitError, FileSystem.FileSystem | Path.Path | Stdio.Stdio> = Effect.fn(
   "runMain",
 )(function* (argv, setOutputMode, setFields) {
   if (argv.length === 0) {
     yield* runEffectCliActionEffect(["--help"]);
+
     return;
   }
 
@@ -50,11 +53,13 @@ const runMainEffect: (
     yield* Effect.sync(() => {
       console.log(PackageJson.version);
     });
+
     return;
   }
 
   if (isEffectCliActionRequest(argv)) {
     yield* runEffectCliActionEffect(normalizeEffectCliActionArgs(argv));
+
     return;
   }
 
@@ -66,6 +71,7 @@ const runMainEffect: (
 
   if (parsed.command === undefined && parsed.inputJson === undefined) {
     yield* runEffectCliActionEffect(["--help"]);
+
     return;
   }
 
@@ -91,6 +97,7 @@ const loadContextEffect: (
       try: () => {
         loadLocalEnv();
         const env = loadEnv();
+
         return {
           password: env.password,
           target: requireTarget(env),
@@ -116,6 +123,7 @@ const parseCommandEffect: (
 
   if (parsed.inputJson !== undefined) {
     const inputJson = yield* resolveInputJsonSource(parsed.inputJson);
+
     return yield* parseInputJsonEffect(inputJson);
   }
 
@@ -130,20 +138,20 @@ const isHelpFlag = (arg: string | undefined): boolean => arg === "--help" || arg
 
 const isVersionFlag = (arg: string | undefined): boolean => arg === "--version" || arg === "-v";
 
-const isVersionActionRequest = (args: readonly string[]): boolean =>
+const isVersionActionRequest = (args: ReadonlyArray<string>): boolean =>
   hasPreTerminatorArg(args, isVersionFlag);
 
-const isEffectCliActionRequest = (args: readonly string[]): boolean =>
+const isEffectCliActionRequest = (args: ReadonlyArray<string>): boolean =>
   hasPreTerminatorArg(
     args,
     (arg) => isHelpFlag(arg) || isVersionFlag(arg) || arg === "--completions",
   );
 
-const normalizeEffectCliActionArgs = (args: readonly string[]): readonly string[] =>
+const normalizeEffectCliActionArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   args.map((arg) => (arg === "-v" ? "--version" : arg));
 
 const hasPreTerminatorArg = (
-  args: readonly string[],
+  args: ReadonlyArray<string>,
   predicate: (arg: string) => boolean,
 ): boolean => {
   for (const arg of args) {

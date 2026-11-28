@@ -1,5 +1,7 @@
 export { describeCli, isDescribedCommandName } from "./cli-describe.js";
+
 export type { CliDescription, DescribedCommand, DescribedField } from "./cli-types.js";
+
 export {
   buildDebugCommand,
   captureDebugConsole,
@@ -7,14 +9,18 @@ export {
   runDebugCommand,
   runDebugCommandEffect,
 } from "./debug.js";
+
 export type {
   DebugCommandResult,
   DebugConsoleCapture,
   RokuDebugCommand,
   RokuDebugPort,
 } from "./debug.js";
+
 export { ecpPort, fetchEcpTextEffect, postEcpEffect } from "./ecp.js";
+
 export type { EcpError } from "./ecp.js";
+
 export {
   collectSnapshot,
   collectSnapshotEffect,
@@ -22,7 +28,9 @@ export {
   writeProof,
   writeProofEffect,
 } from "./proof.js";
+
 export type { Observation, ProofArtifact, ProofBundle, RokitSnapshot } from "./proof.js";
+
 export {
   assertMediaPlayerContainer,
   assertMediaPlayerContainerEffect,
@@ -80,6 +88,7 @@ export {
   waitForSceneGraphNode,
   waitForSceneGraphNodeEffect,
 } from "./roku.js";
+
 export type {
   DeviceSummary,
   DiscoveredRokuDevice,
@@ -98,6 +107,7 @@ export type {
   ScreenshotCaptureOptions,
   WaitForSceneGraphAssertionOptions,
 } from "./roku.js";
+
 export {
   assertNamedNodeSize,
   assertNamedNode,
@@ -118,6 +128,7 @@ export {
   readSceneGraphStatus,
   sceneGraphContainsText,
 } from "./scenegraph.js";
+
 export type {
   NodeExpectation,
   NodeState,
@@ -125,5 +136,7 @@ export type {
   SceneGraphPoint,
   SceneGraphStatus,
 } from "./scenegraph.js";
+
 export { readActiveApp, readXmlAttribute, readXmlTag } from "./xml.js";
+
 export type { ActiveApp } from "./xml.js";

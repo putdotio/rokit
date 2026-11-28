@@ -10,7 +10,8 @@ import { normalizeError } from "./errors.js";
 import { attemptEffect, pollDone, pollPending, pollUntilEffect } from "./polling.js";
 import { failRokit, syncRokit } from "./rokit-effect.js";
 import type { RokuContext } from "./roku-context.js";
-import { readActiveApp, type ActiveApp } from "./xml.js";
+import { readActiveApp } from "./xml.js";
+import type { ActiveApp } from "./xml.js";
 
 type ActiveAppPollState = {
   readonly lastApp?: ActiveApp;
@@ -23,6 +24,7 @@ export const queryActiveAppEffect = Effect.fn("queryActiveApp")(function* (conte
   const xml = yield* fetchEcpTextEffect(context, "/query/active-app").pipe(
     Effect.mapError(normalizeError),
   );
+
   return yield* syncRokit(() => readActiveApp(xml));
 });
 
@@ -35,6 +37,7 @@ export const waitForActiveAppEffect = Effect.fn("waitForActiveApp")(function* (
   timeoutMs = 10_000,
 ) {
   const initialState: ActiveAppPollState = {};
+
   return yield* pollUntilEffect({
     initialState,
     intervalMs: defaultPollIntervalMs,
@@ -55,6 +58,7 @@ export const waitForActiveAppEffect = Effect.fn("waitForActiveApp")(function* (
     timeout: (state) => {
       const last = state.lastApp ? `${state.lastApp.id} ${state.lastApp.name}` : "unknown";
       const errorSuffix = state.lastError ? `; last ECP error: ${state.lastError}` : "";
+
       return failRokit(`expected active app ${appId}, got ${last}${errorSuffix}`);
     },
     timeoutMs,
@@ -79,6 +83,7 @@ export const launchAppEffect = Effect.fn("launchApp")(function* (
   }
 
   yield* postLaunchEffect(context, url).pipe(Effect.mapError(normalizeError));
+
   return yield* waitForActiveAppEffect(context, appId);
 });
 
@@ -98,6 +103,7 @@ export const pressKey = async (context: RokuContext, key: string): Promise<void>
 
 export const queryEcpEffect = Effect.fn("queryEcp")(function* (context: RokuContext, path: string) {
   const safePath = yield* syncRokit(() => validateEcpPath(path));
+
   return yield* fetchEcpTextEffect(
     context,
     safePath.startsWith("/") ? safePath : `/${safePath}`,

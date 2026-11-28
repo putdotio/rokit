@@ -1,9 +1,11 @@
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Path } from "effect";
+import type { FileSystem, Path } from "effect";
+import { Effect } from "effect";
 import type { Command, CommandResult } from "./cli-types.js";
 import { commandSupportsDryRun } from "./cli-command-traits.js";
 import { validateRemoteKey } from "./ecp.js";
-import { normalizeError, type RokitError } from "./errors.js";
+import { normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 import { formatNodeData } from "./node-condition.js";
 import { timestampOutputPath } from "./output-path.js";
 import { resolveSafePackageOutputPathEffect } from "./package-zip.js";
@@ -40,14 +42,16 @@ const dryRunDataEffect: (
   if (!commandSupportsDryRun(command)) {
     return undefined;
   }
+
   if (command.name === "discover") {
-    return { timeoutMs: command.timeoutMs ?? 3_000 };
+    return { timeoutMs: command.timeoutMs ?? 3000 };
   }
 
   if (command.name === "package") {
     const outputPath = yield* syncRokit(() =>
       resolveFileOutputPath(command.outputPath, "package output path"),
     );
+
     return {
       path: yield* resolveSafePackageOutputPathEffect(outputPath).pipe(
         Effect.mapError(normalizeError),

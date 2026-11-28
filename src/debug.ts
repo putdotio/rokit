@@ -1,20 +1,21 @@
 import { createConnection } from "node:net";
 import { Clock, Effect } from "effect";
-import { DebugPortUnavailable, normalizeError, type RokitError } from "./errors.js";
+import { DebugPortUnavailable, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 import { fail, formatErrorMessage, rejectUnsafeInput } from "./runtime.js";
 import type { RokuContext } from "./roku-context.js";
 
 export type RokuDebugPort = 8080 | 8085;
 
 export type RokuDebugCommand = {
-  readonly args: readonly string[];
+  readonly args: ReadonlyArray<string>;
   readonly command: string;
   readonly port: RokuDebugPort;
   readonly request: string;
 };
 
 export type DebugCommandResult = {
-  readonly args: readonly string[];
+  readonly args: ReadonlyArray<string>;
   readonly body: string;
   readonly bytes: number;
   readonly command: string;
@@ -39,7 +40,10 @@ type DebugSocketReadOptions = {
 const debugServerPort: RokuDebugPort = 8080;
 const brightScriptConsolePort: RokuDebugPort = 8085;
 
-export const buildDebugCommand = (command: string, args: readonly string[]): RokuDebugCommand => {
+export const buildDebugCommand = (
+  command: string,
+  args: ReadonlyArray<string>,
+): RokuDebugCommand => {
   validateDebugToken(command, "debug command");
 
   for (const arg of args) {
@@ -48,16 +52,19 @@ export const buildDebugCommand = (command: string, args: readonly string[]): Rok
 
   if (command === "chanperf") {
     validateChanperfArgs(args);
+
     return debugServerCommand(command, args);
   }
 
   if (command === "brightscript_warnings") {
     validateOptionalNonNegativeInteger(args, "brightscript_warnings");
+
     return debugServerCommand(command, args);
   }
 
   if (command === "free" || command === "loaded_textures" || command === "r2d2_bitmaps") {
     validateNoArgs(command, args);
+
     return debugServerCommand(command, args);
   }
 
@@ -75,11 +82,13 @@ export const buildDebugCommand = (command: string, args: readonly string[]): Rok
     command === "list"
   ) {
     validateNoArgs(command, args);
+
     return brightScriptConsoleCommand(command, args);
   }
 
   if (command === "threads" || command === "ths") {
     validateOptionalNonNegativeInteger(args, command);
+
     return brightScriptConsoleCommand(command, args);
   }
 
@@ -88,7 +97,7 @@ export const buildDebugCommand = (command: string, args: readonly string[]): Rok
 
 export const buildDebugCommandEffect: (
   command: string,
-  args: readonly string[],
+  args: ReadonlyArray<string>,
 ) => Effect.Effect<RokuDebugCommand, RokitError> = Effect.fn("buildDebugCommand")(
   function* (command, args) {
     return yield* Effect.try({
@@ -112,11 +121,13 @@ export const runDebugCommandEffect: (
   const safeCommand = yield* buildDebugCommandEffect(command.command, command.args);
   const startedAt = yield* Clock.currentTimeMillis;
   const port = resolveDebugPort(context, safeCommand.port);
+
   const body = yield* readDebugSocketEffect(context, port, {
     durationMs,
     idleTimeoutMs,
     request: safeCommand.request,
   });
+
   const elapsedMs = (yield* Clock.currentTimeMillis) - startedAt;
 
   return {
@@ -163,7 +174,7 @@ export const captureDebugConsole = async (
 ): Promise<DebugConsoleCapture> =>
   await Effect.runPromise(captureDebugConsoleEffect(context, durationMs));
 
-const debugServerCommand = (command: string, args: readonly string[]): RokuDebugCommand => ({
+const debugServerCommand = (command: string, args: ReadonlyArray<string>): RokuDebugCommand => ({
   args,
   command,
   port: debugServerPort,
@@ -172,7 +183,7 @@ const debugServerCommand = (command: string, args: readonly string[]): RokuDebug
 
 const brightScriptConsoleCommand = (
   command: string,
-  args: readonly string[],
+  args: ReadonlyArray<string>,
 ): RokuDebugCommand => ({
   args,
   command,
@@ -262,6 +273,7 @@ const readDebugSocketEffect = Effect.fn("readDebugSocket")(function* (
     socket.once("error", (error) => {
       if (body.length > 0) {
         finish();
+
         return;
       }
 
@@ -280,7 +292,7 @@ const readDebugSocketEffect = Effect.fn("readDebugSocket")(function* (
   });
 });
 
-const formatDebugRequest = (command: string, args: readonly string[]): string =>
+const formatDebugRequest = (command: string, args: ReadonlyArray<string>): string =>
   `${[command, ...args].join(" ")}\r\n`;
 
 const resolveDebugPort = (context: RokuContext, port: RokuDebugPort): number =>
@@ -296,7 +308,7 @@ const validateDebugToken = (value: string, label: string): void => {
   }
 };
 
-const validateChanperfArgs = (args: readonly string[]): void => {
+const validateChanperfArgs = (args: ReadonlyArray<string>): void => {
   if (args.length === 0) {
     return;
   }
@@ -308,37 +320,40 @@ const validateChanperfArgs = (args: readonly string[]): void => {
   fail("usage: rokit debug-command chanperf");
 };
 
-const normalizeSceneGraphNodeArgs = (args: readonly string[]): readonly string[] => {
+const normalizeSceneGraphNodeArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
   if (args.length === 1 && (args[0] === "roots" || args[0] === "all")) {
     return args;
   }
 
   if (args.length === 1) {
     validateDebugToken(args[0] ?? "", "sgnodes id");
+
     return args;
   }
 
   if (args.length === 2 && args[0] === "id") {
     validateDebugToken(args[1] ?? "", "sgnodes id");
+
     return [args[1] ?? ""];
   }
 
   return fail("usage: rokit debug-command sgnodes <roots|all|node-id|id node-id>");
 };
 
-const validateNoArgs = (command: string, args: readonly string[]): void => {
+const validateNoArgs = (command: string, args: ReadonlyArray<string>): void => {
   if (args.length > 0) {
     fail(`usage: rokit debug-command ${command}`);
   }
 };
 
-const validateOptionalNonNegativeInteger = (args: readonly string[], command: string): void => {
+const validateOptionalNonNegativeInteger = (args: ReadonlyArray<string>, command: string): void => {
   if (args.length === 0) {
     return;
   }
 
   if (args.length === 1) {
     validateNonNegativeInteger(args[0] ?? "", `${command} argument`);
+
     return;
   }
 

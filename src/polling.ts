@@ -36,6 +36,7 @@ export const pollUntilEffect = Effect.fn("pollUntil")(function* <A, E, S, R>(
 ): Effect.fn.Return<A, E, R> {
   const deadline = (yield* Clock.currentTimeMillis) + options.timeoutMs;
   let state = options.initialState;
+
   if (options.timeoutMs <= 0) {
     return yield* options.timeout(state);
   }
@@ -45,11 +46,14 @@ export const pollUntilEffect = Effect.fn("pollUntil")(function* <A, E, S, R>(
       if ((yield* Clock.currentTimeMillis) >= deadline) {
         return yield* options.timeout(state);
       }
+
       const decision = yield* options.poll(state);
       const now = yield* Clock.currentTimeMillis;
+
       if (now >= deadline) {
         return yield* options.timeout(state);
       }
+
       if (decision.status === "done") {
         return decision.value;
       }

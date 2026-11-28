@@ -14,10 +14,11 @@ import {
   InputJsonGlobal,
   JsonGlobal,
   OutputGlobal,
-  type RokitGlobalFlagContext,
   readCliOptions,
 } from "./cli-options.js";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import type { RokitGlobalFlagContext } from "./cli-options.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 const effectCliVersion = PackageJson.version;
 
@@ -50,17 +51,19 @@ const rokitCliFormatter: CliOutput.Formatter = {
   formatHelpDoc: (doc) => defaultCliFormatter.formatHelpDoc(withoutNoExtraArg(doc)),
 };
 
+const capture = () => Effect.succeed(undefined);
+
 export const runEffectCliActionEffect = Effect.fn("runEffectCliAction")(function* (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
 ) {
-  const capture = () => Effect.succeed(undefined);
   yield* runRokitCli(argv, capture).pipe(Effect.mapError(normalizeCliError));
 });
 
 export const parseEffectCliEffect: (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
 ) => Effect.Effect<ParsedCli, RokitError> = Effect.fn("parseEffectCli")(function* (argv) {
   let parsedCli: ParsedCli | undefined;
+
   const capture = (command?: Command) =>
     readCliOptions().pipe(
       Effect.flatMap((options) =>
@@ -85,16 +88,16 @@ export const parseEffectCliEffect: (
   return parsedCli;
 });
 
-export const parseEffectCli = async (argv: readonly string[]): Promise<ParsedCli> =>
+export const parseEffectCli = async (argv: ReadonlyArray<string>): Promise<ParsedCli> =>
   await Effect.runPromise(parseEffectCliEffect(argv));
 
-export const effectCliCommandNames = (): readonly string[] =>
+export const effectCliCommandNames = (): ReadonlyArray<string> =>
   makeRokitCommand(() => Effect.succeed(undefined)).subcommands.flatMap((group) =>
     group.commands.map((command) => command.name),
   );
 
 const runRokitCli = (
-  argv: readonly string[],
+  argv: ReadonlyArray<string>,
   capture: (command?: Command) => Effect.Effect<void, never, RokitGlobalFlagContext>,
   consoleService?: Console.Console,
 ) => {
@@ -137,7 +140,7 @@ const withoutNoExtraArg = (
 ): Parameters<CliOutput.Formatter["formatHelpDoc"]>[0] => ({
   ...doc,
   args: doc.args?.filter((arg) => arg.name !== "extra"),
-  usage: doc.usage.replace(/ ?<extra\.\.\.>/g, ""),
+  usage: doc.usage.replaceAll(/ ?<extra\.\.\.>/g, ""),
 });
 
 const makeRokitCommand = (

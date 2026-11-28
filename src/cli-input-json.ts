@@ -24,7 +24,7 @@ import type { RokitError } from "./errors.js";
 import { failRokit, syncRokit } from "./rokit-effect.js";
 import { rejectUnsafeEcpPath } from "./runtime.js";
 
-export const inputJsonCommandNames: readonly string[] = commandNames;
+export const inputJsonCommandNames: ReadonlyArray<string> = commandNames;
 
 export const parseInputJsonEffect: (value: string) => Effect.Effect<Command, RokitError> =
   Effect.fn("parseInputJson")(function* (value) {
@@ -139,6 +139,7 @@ export const parseInputJsonEffect: (value: string) => Effect.Effect<Command, Rok
     if (command === "query") {
       const path = yield* readStringEffect(parsed, "path");
       yield* syncRokit(() => rejectUnsafeEcpPath(path));
+
       return { name: "query", path };
     }
 

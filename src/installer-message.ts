@@ -3,10 +3,13 @@ export const readInstallerMessage = (body: unknown): string => {
   const fontMessages = readRedFontMessages(text);
   const fontFailure = fontMessages.findLast(isInstallerFailure);
   const rokuMessage = readRokuInstallerMessage(text);
+
   const fontSuccess = fontMessages.findLast(
     (message) => isInstallerSuccess(message) || isDeleteSuccess(message),
   );
+
   const fontProgress = fontMessages.at(-1);
+
   const fallback =
     text.trim() === ""
       ? "Empty Roku installer response"
@@ -26,10 +29,6 @@ export const normalizeInstallSuccessMessage = (message: string): string =>
     ? "Identical to previous version -- not replacing"
     : "Successful deploy";
 
-// Both are empty-developer-slot signals: newer devices report "no plugin
-// installed", while older ones (e.g. Roku Stick 3500X) fail a delete/replace of
-// an empty slot with "No such file or directory". Treating either as an empty
-// slot makes delete idempotent and lets a Replace fall back to a fresh Install.
 export const isEmptyDeveloperSlotMessage = (message: string): boolean =>
   /no plugin installed/i.test(message) || /no such file or directory/i.test(message);
 
@@ -42,13 +41,14 @@ const isRecognizedInstallerMessage = (message: string): boolean =>
   message !== "Empty Roku installer response" &&
   !message.startsWith("Unrecognized Roku installer response:");
 
-const readRedFontMessages = (body: string): readonly string[] => {
-  const messages: string[] = [];
+const readRedFontMessages = (body: string): ReadonlyArray<string> => {
+  const messages: Array<string> = [];
   const pattern = /<font\b(?=[^>]*\bcolor\s*=\s*(?:"red"|'red'|red))[^>]*>(.*?)<\/font>/gis;
   let match: RegExpExecArray | null;
 
   while ((match = pattern.exec(body)) !== null) {
     const message = normalizeHtmlMessage(match[1] ?? "");
+
     if (message !== "") {
       messages.push(message);
     }
@@ -59,8 +59,8 @@ const readRedFontMessages = (body: string): readonly string[] => {
 
 const normalizeHtmlMessage = (html: string): string =>
   html
-    .replace(/<[^>]*>/g, "")
-    .replace(/\s+/g, " ")
+    .replaceAll(/<[^>]*>/g, "")
+    .replaceAll(/\s+/g, " ")
     .trim();
 
 const isInstallerFailure = (message: string): boolean =>
@@ -70,24 +70,28 @@ const readRokuInstallerMessage = (body: string): string | undefined => {
   if (/install\sfailure:\scompilation\sfailed/i.test(body)) {
     return "Install failure: compilation failed";
   }
+
   if (/["']\s*Failed\s*to\s*check\s*for\s*software\s*update\s*["']/i.test(body)) {
     return "Failed to check for software update";
   }
 
   const messages = readRokuJsMessages(body);
+
   return messages.errors[0] ?? messages.successes[0];
 };
 
 const readRokuJsMessages = (
   body: string,
 ): {
-  readonly errors: readonly string[];
-  readonly successes: readonly string[];
+  readonly errors: ReadonlyArray<string>;
+  readonly successes: ReadonlyArray<string>;
 } => {
-  const errors: string[] = [];
-  const successes: string[] = [];
+  const errors: Array<string> = [];
+  const successes: Array<string> = [];
+
   const messagePattern =
     /Shell\.create\('Roku\.Message'\)\.trigger\('[\w\s]+',\s+'(\w+)'\)\.trigger\('[\w\s]+',\s+'(.*?)'\)/gims;
+
   let match: RegExpExecArray | null;
 
   while ((match = messagePattern.exec(body)) !== null) {
@@ -110,6 +114,7 @@ const readRokuJsMessages = (
 
   while ((jsonMatch = jsonPattern.exec(body)) !== null) {
     const literal = jsonMatch[1];
+
     if (literal === undefined) {
       continue;
     }
@@ -137,6 +142,7 @@ const parseSingleQuotedJsString = (literal: string): string => {
 
   for (let index = 0; index < input.length; index += 1) {
     const character = input[index];
+
     if (character !== "\\") {
       output += character;
       continue;
@@ -175,6 +181,7 @@ const parseSingleQuotedJsString = (literal: string): string => {
         index += 4;
         break;
       }
+
       default:
         output += escaped ?? "";
         break;
@@ -187,15 +194,15 @@ const parseSingleQuotedJsString = (literal: string): string => {
 const readRokuJsonMessages = (
   payload: unknown,
 ): {
-  readonly errors: readonly string[];
-  readonly successes: readonly string[];
+  readonly errors: ReadonlyArray<string>;
+  readonly successes: ReadonlyArray<string>;
 } => {
   if (!isRecord(payload) || !Array.isArray(payload.messages)) {
     return { errors: [], successes: [] };
   }
 
-  const errors: string[] = [];
-  const successes: string[] = [];
+  const errors: Array<string> = [];
+  const successes: Array<string> = [];
 
   for (const message of payload.messages) {
     if (!isRecord(message)) {

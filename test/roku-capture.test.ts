@@ -8,8 +8,8 @@ import {
   deleteInstalledChannel,
   installPackage,
   querySceneGraph,
-  type RokuContext,
 } from "../src/roku.js";
+import type { RokuContext } from "../src/roku.js";
 
 import { jpegImage, pngImage } from "./fixtures/images.js";
 
@@ -34,6 +34,7 @@ describe("Roku retry helpers", () => {
       .mockResolvedValueOnce(
         new Response("<sgnodes><All_Nodes><App /></All_Nodes><status>OK</status></sgnodes>"),
       );
+
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
@@ -58,6 +59,7 @@ describe("Roku retry helpers", () => {
           '<app-ui><status>OK</status><topscreen><screen><App bounds="{0, 0, 1920, 1080}"><Label name="title" /></App></screen></topscreen></app-ui>',
         ),
       );
+
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(
@@ -100,6 +102,7 @@ describe("Roku retry helpers", () => {
             ),
           )
           .mockResolvedValueOnce(new Response(Uint8Array.from(image)));
+
         vi.stubGlobal("fetch", fetchMock);
 
         const outputPath = join(root, "shots", "story.jpg");
@@ -130,17 +133,24 @@ describe("Roku retry helpers", () => {
       "fetch",
       vi.fn<typeof fetch>(async () => {
         calls += 1;
-        if (calls % 3 === 1)
+
+        if (calls % 3 === 1) {
           return new Response("", {
             status: 401,
             headers: { "WWW-Authenticate": 'Digest qop="auth", realm="rokudev", nonce="nonce"' },
           });
-        if (calls % 3 === 2) return new Response('<a href="pkgs/dev.jpg?cache=1">screenshot</a>');
+        }
+
+        if (calls % 3 === 2) {
+          return new Response('<a href="pkgs/dev.jpg?cache=1">screenshot</a>');
+        }
+
         return new Response("<html>error page</html>", {
           headers: { "Content-Type": "image/jpeg" },
         });
       }),
     );
+
     try {
       const outputPath = join(root, "shot.jpg");
       await expect(
@@ -187,6 +197,7 @@ describe("Roku retry helpers", () => {
         }),
       )
       .mockResolvedValueOnce(new Response('<font color="red">Uninstall Success.</font>'));
+
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(deleteInstalledChannel({ ...context, password: "pass" })).resolves.toBe(
@@ -227,6 +238,7 @@ describe("Roku retry helpers", () => {
         }),
       )
       .mockResolvedValueOnce(new Response('<font color="red">Delete Succeeded.</font>'));
+
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(deleteInstalledChannel({ ...context, password: "pass" })).resolves.toBe(
@@ -246,6 +258,7 @@ describe("Roku retry helpers", () => {
         }),
       )
       .mockResolvedValueOnce(new Response('<font color="red">Uninstall Success.</font>'));
+
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(deleteInstalledChannel({ ...context, password: "pass" })).resolves.toBe(
@@ -272,6 +285,7 @@ describe("Roku retry helpers", () => {
         }),
       )
       .mockResolvedValueOnce(new Response("<html>not deleted</html>"));
+
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(deleteInstalledChannel({ ...context, password: "pass" })).rejects.toThrow(
@@ -286,6 +300,7 @@ describe("Roku retry helpers", () => {
     try {
       const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -297,6 +312,7 @@ describe("Roku retry helpers", () => {
           }),
         )
         .mockResolvedValueOnce(new Response('<font color="red">Successful deploy</font>'));
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(
@@ -314,6 +330,7 @@ describe("Roku retry helpers", () => {
       }
 
       const archive = init.body.get("archive");
+
       if (!(archive instanceof File)) {
         throw new Error("expected archive file");
       }
@@ -334,6 +351,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -349,6 +367,7 @@ describe("Roku retry helpers", () => {
             "Shell.create('Roku.Message').trigger('setType', 'success').trigger('setMessage', 'Install Success.')",
           ),
         );
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).resolves.toBe(
@@ -365,6 +384,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -383,6 +403,7 @@ describe("Roku retry helpers", () => {
             </font>
           `),
         );
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).resolves.toBe(
@@ -399,6 +420,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -415,6 +437,7 @@ describe("Roku retry helpers", () => {
             Shell.create('Roku.Message').trigger('setType', 'success').trigger('setMessage', 'Install Success.')
           `),
         );
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).resolves.toBe(
@@ -431,6 +454,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -444,6 +468,7 @@ describe("Roku retry helpers", () => {
         .mockResolvedValueOnce(
           new Response('<font color="red">Application Received: 1079 bytes stored.</font>'),
         );
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).resolves.toBe(
@@ -460,6 +485,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -471,6 +497,7 @@ describe("Roku retry helpers", () => {
           }),
         )
         .mockResolvedValueOnce(new Response("<html><title>Success</title></html>"));
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).rejects.toThrow(
@@ -487,6 +514,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -498,6 +526,7 @@ describe("Roku retry helpers", () => {
           }),
         )
         .mockResolvedValueOnce(new Response(""));
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).rejects.toThrow(
@@ -514,6 +543,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -529,6 +559,7 @@ describe("Roku retry helpers", () => {
             "Shell.create('Roku.Message').trigger('show', 'error').trigger('text', 'Compile failed')",
           ),
         );
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).rejects.toThrow(
@@ -545,6 +576,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -560,6 +592,7 @@ describe("Roku retry helpers", () => {
             `JSON.parse('{"messages":[{"type":"error","text_type":"text","text":"Package rejected"}]}');`,
           ),
         );
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).rejects.toThrow(
@@ -576,6 +609,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -587,6 +621,7 @@ describe("Roku retry helpers", () => {
           }),
         )
         .mockResolvedValueOnce(new Response("'Failed to check for software update'"));
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).rejects.toThrow(
@@ -603,6 +638,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -623,6 +659,7 @@ describe("Roku retry helpers", () => {
           }),
         )
         .mockResolvedValueOnce(new Response('<font color="red">Install Success.</font>'));
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).resolves.toBe(
@@ -631,6 +668,7 @@ describe("Roku retry helpers", () => {
 
       const replaceBody = fetchMock.mock.calls[1]?.[1]?.body;
       const installBody = fetchMock.mock.calls[3]?.[1]?.body;
+
       if (!(replaceBody instanceof FormData) || !(installBody instanceof FormData)) {
         throw new Error("expected FormData request bodies");
       }
@@ -648,6 +686,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -668,6 +707,7 @@ describe("Roku retry helpers", () => {
           }),
         )
         .mockResolvedValueOnce(new Response('<font color="red">Compile failed</font>'));
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).rejects.toThrow(
@@ -684,6 +724,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -695,6 +736,7 @@ describe("Roku retry helpers", () => {
           }),
         )
         .mockResolvedValueOnce(new Response('<font color="red">Compile failed</font>'));
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).rejects.toThrow(
@@ -712,6 +754,7 @@ describe("Roku retry helpers", () => {
 
     try {
       await writeFile(zipPath, "zip");
+
       const fetchMock = vi
         .fn<typeof fetch>()
         .mockResolvedValueOnce(
@@ -725,6 +768,7 @@ describe("Roku retry helpers", () => {
         .mockResolvedValueOnce(
           new Response('<font color="red">Identical to previous version -- not replacing.</font>'),
         );
+
       vi.stubGlobal("fetch", fetchMock);
 
       await expect(installPackage({ ...context, password: "pass" }, zipPath)).resolves.toBe(
@@ -739,6 +783,7 @@ describe("Roku retry helpers", () => {
 
 const readAuthorization = (init: RequestInit | undefined): string => {
   const headers = init?.headers;
+
   if (headers === undefined || headers instanceof Headers || Array.isArray(headers)) {
     throw new Error("expected plain header record");
   }

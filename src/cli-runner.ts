@@ -1,5 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Path } from "effect";
+import type { FileSystem, Path } from "effect";
+import { Effect } from "effect";
 import {
   launchAppEffect,
   queryActiveAppEffect,
@@ -36,7 +37,8 @@ import { syncRokit } from "./rokit-effect.js";
 import { captureScreenshotEffect } from "./screenshot.js";
 import type { RokuContext } from "./roku-context.js";
 import { resolveFileOutputPath, resolveOutputPath } from "./runtime.js";
-import { InvalidInput, normalizeError, type RokitError } from "./errors.js";
+import { InvalidInput, normalizeError } from "./errors.js";
+import type { RokitError } from "./errors.js";
 
 export const runCommandEffect: (
   context: RokuContext | undefined,
@@ -67,6 +69,7 @@ export const runCommandEffect: (
 
   if (command.name === "discover") {
     const devices = yield* discoverRokuDevicesEffect(command.timeoutMs);
+
     return {
       command: command.name,
       data: { devices },
@@ -82,7 +85,9 @@ export const runCommandEffect: (
     const outputPath = yield* syncRokit(() =>
       resolveFileOutputPath(command.outputPath, "package output path"),
     );
+
     const result = yield* packageChannelEffect(outputPath).pipe(Effect.mapError(normalizeError));
+
     return {
       command: command.name,
       data: result,
@@ -95,6 +100,7 @@ export const runCommandEffect: (
 
   if (command.name === "check") {
     const summary = yield* checkDeviceEffect(deviceContext);
+
     return {
       command: command.name,
       data: summary,
@@ -111,6 +117,7 @@ export const runCommandEffect: (
     const requestedPath = yield* syncRokit(() =>
       resolveFileOutputPath(command.args.outputPath, "console output path"),
     );
+
     const path = timestampOutputPath(requestedPath);
     const capture = yield* captureDebugConsoleEffect(deviceContext, command.args.durationMs);
     yield* writeTextFileEffect(path, capture.body).pipe(Effect.mapError(normalizeError));
@@ -149,6 +156,7 @@ export const runCommandEffect: (
 
   if (command.name === "active-app") {
     const app = yield* queryActiveAppEffect(deviceContext);
+
     return {
       command: command.name,
       data: app,
@@ -159,6 +167,7 @@ export const runCommandEffect: (
 
   if (command.name === "media-player") {
     const mediaPlayer = yield* queryMediaPlayerEffect(deviceContext);
+
     return {
       command: command.name,
       data: mediaPlayer,
@@ -173,6 +182,7 @@ export const runCommandEffect: (
       command.state,
       command.timeoutMs,
     );
+
     return {
       command: command.name,
       data: mediaPlayer,
@@ -183,6 +193,7 @@ export const runCommandEffect: (
 
   if (command.name === "wait-active") {
     const app = yield* waitForActiveAppEffect(deviceContext, command.appId, command.timeoutMs);
+
     return {
       command: command.name,
       data: app,
@@ -193,6 +204,7 @@ export const runCommandEffect: (
 
   if (command.name === "launch") {
     const app = yield* launchAppEffect(deviceContext, command.args.appId, command.args.params);
+
     return {
       command: command.name,
       data: app,
@@ -207,6 +219,7 @@ export const runCommandEffect: (
 
   if (command.name === "query") {
     const body = yield* queryEcpEffect(deviceContext, command.path);
+
     return {
       command: command.name,
       data: { body, path: command.path },
@@ -217,6 +230,7 @@ export const runCommandEffect: (
 
   if (command.name === "sgnodes") {
     const body = yield* querySceneGraphEffect(deviceContext);
+
     return { command: command.name, data: { body }, message: body, status: "ok" };
   }
 
@@ -226,6 +240,7 @@ export const runCommandEffect: (
       command.args.nodeName,
       command.args.expectation,
     );
+
     return {
       command: command.name,
       data: formatNodeData(command.args),
@@ -241,6 +256,7 @@ export const runCommandEffect: (
       command.args.expectation,
       command.args.timeoutMs,
     );
+
     return {
       command: command.name,
       data: formatNodeData(command.args),
@@ -253,13 +269,16 @@ export const runCommandEffect: (
     const requestedPath = yield* syncRokit(() =>
       resolveFileOutputPath(command.outputPath, "screenshot output path"),
     );
+
     const path = timestampOutputPath(requestedPath);
 
     const password = yield* requirePasswordEffect(deviceContext);
+
     const screenshotPath = yield* captureScreenshotEffect(
       { ...deviceContext, password },
       path,
     ).pipe(Effect.mapError(normalizeError));
+
     return {
       command: command.name,
       data: { path: screenshotPath },
@@ -270,6 +289,7 @@ export const runCommandEffect: (
 
   if (command.name === "snapshot") {
     const data = yield* collectSnapshotEffect(deviceContext);
+
     return observationResult(command.name, data);
   }
 
@@ -281,6 +301,7 @@ export const runCommandEffect: (
     const data = yield* writeProofEffect(deviceContext, outputDir, command.screenshot).pipe(
       Effect.mapError(normalizeError),
     );
+
     return proofBundleResult(command.name, data);
   }
 
@@ -290,10 +311,12 @@ export const runCommandEffect: (
 
   if (command.name === "install") {
     const password = yield* requirePasswordEffect(deviceContext);
+
     const message = yield* installPackageEffect(
       { ...deviceContext, password },
       command.zipPath,
     ).pipe(Effect.mapError(normalizeError));
+
     return { command: command.name, data: { message }, message, status: "ok" };
   }
 

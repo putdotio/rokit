@@ -1,13 +1,13 @@
 export type PackageRootSpec = {
-  readonly excluded: readonly string[];
-  readonly included: readonly string[];
-  readonly rules?: readonly PackagePathRule[];
+  readonly excluded: ReadonlyArray<string>;
+  readonly included: ReadonlyArray<string>;
+  readonly rules?: ReadonlyArray<PackagePathRule>;
 };
 
 export type PackagePathRule = {
   readonly included: boolean;
-  readonly patterns: readonly string[];
-  readonly roots: readonly string[];
+  readonly patterns: ReadonlyArray<string>;
+  readonly roots: ReadonlyArray<string>;
   readonly supported: boolean;
 };
 
@@ -28,7 +28,7 @@ const defaultRokuDeployFiles = [
 ] as const;
 
 export const packageRootSpecFromRokuDeployFiles = (
-  files: readonly unknown[] | undefined,
+  files: ReadonlyArray<unknown> | undefined,
 ): PackageRootSpec => {
   const included = new Set<string>();
   const excluded = new Set<string>();
@@ -36,9 +36,11 @@ export const packageRootSpecFromRokuDeployFiles = (
   for (const entry of files ?? defaultRokuDeployFiles) {
     for (const pattern of packageFileEntryPatterns(entry)) {
       const isExcludedPattern = isNegatedPackagePattern(pattern);
+
       const roots = isExcludedPattern
         ? packageExcludedRootsFromFilePattern(pattern)
         : packageRootsFromFilePattern(pattern);
+
       const target = isExcludedPattern ? excluded : included;
 
       for (const root of roots) {
@@ -56,12 +58,12 @@ export const packageRootSpecFromRokuDeployFiles = (
 
 export const isInsidePackageRoots = (
   relativeOutput: string,
-  packageRoots: readonly string[],
+  packageRoots: ReadonlyArray<string>,
 ): boolean => packageRoots.some((packageRoot) => isInsidePackageRoot(relativeOutput, packageRoot));
 
 export const packageRulesIncludePath = (
   relativeOutput: string,
-  rules: readonly PackagePathRule[],
+  rules: ReadonlyArray<PackagePathRule>,
 ): boolean => {
   let included = false;
   let hasUnknownMatchingRule = false;
@@ -85,7 +87,7 @@ export const packageRulesIncludePath = (
   return hasUnknownMatchingRule ? true : included;
 };
 
-const packageRootsFromFilePattern = (pattern: string): readonly string[] => {
+const packageRootsFromFilePattern = (pattern: string): ReadonlyArray<string> => {
   const normalized = normalizePackageFilePattern(pattern);
 
   if (normalized === undefined) {
@@ -97,7 +99,7 @@ const packageRootsFromFilePattern = (pattern: string): readonly string[] => {
   return packageRootsFromFirstSegment(root);
 };
 
-const packageExcludedRootsFromFilePattern = (pattern: string): readonly string[] => {
+const packageExcludedRootsFromFilePattern = (pattern: string): ReadonlyArray<string> => {
   const normalized = normalizePackageFilePattern(pattern);
 
   if (normalized === undefined) {
@@ -115,9 +117,9 @@ const packageExcludedRootsFromFilePattern = (pattern: string): readonly string[]
 };
 
 const packagePathRulesFromRokuDeployFiles = (
-  files: readonly unknown[] | undefined,
-): readonly PackagePathRule[] => {
-  const rules: PackagePathRule[] = [];
+  files: ReadonlyArray<unknown> | undefined,
+): ReadonlyArray<PackagePathRule> => {
+  const rules: Array<PackagePathRule> = [];
 
   for (const entry of files ?? defaultRokuDeployFiles) {
     for (const pattern of packageFileEntryPatterns(entry)) {
@@ -141,8 +143,9 @@ const packagePathRulesFromRokuDeployFiles = (
 
 const normalizePackageFilePattern = (pattern: string): string | undefined => {
   const trimmed = pattern.trim();
+
   const normalized = (isNegatedPackagePattern(trimmed) ? trimmed.replace(/^!+/, "") : trimmed)
-    .replace(/\\/g, "/")
+    .replaceAll("\\", "/")
     .replace(/^\.\/+/, "");
 
   return normalized === "" ? undefined : normalized;
@@ -150,10 +153,11 @@ const normalizePackageFilePattern = (pattern: string): string | undefined => {
 
 const isNegatedPackagePattern = (pattern: string): boolean => {
   const trimmed = pattern.trim();
+
   return trimmed.startsWith("!") && !trimmed.startsWith("!(");
 };
 
-const packageRootsFromFirstSegment = (root: string | undefined): readonly string[] => {
+const packageRootsFromFirstSegment = (root: string | undefined): ReadonlyArray<string> => {
   if (root === undefined || root === "" || root === "." || root === "..") {
     return [];
   }
@@ -172,7 +176,7 @@ const packageRootsFromFirstSegment = (root: string | undefined): readonly string
   return [root];
 };
 
-const packageFileEntryPatterns = (entry: unknown): readonly string[] => {
+const packageFileEntryPatterns = (entry: unknown): ReadonlyArray<string> => {
   if (typeof entry === "string") {
     return [entry];
   }
@@ -210,7 +214,7 @@ const packagePatternMatchesPath = (pattern: string, relativeOutput: string): boo
   return globPatternToRegExp(pattern).test(relativeOutput);
 };
 
-const expandBraceAlternates = (pattern: string): readonly string[] => {
+const expandBraceAlternates = (pattern: string): ReadonlyArray<string> => {
   const match = /\{([^{}]+)\}/.exec(pattern);
 
   if (match === null) {

@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vite-plus/test";
@@ -13,10 +12,12 @@ import { runCommandEffect } from "../src/cli-runner.js";
 import type { Command, CommandResult } from "../src/cli-types.js";
 import { buildDebugCommand } from "../src/debug.js";
 
-const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repoRoot = resolve(import.meta.dirname, "..");
 const builtDistDir = resolve(repoRoot, "dist");
 const testDistParent = resolve(repoRoot, ".rokit");
+
 mkdirSync(testDistParent, { recursive: true });
+
 const testDistDir = mkdtempSync(join(testDistParent, "cli-test-dist-"));
 const cliPath = resolve(testDistDir, "rokit.mjs");
 
@@ -28,34 +29,36 @@ afterAll(() => {
   rmSync(testDistDir, { force: true, recursive: true });
 });
 
-// Kept for the boot test below, which proves the packaged binary itself.
-// Everything else runs the same CLI entry in-process (mainEffect or the
-// command effects) so V8 coverage attributes it.
-const runRokit = (args: readonly string[]) =>
+const runRokit = (args: ReadonlyArray<string>) =>
   spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repoRoot,
     encoding: "utf8",
     env: childCliEnv(),
   });
 
+const format = (parts: ReadonlyArray<unknown>) => parts.map(String).join(" ");
+
+const joinLines = (lines: ReadonlyArray<string>) => lines.map((line) => `${line}\n`).join("");
+
 const runRokitInProcess = async (
-  args: readonly string[],
+  args: ReadonlyArray<string>,
 ): Promise<{ readonly status: number; readonly stderr: string; readonly stdout: string }> => {
-  const stdout: string[] = [];
-  const stderr: string[] = [];
-  const format = (parts: readonly unknown[]) => parts.map(String).join(" ");
-  const logSpy = vi.spyOn(console, "log").mockImplementation((...parts: unknown[]) => {
+  const stdout: Array<string> = [];
+  const stderr: Array<string> = [];
+
+  const logSpy = vi.spyOn(console, "log").mockImplementation((...parts: Array<unknown>) => {
     stdout.push(format(parts));
   });
-  const errorSpy = vi.spyOn(console, "error").mockImplementation((...parts: unknown[]) => {
+
+  const errorSpy = vi.spyOn(console, "error").mockImplementation((...parts: Array<unknown>) => {
     stderr.push(format(parts));
   });
+
   const previousExitCode = process.exitCode;
   process.exitCode = 0;
 
   try {
     await Effect.runPromise(mainEffect(args).pipe(Effect.provide(NodeServices.layer)));
-    const joinLines = (lines: readonly string[]) => lines.map((line) => `${line}\n`).join("");
 
     return {
       status: process.exitCode === 0 ? 0 : 1,
@@ -77,6 +80,7 @@ const childCliEnv = (): NodeJS.ProcessEnv => {
     "VITEST_WORKER_ID",
     "VITEST_VSCODE",
   ]);
+
   const env: NodeJS.ProcessEnv = {};
 
   for (const [name, value] of Object.entries(process.env)) {
@@ -99,8 +103,9 @@ const runDryCommand = async (command: Command): Promise<CommandResult> =>
 const parseJsonCommand = async (value: string): Promise<Command> =>
   await Effect.runPromise(parseInputJsonEffect(value));
 
-const parseCliCommand = async (args: readonly string[]): Promise<Command> => {
+const parseCliCommand = async (args: ReadonlyArray<string>): Promise<Command> => {
   const parsed = await Effect.runPromise(parseEffectCliEffect(args));
+
   if (parsed.command === undefined) {
     throw new Error("expected command");
   }

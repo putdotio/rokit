@@ -18,6 +18,7 @@ export const checkDeviceEffect = Effect.fn("checkDevice")(function* (context: Ro
   const deviceInfo = yield* fetchEcpTextEffect(context, "/query/device-info").pipe(
     Effect.mapError(normalizeError),
   );
+
   const installerStatus = yield* fetchInstallerStatusEffect(context);
 
   return {

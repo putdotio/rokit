@@ -9,14 +9,14 @@ type CommandTraits = {
 
 type CommandMetadata = CommandTraits & {
   readonly description: string;
-  readonly inputJsonFields: readonly DescribedField[];
+  readonly inputJsonFields: ReadonlyArray<DescribedField>;
   readonly name: CommandName;
-  readonly parameters: readonly DescribedField[];
+  readonly parameters: ReadonlyArray<DescribedField>;
 };
 
 const nodeConditionType = nodeConditionStates.join("|");
 
-export const commandMetadata: readonly CommandMetadata[] = [
+export const commandMetadata: ReadonlyArray<CommandMetadata> = [
   command(
     "describe",
     { dryRun: false, mutates: false, requiresTarget: false },
@@ -291,33 +291,37 @@ export const commandMetadata: readonly CommandMetadata[] = [
   ),
 ];
 
-export const commandNames: readonly CommandName[] = commandMetadata.map((command) => command.name);
+export const commandNames: ReadonlyArray<CommandName> = commandMetadata.map(
+  (command) => command.name,
+);
 
-export const describedCommands: readonly DescribedCommand[] = commandMetadata.map((metadata) => ({
-  description: metadata.description,
-  inputJson: {
-    fields: [
-      {
-        description: "Command name.",
-        name: "command",
-        required: true,
-        type: "string",
-        values: [metadata.name],
-      },
-      ...metadata.inputJsonFields,
-    ],
-    required: [
-      "command",
-      ...metadata.inputJsonFields.filter((field) => field.required).map((field) => field.name),
-    ],
-  },
-  mutates: metadata.mutates,
-  name: metadata.name,
-  parameters: metadata.parameters,
-  requiresTarget: metadata.requiresTarget,
-}));
+export const describedCommands: ReadonlyArray<DescribedCommand> = commandMetadata.map(
+  (metadata) => ({
+    description: metadata.description,
+    inputJson: {
+      fields: [
+        {
+          description: "Command name.",
+          name: "command",
+          required: true,
+          type: "string",
+          values: [metadata.name],
+        },
+        ...metadata.inputJsonFields,
+      ],
+      required: [
+        "command",
+        ...metadata.inputJsonFields.filter((field) => field.required).map((field) => field.name),
+      ],
+    },
+    mutates: metadata.mutates,
+    name: metadata.name,
+    parameters: metadata.parameters,
+    requiresTarget: metadata.requiresTarget,
+  }),
+);
 
-export const globalOptions: readonly DescribedField[] = [
+export const globalOptions: ReadonlyArray<DescribedField> = [
   globalField("json", "boolean", "Print structured JSON output."),
   globalField("output", "json|text", "Select structured or human output.", false, ["json", "text"]),
   globalField("dry-run", "boolean", "Validate mutating commands without side effects."),
@@ -351,7 +355,7 @@ export const commandMetadataFor = (name: CommandName): CommandMetadata => {
 };
 
 function describedField(
-  fields: readonly DescribedField[],
+  fields: ReadonlyArray<DescribedField>,
   fieldName: string,
   label: string,
 ): DescribedField {
@@ -368,8 +372,8 @@ function command(
   name: CommandName,
   traits: CommandTraits,
   description: string,
-  parameters: readonly DescribedField[],
-  inputJsonFields: readonly DescribedField[] = parameters,
+  parameters: ReadonlyArray<DescribedField>,
+  inputJsonFields: ReadonlyArray<DescribedField> = parameters,
 ): CommandMetadata {
   return {
     ...traits,
@@ -386,7 +390,7 @@ function argumentField(
   description: string,
   required = true,
   repeatable = false,
-  values?: readonly string[],
+  values?: ReadonlyArray<string>,
 ): DescribedField {
   return {
     description,
@@ -404,7 +408,7 @@ function optionField(
   description: string,
   required = false,
   repeatable = false,
-  values?: readonly string[],
+  values?: ReadonlyArray<string>,
 ): DescribedField {
   return {
     description,
@@ -421,7 +425,7 @@ function globalField(
   type: string,
   description: string,
   required = false,
-  values?: readonly string[],
+  values?: ReadonlyArray<string>,
 ): DescribedField {
   return {
     description,
@@ -432,7 +436,7 @@ function globalField(
   };
 }
 
-function nodeConditionFields(): readonly DescribedField[] {
+function nodeConditionFields(): ReadonlyArray<DescribedField> {
   return [
     argumentField("node-name", "string", "SceneGraph node name."),
     argumentField(
@@ -452,7 +456,7 @@ function nodeConditionFields(): readonly DescribedField[] {
   ];
 }
 
-function nodeConditionInputJsonFields(): readonly DescribedField[] {
+function nodeConditionInputJsonFields(): ReadonlyArray<DescribedField> {
   return [
     argumentField("nodeName", "string", "SceneGraph node name."),
     argumentField(

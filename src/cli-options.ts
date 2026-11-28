@@ -62,12 +62,13 @@ export const readCliOptions: () => Effect.Effect<CliOptions, never, RokitGlobalF
     };
   });
 
-export const inferErrorOutputMode = (argv: readonly string[]): OutputMode => {
+export const inferErrorOutputMode = (argv: ReadonlyArray<string>): OutputMode => {
   if (hasLongFlag(argv, "json")) {
     return "json";
   }
 
   const output = readLongFlagValue(argv, "output");
+
   if (output === "json") {
     return "json";
   }
@@ -86,7 +87,7 @@ export const inferErrorOutputMode = (argv: readonly string[]): OutputMode => {
 const defaultOutputMode = (): OutputMode => (process.stdout.isTTY ? "text" : "json");
 
 const inferredOutputMode = (options: {
-  readonly fields: readonly string[];
+  readonly fields: ReadonlyArray<string>;
   readonly inputJson?: string;
   readonly json: boolean;
 }): OutputMode => {
@@ -97,7 +98,7 @@ const inferredOutputMode = (options: {
   return defaultOutputMode();
 };
 
-const parseFieldMask = (value: string | undefined): readonly string[] => {
+const parseFieldMask = (value: string | undefined): ReadonlyArray<string> => {
   if (value === undefined) {
     return [];
   }
@@ -124,10 +125,10 @@ const optionToUndefined = <A>(value: Option.Option<A>): A | undefined =>
     onSome: (inner) => inner,
   });
 
-const hasLongFlag = (argv: readonly string[], name: string): boolean =>
+const hasLongFlag = (argv: ReadonlyArray<string>, name: string): boolean =>
   argv.some((arg) => arg === `--${name}` || arg.startsWith(`--${name}=`));
 
-const readLongFlagValue = (argv: readonly string[], name: string): string | undefined => {
+const readLongFlagValue = (argv: ReadonlyArray<string>, name: string): string | undefined => {
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
 
@@ -136,6 +137,7 @@ const readLongFlagValue = (argv: readonly string[], name: string): string | unde
     }
 
     const prefix = `--${name}=`;
+
     if (arg?.startsWith(prefix) === true) {
       return arg.slice(prefix.length);
     }
