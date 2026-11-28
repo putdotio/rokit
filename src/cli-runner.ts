@@ -1,5 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Path } from "effect";
+import type { FileSystem, Path } from "effect";
+import { Effect } from "effect";
 import {
   launchAppEffect,
   queryActiveAppEffect,

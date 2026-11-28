@@ -1,5 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Path } from "effect";
+import type { FileSystem, Path } from "effect";
+import { Effect } from "effect";
 import type { Command, CommandResult } from "./cli-types.js";
 import { commandSupportsDryRun } from "./cli-command-traits.js";
 import { validateRemoteKey } from "./ecp.js";

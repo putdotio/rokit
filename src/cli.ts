@@ -1,4 +1,5 @@
-import { Effect, FileSystem, Path, Stdio } from "effect";
+import type { FileSystem, Path, Stdio } from "effect";
+import { Effect } from "effect";
 import PackageJson from "../package.json" with { type: "json" };
 import { parseEffectCliEffect, runEffectCliActionEffect } from "./cli-command.js";
 import { commandNeedsTarget } from "./cli-command-traits.js";

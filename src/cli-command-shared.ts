@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import type { Effect } from "effect";
 import { Argument, Command as EffectCommand } from "effect/cli";
 import type { Command } from "./cli-types.js";
 import type { RokitGlobalFlagContext } from "./cli-options.js";
