@@ -33,11 +33,13 @@ const waitForReadyEffect = Effect.fn("waitForReady")(function* (
   command: WaitReadyCommand,
 ) {
   const activeApp = yield* waitForActiveAppEffect(context, command.appId, command.timeoutMs);
+
   const sceneGraph = yield* observeRokitEffect(
     querySceneGraphEffect(context, { attempts: 3, requireComplete: true }),
   );
 
   const node = command.node;
+
   if (node !== undefined) {
     yield* waitForSceneGraphNodeEffect(
       context,
@@ -48,6 +50,7 @@ const waitForReadyEffect = Effect.fn("waitForReady")(function* (
   }
 
   const mediaState = command.mediaState;
+
   const mediaPlayer =
     mediaState !== undefined
       ? {

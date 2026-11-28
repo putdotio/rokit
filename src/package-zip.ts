@@ -60,6 +60,7 @@ export const packageChannelEffect = Effect.fn("packageChannel")(function* (
   const options = yield* getRokuDeployOptionsEffect(baseOptions, fallbackRootDir);
   const outputZipPath = yield* resolvePackageChannelOutputPath(options, fallbackRootDir);
   const hasRokuDeployConfig = yield* hasRokuDeployConfigEffect(fallbackRootDir);
+
   const nativeOptions =
     hasRokuDeployConfig || !canUseNativePackageZip(outputZipPath)
       ? undefined
@@ -67,6 +68,7 @@ export const packageChannelEffect = Effect.fn("packageChannel")(function* (
 
   if (nativeOptions !== undefined) {
     const result = yield* createPackageZipEffect(nativeOptions);
+
     return { path: result.path };
   }
 
@@ -88,6 +90,7 @@ export const resolvePackageOutputPathEffect = Effect.fn("resolvePackageOutputPat
   const path = yield* Path.Path;
   const fallbackRootDir = path.resolve(rootDir ?? process.cwd());
   const options = yield* packageOptionsEffect(outputPath, rootDir);
+
   return yield* getRokuDeployOutputZipFilePathEffect(options, fallbackRootDir);
 });
 
@@ -127,6 +130,7 @@ export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
     const skipMissingRoot =
       (options.skipMissingRoots === true && !requiredDefaultPackageRoots.has(packagePath)) ||
       (usingDefaultRoots && !requiredDefaultPackageRoots.has(packagePath));
+
     const rootFiles = yield* collectPackageZipFiles(
       rootDir,
       rootRealPath,
@@ -178,6 +182,7 @@ export const createPackageZipEffect = Effect.fn("createPackageZip")(function* (
         directory: path.dirname(outFile),
         prefix: `.${path.basename(outFile)}-`,
       });
+
       yield* fs.writeFile(tempFile, output);
       yield* fs.rename(tempFile, outFile);
     }),
@@ -213,6 +218,7 @@ export const resolveSafePackageOutputPathEffect = Effect.fn("resolveSafePackageO
     const fallbackRootDir = path.resolve(rootDir ?? process.cwd());
     const baseOptions = yield* packageOptionsEffect(outputPath, rootDir);
     const options = yield* getRokuDeployOptionsEffect(baseOptions, fallbackRootDir);
+
     return yield* resolvePackageChannelOutputPath(options, fallbackRootDir);
   },
 );
@@ -263,6 +269,7 @@ const collectPackageZipFiles: (
   }
 
   const files: string[] = [];
+
   for (const entry of yield* fs.readDirectory(absolutePath)) {
     const childPath = yield* normalizePackagePath(`${relativePath}/${entry}`);
 
@@ -282,11 +289,13 @@ const readPackageFile = Effect.fn("readPackageFile")(function* (
   const absolutePath = path.join(rootDir, relativePath);
   yield* rejectPackageSymlink(absolutePath);
   yield* assertInsidePackageRoot(rootRealPath, absolutePath);
+
   return yield* fs.readFile(absolutePath);
 });
 
 const rejectPackageSymlink = Effect.fn("rejectPackageSymlink")(function* (absolutePath: string) {
   const fs = yield* FileSystem.FileSystem;
+
   const linkTarget = yield* Effect.match(fs.readLink(absolutePath), {
     onFailure: () => undefined,
     onSuccess: (target) => target,
@@ -329,6 +338,7 @@ const assertPackageOutputFile = Effect.fn("assertPackageOutputFile")(function* (
   }
 
   const info = yield* fs.stat(outputPath);
+
   if (info.type === "File") {
     return;
   }
@@ -363,6 +373,7 @@ const rejectUnsafeInput = Effect.fn("rejectUnsafeInput")(function* (value: strin
   if (
     [...value].some((character) => {
       const code = character.charCodeAt(0);
+
       return code < 32 || code === 127;
     })
   ) {
@@ -386,11 +397,13 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
   yield* rejectUnsafeInput(outputPath, "package output path");
 
   const path = yield* Path.Path;
+
   const resolvedOutput = path.isAbsolute(outputPath)
     ? path.resolve(outputPath)
     : path.resolve(rootDir, outputPath);
 
   const extension = path.extname(resolvedOutput).toLowerCase();
+
   if (!allowedExtensions.includes(extension)) {
     return yield* Effect.fail(
       new PackageZipError({
@@ -402,16 +415,20 @@ const resolvePackageZipOutputPath = Effect.fn("resolvePackageZipOutputPath")(fun
   yield* assertPackageOutputFile(resolvedOutput);
 
   const relativeOutput = path.relative(rootDir, resolvedOutput).replace(/\\/g, "/");
+
   const isInsideRoot =
     relativeOutput !== "" && !relativeOutput.startsWith("..") && !path.isAbsolute(relativeOutput);
 
   const realOutput = yield* resolveRealOutputCandidatePath(resolvedOutput);
   const relativeRealOutput = path.relative(rootRealPath, realOutput).replace(/\\/g, "/");
+
   const realOutputIsInsideRoot =
     relativeRealOutput !== "" &&
     !relativeRealOutput.startsWith("..") &&
     !path.isAbsolute(relativeRealOutput);
+
   const relativeSandboxOutput = path.relative(sandboxRealPath, realOutput).replace(/\\/g, "/");
+
   const realOutputIsInsideSandbox =
     relativeSandboxOutput !== "" &&
     !relativeSandboxOutput.startsWith("..") &&
@@ -531,6 +548,7 @@ const resolveRealOutputCandidatePath = Effect.fn("resolveRealOutputCandidatePath
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+
   const linkTarget = yield* Effect.match(fs.readLink(outputPath), {
     onFailure: () => undefined,
     onSuccess: (target) => target,
@@ -563,6 +581,7 @@ const resolveRealOutputCandidatePath = Effect.fn("resolveRealOutputCandidatePath
   }
 
   const realAncestor = yield* fs.realPath(ancestor);
+
   return path.join(realAncestor, ...pendingSegments);
 });
 
@@ -576,6 +595,7 @@ const packageOptionsEffect = Effect.fn("packageOptions")(function* (
 ) {
   const path = yield* Path.Path;
   const resolvedRoot = path.resolve(rootDir ?? process.cwd());
+
   const resolvedOutput = path.isAbsolute(outputPath)
     ? path.resolve(outputPath)
     : path.resolve(resolvedRoot, outputPath);
@@ -668,6 +688,7 @@ const withCwd = <A>(cwd: string, run: () => A): A => {
 
   const previousCwd = process.cwd();
   process.chdir(cwd);
+
   try {
     return run();
   } finally {

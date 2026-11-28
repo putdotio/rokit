@@ -1,8 +1,11 @@
 import { readXmlAttribute, readXmlTag } from "./xml.js";
 
 export type NodeState = "absent" | "hidden" | "visible";
+
 export type SceneGraphBounds = readonly [x: number, y: number, width: number, height: number];
+
 export type SceneGraphPoint = readonly [x: number, y: number];
+
 export type SceneGraphStatus = {
   readonly error?: string;
   readonly status?: string;
@@ -49,6 +52,7 @@ export const readNamedNodeNumber = (
 
   if (value !== undefined) {
     const parsed = Number(value);
+
     return Number.isFinite(parsed) ? parsed : undefined;
   }
 
@@ -196,6 +200,7 @@ export const assertNamedNode = (
 ): void => {
   if ("attribute" in expectation) {
     assertNamedNodeAttribute(xml, nodeName, expectation.attribute, expectation.value);
+
     return;
   }
 

@@ -87,6 +87,7 @@ export const optionToUndefined = <A>(value: Option.Option<A>): A | undefined =>
 
 const validateRemoteKeyArgument = (key: string): string => {
   validateRemoteKey(key);
+
   return key;
 };
 

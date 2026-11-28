@@ -97,6 +97,7 @@ describe("package zip helper", () => {
           }),
         ),
       ).pipe(Layer.provide(NodeFileSystem.layer));
+
       const testLayer = Layer.merge(failingFileSystemLayer, NodePath.layer);
 
       await expect(
@@ -225,6 +226,7 @@ describe("package zip helper", () => {
         outFile: "dist/channel.zip",
         rootDir: root,
       });
+
       const zip = await JSZip.loadAsync(await readFile(result.path));
 
       expect(result.files).toEqual(["manifest", "source/Main.brs"]);

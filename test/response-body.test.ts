@@ -5,6 +5,7 @@ import { readResponseBytesEffect } from "../src/response-body.js";
 describe("bounded response bodies", () => {
   it("cancels a stream as soon as its byte budget is exceeded", async () => {
     let cancelled = false;
+
     const response = new Response(
       new ReadableStream<Uint8Array>({
         pull(controller) {
@@ -15,6 +16,7 @@ describe("bounded response bodies", () => {
         },
       }),
     );
+
     await expect(Effect.runPromise(readResponseBytesEffect(response, String, 5))).rejects.toThrow(
       "maximum byte length",
     );

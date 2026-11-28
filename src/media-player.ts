@@ -70,11 +70,13 @@ export const isActiveMediaPlayerState = (state: string | undefined): boolean =>
 
 const readXmlNumberTag = (xml: string, tag: string): number | undefined => {
   const rawValue = readXmlTag(xml, tag);
+
   if (rawValue === undefined) {
     return undefined;
   }
 
   const match = /-?\d+(?:\.\d+)?/.exec(rawValue);
+
   if (!match) {
     return undefined;
   }
@@ -84,9 +86,11 @@ const readXmlNumberTag = (xml: string, tag: string): number | undefined => {
 
 const readXmlBooleanTag = (xml: string, tag: string): boolean | undefined => {
   const value = readXmlTag(xml, tag);
+
   if (value === "true") {
     return true;
   }
+
   if (value === "false") {
     return false;
   }
@@ -96,10 +100,12 @@ const readXmlBooleanTag = (xml: string, tag: string): boolean | undefined => {
 
 const readXmlNumberAttribute = (attributes: string, name: string): number | undefined => {
   const value = readXmlAttribute(attributes, name);
+
   if (value === undefined) {
     return undefined;
   }
 
   const parsed = Number(value);
+
   return Number.isFinite(parsed) ? parsed : undefined;
 };

@@ -68,6 +68,7 @@ export const inferErrorOutputMode = (argv: readonly string[]): OutputMode => {
   }
 
   const output = readLongFlagValue(argv, "output");
+
   if (output === "json") {
     return "json";
   }
@@ -136,6 +137,7 @@ const readLongFlagValue = (argv: readonly string[], name: string): string | unde
     }
 
     const prefix = `--${name}=`;
+
     if (arg?.startsWith(prefix) === true) {
       return arg.slice(prefix.length);
     }

@@ -54,11 +54,13 @@ export const querySceneGraphEffect = Effect.fn("querySceneGraph")(function* (
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const result = yield* attemptEffect(queryEcpEffect(context, path));
+
     if (result.status === "ok") {
       const xml = result.value;
       const complete = !requireComplete || isCompleteSceneGraph(xml);
       const hasTree = xml.includes("<All_Nodes>") || xml.includes("<app-ui>");
       const hasAppNode = !requireAppNode || !hasTree || xml.includes("<App ");
+
       if (complete && hasAppNode) {
         return xml;
       }
@@ -98,9 +100,11 @@ export const querySceneGraphNodeEffect = Effect.fn("querySceneGraphNode")(functi
 ) {
   const url = ecpUrl(context, "/query/sgnodes/nodes");
   url.searchParams.set("node-id", nodeName);
+
   const xml = yield* fetchEcpUrlTextEffect(context, url, "/query/sgnodes/nodes").pipe(
     Effect.mapError(normalizeError),
   );
+
   if (!isCompleteSceneGraph(xml)) {
     return yield* failRokit(`SceneGraph node query for "${nodeName}" returned incomplete XML`);
   }
@@ -138,6 +142,7 @@ export const waitForSceneGraphNodeEffect = Effect.fn("waitForSceneGraphNode")(fu
   timeoutMs = 30_000,
 ) {
   const initialState: SceneGraphPollState = {};
+
   return yield* pollUntilEffect({
     initialState,
     intervalMs: defaultPollIntervalMs,
@@ -151,6 +156,7 @@ export const waitForSceneGraphNodeEffect = Effect.fn("waitForSceneGraphNode")(fu
       ),
     timeout: (state) => {
       const suffix = state.lastError ? `; last observation: ${state.lastError}` : "";
+
       return failRokit(`expected SceneGraph node "${nodeName}" to match condition${suffix}`);
     },
     timeoutMs,
@@ -174,6 +180,7 @@ export const waitForSceneGraphAssertionEffect = Effect.fn("waitForSceneGraphAsse
   const timeoutMs = options.timeoutMs ?? 30_000;
   const pollIntervalMs = options.pollIntervalMs ?? 500;
   const initialState: SceneGraphPollState = {};
+
   return yield* pollUntilEffect({
     initialState,
     intervalMs: pollIntervalMs,
@@ -195,6 +202,7 @@ export const waitForSceneGraphAssertionEffect = Effect.fn("waitForSceneGraphAsse
       ),
     timeout: (state) => {
       const suffix = state.lastError ? `; last observation: ${state.lastError}` : "";
+
       return failRokit(`${description}${suffix}`);
     },
     timeoutMs,

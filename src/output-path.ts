@@ -3,6 +3,7 @@ import { basename, dirname, extname, join } from "node:path";
 export const timestampOutputPath = (path: string, date = new Date()): string => {
   const extension = extname(path);
   const name = basename(path, extension);
+
   return join(dirname(path), `${name}-${formatTimestamp(date)}${extension}`);
 };
 

@@ -34,9 +34,11 @@ const readResponseBytes = async (
     new WritableStream<Uint8Array>({
       write: (chunk) => {
         receivedBytes += chunk.byteLength;
+
         if (receivedBytes > maxBytes) {
           throw new Error("response exceeds maximum byte length");
         }
+
         chunks.push(chunk);
       },
     }),

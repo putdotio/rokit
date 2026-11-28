@@ -36,9 +36,11 @@ export const packageRootSpecFromRokuDeployFiles = (
   for (const entry of files ?? defaultRokuDeployFiles) {
     for (const pattern of packageFileEntryPatterns(entry)) {
       const isExcludedPattern = isNegatedPackagePattern(pattern);
+
       const roots = isExcludedPattern
         ? packageExcludedRootsFromFilePattern(pattern)
         : packageRootsFromFilePattern(pattern);
+
       const target = isExcludedPattern ? excluded : included;
 
       for (const root of roots) {
@@ -141,6 +143,7 @@ const packagePathRulesFromRokuDeployFiles = (
 
 const normalizePackageFilePattern = (pattern: string): string | undefined => {
   const trimmed = pattern.trim();
+
   const normalized = (isNegatedPackagePattern(trimmed) ? trimmed.replace(/^!+/, "") : trimmed)
     .replace(/\\/g, "/")
     .replace(/^\.\/+/, "");
@@ -150,6 +153,7 @@ const normalizePackageFilePattern = (pattern: string): string | undefined => {
 
 const isNegatedPackagePattern = (pattern: string): boolean => {
   const trimmed = pattern.trim();
+
   return trimmed.startsWith("!") && !trimmed.startsWith("!(");
 };
 

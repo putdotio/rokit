@@ -81,6 +81,7 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
     const outputPath = path.join(outputDir, `${name}.json`);
     yield* fs.writeFile(outputPath, textEncoder.encode(`${JSON.stringify(value, null, 2)}\n`));
     artifacts.push({ kind: "json", path: outputPath });
+
     return outputPath;
   });
 
@@ -88,6 +89,7 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
   yield* writeJson("summary", snapshot);
 
   const sceneGraph = yield* observeRokitEffect(querySceneGraphEffect(context));
+
   if (sceneGraph.status === "ok") {
     const outputPath = path.join(outputDir, "sgnodes.xml");
     yield* fs.writeFile(outputPath, textEncoder.encode(sceneGraph.data));
@@ -100,10 +102,12 @@ export const writeProofEffect = Effect.fn("writeProof")(function* (
 
   if (includeScreenshot) {
     const password = yield* requirePasswordEffect(context);
+
     const screenshotPath = yield* captureScreenshotEffect(
       { ...context, password },
       timestampOutputPath(path.join(outputDir, "screenshot.png")),
     ).pipe(Effect.mapError(normalizeError));
+
     artifacts.push({ kind: "screenshot", path: screenshotPath });
   }
 

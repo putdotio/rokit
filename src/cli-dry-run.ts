@@ -40,6 +40,7 @@ const dryRunDataEffect: (
   if (!commandSupportsDryRun(command)) {
     return undefined;
   }
+
   if (command.name === "discover") {
     return { timeoutMs: command.timeoutMs ?? 3_000 };
   }
@@ -48,6 +49,7 @@ const dryRunDataEffect: (
     const outputPath = yield* syncRokit(() =>
       resolveFileOutputPath(command.outputPath, "package output path"),
     );
+
     return {
       path: yield* resolveSafePackageOutputPathEffect(outputPath).pipe(
         Effect.mapError(normalizeError),

@@ -4,7 +4,9 @@ import { PNG } from "pngjs";
 const pixels = Buffer.from([255, 0, 0, 255, 0, 255, 0, 255]);
 export const jpegImage = encode({ width: 2, height: 1, data: pixels }, 90).data;
 const png = new PNG({ width: 2, height: 1 });
+
 png.data = pixels;
+
 export const pngImage = PNG.sync.write(png);
 
 // Synthetic 17×17 RGB gradient (x*15, y*15, (x+y)*7), encoded with cjpeg.
@@ -24,6 +26,7 @@ export const baselineRestartJpeg = Buffer.from(
     "Fb+2PtP7c8zI0/tXVaf2oorzKZ+L5H0P/9D26iiisBn/2Q==",
   "base64",
 );
+
 export const progressiveRestartJpeg = Buffer.from(
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIx" +
     "wcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy" +
@@ -38,6 +41,7 @@ export const progressiveRestartJpeg = Buffer.from(
     "QRHw/9oACAEBAAE/EIv/0Iv/0X//0ov/04v/1PfH/9XD/9bD/9d//9k=",
   "base64",
 );
+
 export const grayscaleRestartJpeg = Buffer.from(
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIx" +
     "wcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAARABEBAREA/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL" +
@@ -63,6 +67,7 @@ export const progressivePartialRestartJpeg = Buffer.from(
     "EBAAAAAAAAAAAAAAAAMUER8P/aAAgBAQABPxCLF//QcX//0Yvvj//Sww//03//2Q==",
   "base64",
 );
+
 export const grayscalePartialRestartJpeg = Buffer.from(
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIx" +
     "wcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAARABEBAREA/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL" +

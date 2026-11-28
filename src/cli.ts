@@ -43,6 +43,7 @@ const runMainEffect: (
 )(function* (argv, setOutputMode, setFields) {
   if (argv.length === 0) {
     yield* runEffectCliActionEffect(["--help"]);
+
     return;
   }
 
@@ -50,11 +51,13 @@ const runMainEffect: (
     yield* Effect.sync(() => {
       console.log(PackageJson.version);
     });
+
     return;
   }
 
   if (isEffectCliActionRequest(argv)) {
     yield* runEffectCliActionEffect(normalizeEffectCliActionArgs(argv));
+
     return;
   }
 
@@ -66,6 +69,7 @@ const runMainEffect: (
 
   if (parsed.command === undefined && parsed.inputJson === undefined) {
     yield* runEffectCliActionEffect(["--help"]);
+
     return;
   }
 
@@ -91,6 +95,7 @@ const loadContextEffect: (
       try: () => {
         loadLocalEnv();
         const env = loadEnv();
+
         return {
           password: env.password,
           target: requireTarget(env),
@@ -116,6 +121,7 @@ const parseCommandEffect: (
 
   if (parsed.inputJson !== undefined) {
     const inputJson = yield* resolveInputJsonSource(parsed.inputJson);
+
     return yield* parseInputJsonEffect(inputJson);
   }
 

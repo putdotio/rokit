@@ -7,11 +7,13 @@ export const printResult = (
 ): void => {
   if (outputMode === "json") {
     console.log(JSON.stringify(applyFields(result, fields), null, 2));
+
     return;
   }
 
   if (result.message !== undefined) {
     console.log(result.message);
+
     return;
   }
 
@@ -25,6 +27,7 @@ export const printError = (
 ): void => {
   if (outputMode === "json") {
     console.error(JSON.stringify({ error: { message }, status: "failed" }, null, 2));
+
     return;
   }
 
@@ -48,6 +51,7 @@ export const applyFields = (value: unknown, fields: readonly string[]): unknown 
   }
 
   preserveStatusMetadata(value, output);
+
   return output;
 };
 
@@ -74,6 +78,7 @@ const pickField = (source: unknown, path: readonly string[]): unknown => {
 
   if (Array.isArray(source)) {
     const index = parseArrayIndex(head);
+
     return index === undefined || index >= source.length
       ? undefined
       : pickFieldOrValue(source[index], tail);
@@ -98,6 +103,7 @@ const mergeField = (target: FieldContainer, path: readonly string[], value: unkn
 
   if (tail.length === 0) {
     setContainerValue(target, head, value);
+
     return;
   }
 
@@ -110,6 +116,7 @@ const mergeField = (target: FieldContainer, path: readonly string[], value: unkn
 const getContainerValue = (target: FieldContainer, key: string): unknown => {
   if (Array.isArray(target)) {
     const index = parseArrayIndex(key);
+
     return index === undefined ? undefined : target[index];
   }
 
@@ -119,9 +126,11 @@ const getContainerValue = (target: FieldContainer, key: string): unknown => {
 const setContainerValue = (target: FieldContainer, key: string, value: unknown): void => {
   if (Array.isArray(target)) {
     const index = parseArrayIndex(key);
+
     if (index !== undefined) {
       target[index] = value;
     }
+
     return;
   }
 

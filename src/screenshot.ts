@@ -42,10 +42,12 @@ export const takeScreenshotEffect: (
   const path = yield* Path.Path;
   const resolvedOutput = path.resolve(outputPath);
   const extension = path.extname(resolvedOutput);
+
   const baseOutputPath = path.join(
     path.dirname(resolvedOutput),
     path.basename(resolvedOutput, extension),
   );
+
   const screenshot = yield* createScreenshotOnDeviceEffect(context);
   const outputWithDeviceExtension = `${baseOutputPath}${screenshot.extension}`;
   const image = yield* fetchScreenshotImageEffect(context, screenshot.url);
@@ -73,14 +75,17 @@ const createScreenshotOnDeviceEffect = Effect.fn("createScreenshotOnDevice")(fun
   context: RokuContext & { readonly password: string },
 ) {
   const url = screenshotInspectUrl(context);
+
   const responseBody = yield* postPluginInspectFormEffect(context, url, () => {
     const form = new FormData();
     form.set("mysubmit", "Screenshot");
     form.set("archive", "");
+
     return form;
   });
 
   const screenshot = readScreenshotUrl(url, responseBody);
+
   if (screenshot !== undefined) {
     return screenshot;
   }
@@ -100,6 +105,7 @@ const postPluginInspectFormEffect = Effect.fn("postPluginInspectForm")(function*
 ) {
   const challenge = yield* readScreenshotDigestChallengeEffect(context, url);
   const authorization = yield* digestAuthHeaderEffect(context, "POST", url.pathname, challenge);
+
   const response = yield* Effect.tryPromise({
     try: (signal) =>
       fetch(url, {
@@ -125,6 +131,7 @@ const fetchScreenshotImageEffect = Effect.fn("fetchScreenshotImage")(function* (
   url: URL,
 ) {
   const firstResponse = yield* fetchScreenshotImageRequestEffect(url, undefined, context.timeoutMs);
+
   const response =
     firstResponse.status === 401
       ? yield* fetchAuthorizedScreenshotImageEffect(context, url, firstResponse)
@@ -148,6 +155,7 @@ const fetchScreenshotImageEffect = Effect.fn("fetchScreenshotImage")(function* (
       }),
     maxScreenshotBytes,
   );
+
   yield* Effect.try({
     try: () => validateScreenshotImage(image),
     catch: (error) =>
@@ -156,6 +164,7 @@ const fetchScreenshotImageEffect = Effect.fn("fetchScreenshotImage")(function* (
         outputPath: url.pathname,
       }),
   });
+
   return image;
 });
 
@@ -165,6 +174,7 @@ const fetchAuthorizedScreenshotImageEffect = Effect.fn("fetchAuthorizedScreensho
   challengeResponse: Response,
 ) {
   const challenge = parseDigestChallenge(challengeResponse.headers.get("www-authenticate"));
+
   if (challenge === undefined) {
     return yield* Effect.fail(
       new ScreenshotCaptureError({
@@ -175,6 +185,7 @@ const fetchAuthorizedScreenshotImageEffect = Effect.fn("fetchAuthorizedScreensho
   }
 
   const authorization = yield* digestAuthHeaderEffect(context, "GET", digestUri(url), challenge);
+
   return yield* fetchScreenshotImageRequestEffect(url, authorization, context.timeoutMs);
 });
 
@@ -213,6 +224,7 @@ const readScreenshotDigestChallengeEffect = Effect.fn("readScreenshotDigestChall
         outputPath: "screenshot",
       }),
   });
+
   const challenge = parseDigestChallenge(response.headers.get("www-authenticate"));
 
   if (challenge === undefined) {
@@ -307,23 +319,28 @@ export const captureScreenshotEffect: (
         const captureDir = yield* fs.makeTempDirectoryScoped({
           prefix: safeTempPrefix(options.tempDirPrefix ?? "rokit-screenshot"),
         });
+
         const capturePath = path.join(captureDir, outputFileName);
 
         const capturedPath = yield* takeScreenshotEffect(context, capturePath);
         const tempResult = yield* firstExistingPath([capturedPath, capturePath]);
+
         if (tempResult !== undefined) {
           yield* fs.copyFile(tempResult, resolvedOutput);
+
           return resolvedOutput;
         }
 
         const directCapturedPath = yield* takeScreenshotEffect(context, resolvedOutput);
         const directResult = yield* firstExistingPath([resolvedOutput, directCapturedPath]);
+
         if (directResult === resolvedOutput) {
           return resolvedOutput;
         }
 
         if (directResult !== undefined) {
           yield* fs.copyFile(directResult, resolvedOutput);
+
           return resolvedOutput;
         }
 
@@ -337,6 +354,7 @@ export const captureScreenshotEffect: (
     ).pipe(
       Effect.catchTag("ScreenshotCaptureError", (error) => {
         lastError = error.detail;
+
         return Effect.succeed(undefined);
       }),
     );

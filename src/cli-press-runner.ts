@@ -30,6 +30,7 @@ export const runPressCommandEffect: (
       }
 
       const until = command.args.until;
+
       if (until === undefined) {
         break;
       }

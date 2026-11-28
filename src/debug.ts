@@ -48,16 +48,19 @@ export const buildDebugCommand = (command: string, args: readonly string[]): Rok
 
   if (command === "chanperf") {
     validateChanperfArgs(args);
+
     return debugServerCommand(command, args);
   }
 
   if (command === "brightscript_warnings") {
     validateOptionalNonNegativeInteger(args, "brightscript_warnings");
+
     return debugServerCommand(command, args);
   }
 
   if (command === "free" || command === "loaded_textures" || command === "r2d2_bitmaps") {
     validateNoArgs(command, args);
+
     return debugServerCommand(command, args);
   }
 
@@ -75,11 +78,13 @@ export const buildDebugCommand = (command: string, args: readonly string[]): Rok
     command === "list"
   ) {
     validateNoArgs(command, args);
+
     return brightScriptConsoleCommand(command, args);
   }
 
   if (command === "threads" || command === "ths") {
     validateOptionalNonNegativeInteger(args, command);
+
     return brightScriptConsoleCommand(command, args);
   }
 
@@ -112,11 +117,13 @@ export const runDebugCommandEffect: (
   const safeCommand = yield* buildDebugCommandEffect(command.command, command.args);
   const startedAt = yield* Clock.currentTimeMillis;
   const port = resolveDebugPort(context, safeCommand.port);
+
   const body = yield* readDebugSocketEffect(context, port, {
     durationMs,
     idleTimeoutMs,
     request: safeCommand.request,
   });
+
   const elapsedMs = (yield* Clock.currentTimeMillis) - startedAt;
 
   return {
@@ -262,6 +269,7 @@ const readDebugSocketEffect = Effect.fn("readDebugSocket")(function* (
     socket.once("error", (error) => {
       if (body.length > 0) {
         finish();
+
         return;
       }
 
@@ -315,11 +323,13 @@ const normalizeSceneGraphNodeArgs = (args: readonly string[]): readonly string[]
 
   if (args.length === 1) {
     validateDebugToken(args[0] ?? "", "sgnodes id");
+
     return args;
   }
 
   if (args.length === 2 && args[0] === "id") {
     validateDebugToken(args[1] ?? "", "sgnodes id");
+
     return [args[1] ?? ""];
   }
 
@@ -339,6 +349,7 @@ const validateOptionalNonNegativeInteger = (args: readonly string[], command: st
 
   if (args.length === 1) {
     validateNonNegativeInteger(args[0] ?? "", `${command} argument`);
+
     return;
   }
 

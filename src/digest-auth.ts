@@ -22,6 +22,7 @@ export const digestAuthHeaderEffect: (
   function* (context, method, uri, challenge) {
     const ha1 = md5(`${context.username}:${challenge.realm}:${context.password}`);
     const ha2 = md5(`${method}:${uri}`);
+
     const parts = [
       `username="${escapeDigestValue(context.username)}"`,
       `realm="${escapeDigestValue(challenge.realm)}"`,
@@ -69,6 +70,7 @@ export const parseDigestChallenge = (header: string | null): DigestChallenge | u
 
 const randomHex = Effect.fn("randomHex")(function* (byteCount: number) {
   let hex = "";
+
   for (let index = 0; index < byteCount; index += 1) {
     const byte = yield* Random.nextIntBetween(0, 255);
     hex += byte.toString(16).padStart(2, "0");
@@ -79,6 +81,7 @@ const randomHex = Effect.fn("randomHex")(function* (byteCount: number) {
 
 const readDigestParam = (header: string, name: string): string | undefined => {
   const match = new RegExp(`${name}=(?:"([^"]*)"|([^,\\s]*))`, "i").exec(header);
+
   return match?.[1] ?? match?.[2];
 };
 

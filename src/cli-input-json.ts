@@ -139,6 +139,7 @@ export const parseInputJsonEffect: (value: string) => Effect.Effect<Command, Rok
     if (command === "query") {
       const path = yield* readStringEffect(parsed, "path");
       yield* syncRokit(() => rejectUnsafeEcpPath(path));
+
       return { name: "query", path };
     }
 

@@ -13,6 +13,7 @@ export const discoverRokuDevicesEffect = Effect.fn("discoverRokuDevices")(functi
   timeoutMs = 3_000,
 ) {
   const safeTimeoutMs = yield* validateDiscoveryTimeoutEffect(timeoutMs);
+
   return yield* discoverWithSsdpEffect(safeTimeoutMs);
 });
 

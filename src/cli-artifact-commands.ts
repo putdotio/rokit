@@ -72,6 +72,7 @@ const packageOutputPath = (
   }
 
   const outputPath = positional ?? out;
+
   return outputPath === undefined
     ? Effect.fail(new InvalidInput({ message: packageUsage }))
     : Effect.succeed(outputPath);

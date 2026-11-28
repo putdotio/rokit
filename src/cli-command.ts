@@ -61,6 +61,7 @@ export const parseEffectCliEffect: (
   argv: readonly string[],
 ) => Effect.Effect<ParsedCli, RokitError> = Effect.fn("parseEffectCli")(function* (argv) {
   let parsedCli: ParsedCli | undefined;
+
   const capture = (command?: Command) =>
     readCliOptions().pipe(
       Effect.flatMap((options) =>

@@ -20,6 +20,7 @@ export const resolveInputJsonSource: (
     }
 
     const fileSystem = yield* FileSystem.FileSystem;
+
     return yield* fileSystem.readFileString(path).pipe(Effect.mapError(normalizeError));
   }
 
@@ -30,6 +31,7 @@ const readStdinText: () => Effect.Effect<string, RokitError, Stdio.Stdio> = Effe
   "readInputJsonStdin",
 )(function* () {
   const stdio = yield* Stdio.Stdio;
+
   const chunks = yield* stdio.stdin.pipe(
     Stream.decodeText(),
     Stream.runCollect,

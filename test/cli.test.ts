@@ -16,7 +16,9 @@ import { buildDebugCommand } from "../src/debug.js";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const builtDistDir = resolve(repoRoot, "dist");
 const testDistParent = resolve(repoRoot, ".rokit");
+
 mkdirSync(testDistParent, { recursive: true });
+
 const testDistDir = mkdtempSync(join(testDistParent, "cli-test-dist-"));
 const cliPath = resolve(testDistDir, "rokit.mjs");
 
@@ -44,12 +46,15 @@ const runRokitInProcess = async (
   const stdout: string[] = [];
   const stderr: string[] = [];
   const format = (parts: readonly unknown[]) => parts.map(String).join(" ");
+
   const logSpy = vi.spyOn(console, "log").mockImplementation((...parts: unknown[]) => {
     stdout.push(format(parts));
   });
+
   const errorSpy = vi.spyOn(console, "error").mockImplementation((...parts: unknown[]) => {
     stderr.push(format(parts));
   });
+
   const previousExitCode = process.exitCode;
   process.exitCode = 0;
 
@@ -77,6 +82,7 @@ const childCliEnv = (): NodeJS.ProcessEnv => {
     "VITEST_WORKER_ID",
     "VITEST_VSCODE",
   ]);
+
   const env: NodeJS.ProcessEnv = {};
 
   for (const [name, value] of Object.entries(process.env)) {
@@ -101,6 +107,7 @@ const parseJsonCommand = async (value: string): Promise<Command> =>
 
 const parseCliCommand = async (args: readonly string[]): Promise<Command> => {
   const parsed = await Effect.runPromise(parseEffectCliEffect(args));
+
   if (parsed.command === undefined) {
     throw new Error("expected command");
   }

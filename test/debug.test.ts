@@ -70,6 +70,7 @@ describe("Roku debug helpers", () => {
       },
       async (port) => {
         const context = testContext({ debugServerPort: port });
+
         const forgedCommand = {
           args: [],
           command: "cont",
@@ -174,6 +175,7 @@ const listen = async (server: ReturnType<typeof createServer>): Promise<number> 
 
       if (address === null || typeof address === "string") {
         reject(new Error("Expected TCP server address"));
+
         return;
       }
 
@@ -186,6 +188,7 @@ const closeServer = async (server: ReturnType<typeof createServer>): Promise<voi
     server.close((error) => {
       if (error) {
         reject(error);
+
         return;
       }
 

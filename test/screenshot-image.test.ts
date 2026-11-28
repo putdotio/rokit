@@ -17,6 +17,7 @@ function pngChunk(kind: string, data: Buffer): Buffer {
   chunk.write(kind, 4);
   data.copy(chunk, 8);
   chunk.writeUInt32BE(crc32(chunk.subarray(4, -4)), chunk.length - 4);
+
   return chunk;
 }
 
@@ -24,6 +25,7 @@ function smallPng(rawPixels: Buffer, interlaced = false, width = 1, height = 1):
   const header = Buffer.from([0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, Number(interlaced)]);
   header.writeUInt32BE(width, 0);
   header.writeUInt32BE(height, 4);
+
   return Buffer.concat([
     pngImage.subarray(0, 8),
     pngChunk("IHDR", header),
@@ -43,29 +45,41 @@ function pixelFormatPng(colorType: number, depth: number, channels: number): Buf
 }
 
 const badCrc = Buffer.from(pngImage);
+
 badCrc[badCrc.length - 1] ^= 1;
+
 const largePng = Buffer.from(pngImage);
+
 largePng.writeUInt32BE(100_000, 16);
+
 const corruptJpeg = Buffer.from(jpegImage);
+
 corruptJpeg[corruptJpeg.indexOf(Buffer.from([0xff, 0xda])) + 2] = 0xff;
+
 const largeJpeg = Buffer.from(jpegImage);
 const frameOffset = largeJpeg.indexOf(Buffer.from([0xff, 0xc0]));
+
 largeJpeg.writeUInt16BE(10000, frameOffset + 5);
+
 largeJpeg.writeUInt16BE(10000, frameOffset + 7);
+
 const interlacedPng = smallPng(Buffer.from([0, 255, 0, 0, 255]), true);
 
 const scanOffset = jpegImage.indexOf(Buffer.from([0xff, 0xda]));
 const scanlessJpeg = Buffer.concat([jpegImage.subarray(0, scanOffset), Buffer.from([0xff, 0xd9])]);
+
 const emptyScanJpeg = Buffer.concat([
   jpegImage.subarray(0, scanOffset + 2 + jpegImage.readUInt16BE(scanOffset + 2)),
   Buffer.from([0xff, 0xd9]),
 ]);
+
 // Each copy of the genuine fixture's entropy encodes one complete 8×8 MCU.
 function restartJpeg(declaredMcus: number, includedMcus: number): Buffer {
   const prefix = Buffer.from(jpegImage.subarray(0, scanOffset));
   prefix.writeUInt16BE(declaredMcus * 8, frameOffset + 7);
   const scanEnd = scanOffset + 2 + jpegImage.readUInt16BE(scanOffset + 2);
   const entropy = jpegImage.subarray(scanEnd, -2);
+
   return Buffer.concat([
     prefix,
     Buffer.from([0xff, 0xdd, 0, 4, 0, 1]),
@@ -81,26 +95,35 @@ function restartJpeg(declaredMcus: number, includedMcus: number): Buffer {
 
 const finalInterval = restartJpeg(2, 2);
 const finalIntervalStart = finalInterval.indexOf(Buffer.from([0xff, 0xd0])) + 2;
+
 const missingFinalInterval = Buffer.concat([
   finalInterval.subarray(0, finalIntervalStart),
   Buffer.from([0xff, 0xd9]),
 ]);
+
 const truncatedFinalInterval = Buffer.concat([
   finalInterval.subarray(0, finalIntervalStart + 1),
   Buffer.from([0xff, 0xd9]),
 ]);
+
 const badRestartSequence = restartJpeg(2, 2);
+
 badRestartSequence[badRestartSequence.indexOf(Buffer.from([0xff, 0xd0])) + 1] = 0xd1;
+
 const restartWithoutInterval = restartJpeg(2, 2);
+
 restartWithoutInterval.writeUInt16BE(
   0,
   restartWithoutInterval.indexOf(Buffer.from([0xff, 0xdd])) + 4,
 );
 
 const ancillary = pngChunk("tEXt", Buffer.from("note\0synthetic"));
+
 ancillary[ancillary.length - 1] ^= 1;
+
 const ancillaryCrcPng = Buffer.concat([pngImage.subarray(0, 33), ancillary, pngImage.subarray(33)]);
 const header = Buffer.from([0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0]);
+
 const missingZlibChecksumPng = Buffer.concat([
   pngImage.subarray(0, 8),
   pngChunk("IHDR", header),

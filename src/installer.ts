@@ -13,6 +13,7 @@ import type { RokuContext } from "./roku-context.js";
 import { abortSignalWithTimeout } from "./timing.js";
 
 type InstallerAction = "delete" | "install";
+
 type InstallerSubmitValue = "Delete" | "Install" | "Replace";
 
 const nodeInstallerLayer = Layer.merge(NodeFileSystem.layer, NodePath.layer);
@@ -53,6 +54,7 @@ export const installPackageEffect: (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const resolvedZip = withPackageArchiveExtension(path.resolve(zipPath));
+
   const archive = yield* fs.readFile(resolvedZip).pipe(
     Effect.mapError(
       (error) =>
@@ -62,6 +64,7 @@ export const installPackageEffect: (
         }),
     ),
   );
+
   const fileName = path.basename(resolvedZip);
 
   return yield* postValidatedInstallPackage(context, archive, fileName, "Replace").pipe(
@@ -82,6 +85,7 @@ export const deleteInstalledChannelEffect: (
     const form = new FormData();
     form.set("mysubmit", "Delete");
     form.set("archive", "");
+
     return form;
   });
 
@@ -121,6 +125,7 @@ const postInstallerForm = Effect.fn("postInstallerForm")(function* (
   const url = installerUrl(context);
   const challenge = yield* readDigestChallenge(context, action, url);
   const authorization = yield* digestAuthHeaderEffect(context, "POST", url.pathname, challenge);
+
   const response = yield* Effect.tryPromise({
     try: (signal) =>
       fetch(url, {
@@ -137,6 +142,7 @@ const postInstallerForm = Effect.fn("postInstallerForm")(function* (
         detail: formatErrorMessage(error),
       }),
   });
+
   const responseBody = yield* readResponseTextEffect(
     response,
     (error) =>
@@ -145,6 +151,7 @@ const postInstallerForm = Effect.fn("postInstallerForm")(function* (
         detail: formatErrorMessage(error),
       }),
   );
+
   const message = readInstallerMessage(responseBody);
 
   if (!response.ok) {
@@ -177,6 +184,7 @@ const readDigestChallenge = Effect.fn("readDigestChallenge")(function* (
         detail: formatErrorMessage(error),
       }),
   });
+
   const challenge = parseDigestChallenge(response.headers.get("www-authenticate"));
 
   if (challenge === undefined) {
@@ -201,6 +209,7 @@ const postInstallPackage = Effect.fn("postInstallPackage")(function* (
     const form = new FormData();
     form.set("mysubmit", submitValue);
     form.set("archive", new Blob([new Uint8Array(archive)], { type: "application/zip" }), fileName);
+
     return form;
   });
 });
@@ -243,6 +252,7 @@ const installerPostTimeoutMs = (context: RokuContext, action: InstallerAction): 
 
 const fallbackHttpDetail = (body: string, statusText: string): string => {
   const detail = body.trim() || statusText.trim();
+
   return detail === "" ? "request rejected" : detail.slice(0, 200);
 };
 

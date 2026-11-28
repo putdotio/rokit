@@ -29,6 +29,7 @@ export const queryMediaPlayerEffect = Effect.fn("queryMediaPlayer")(function* (
   context: RokuContext,
 ) {
   const xml = yield* queryMediaPlayerXmlEffect(context);
+
   return readMediaPlayerInfo(xml);
 });
 
@@ -51,6 +52,7 @@ export const queryMediaPlayerSafeEffect = Effect.fn("queryMediaPlayerSafe")(func
   context: RokuContext,
 ) {
   const xml = yield* queryMediaPlayerXmlSafeEffect(context);
+
   return xml === undefined ? undefined : readMediaPlayerInfo(xml);
 });
 
@@ -86,6 +88,7 @@ export const waitForMediaPlayerStateEffect = Effect.fn("waitForMediaPlayerState"
   timeoutMs = 10_000,
 ) {
   const initialState: MediaPlayerPollState = {};
+
   return yield* pollUntilEffect({
     initialState,
     intervalMs: defaultPollIntervalMs,
@@ -105,6 +108,7 @@ export const waitForMediaPlayerStateEffect = Effect.fn("waitForMediaPlayerState"
       ),
     timeout: (state) => {
       const suffix = state.lastError ? `; last ECP error: ${state.lastError}` : "";
+
       return failRokit(
         `expected media-player state ${expectedState}, got ${state.lastState ?? "unknown"}${suffix}`,
       );

@@ -67,6 +67,7 @@ export const formatNodeCondition = ({ expectation, nodeName }: NodeCondition): s
   }
 
   const suffix = expectation.text === undefined ? "" : ` text=${expectation.text}`;
+
   return `${nodeName} ${expectation.state}${suffix}`;
 };
 

@@ -45,6 +45,7 @@ describe("Roku helpers", () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (input) => {
       fetchCalls.push(String(input));
+
       return new Response("");
     };
 
@@ -62,6 +63,7 @@ describe("Roku helpers", () => {
     let requestSignal: AbortSignal | undefined;
     globalThis.fetch = (_input, init) => {
       requestSignal = init?.signal ?? undefined;
+
       return new Promise<Response>(() => {});
     };
 
@@ -83,6 +85,7 @@ describe("Roku helpers", () => {
         new ReadableStream<Uint8Array>({
           pull: () => {
             bodyRead.resolve();
+
             return new Promise<void>(() => {});
           },
           cancel: () => {
