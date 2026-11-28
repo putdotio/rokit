@@ -1,6 +1,41 @@
+import uinaf, { env, ignorePatterns } from "@uinaf/oxlint-config/effect/vite-plus";
 import { defineConfig } from "vite-plus";
 
 export default defineConfig({
+  lint: {
+    extends: [uinaf],
+    env,
+    ignorePatterns,
+    rules: {
+      "@nkzw/no-instanceof": "off",
+      "anti-slop-effect/no-manual-tag-comparison": "off",
+      "anti-slop-effect/no-service-constructor-imports": "off",
+      "anti-slop/no-runtime-typeof": "off",
+      "anti-slop/no-unknown-parameters": "off",
+      "anti-slop/require-readable-spacing": "off",
+      curly: "off",
+      "import/consistent-type-specifier-style": "off",
+      "import/no-namespace": "off",
+      "no-console": "off",
+      "quality/no-known-value-widening": "off",
+      "quality/no-unknown-returns": "off",
+      "quality/no-unsafe-dictionary-type": "off",
+      "typescript/array-type": "off",
+      "typescript/consistent-type-imports": "off",
+      "typescript/no-misused-spread": "off",
+      "typescript/no-non-null-assertion": "off",
+      "typescript/no-unnecessary-type-assertion": "off",
+      "typescript/no-unsafe-argument": "off",
+      "typescript/no-unsafe-assignment": "off",
+      "uinaf/no-comments": "off",
+      "unicorn/consistent-function-scoping": "off",
+      "unicorn/numeric-separators-style": "off",
+      "unicorn/prefer-at": "off",
+      "unicorn/prefer-import-meta-properties": "off",
+      "unicorn/prefer-string-raw": "off",
+      "unicorn/prefer-string-replace-all": "off",
+    },
+  },
   pack: {
     // npm consumers do not apply our pnpm decoder patch; ship the patched code.
     deps: { alwaysBundle: ["jpeg-js"], onlyBundle: ["jpeg-js"] },
